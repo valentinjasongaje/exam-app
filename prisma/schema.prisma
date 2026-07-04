@@ -1,0 +1,117 @@
+// Prisma schema for the exam review app.
+// Production target: PostgreSQL (Neon / Supabase).
+// See README.md for how this was verified locally against SQLite
+// before pointing DATABASE_URL at a real Postgres instance.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Content model (seeded from scraped HTML) ----------
+
+model Subject {
+  id        String   @id @default(cuid())
+  name      String // e.g. "ECT", "HB Elec"
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  exams Exam[]
+}
+
+model Exam {
+  id         String   @id @default(cuid())
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  title      String // e.g. "ECT Pre Board Exam 1"
+  slug       String   @unique
+  sourceFile String // original scraped filename, for traceability
+  sourceTag  String? // the old "data-id" grouping value from the scrape, if present
+  createdAt  DateTime @default(now())
+
+  questions Question[]
+  attempts  Attempt[]
+}
+
+model Question {
+  id           String  @id @default(cuid())
+  examId       String
+  exam         Exam    @relation(fields: [examId], references: [id])
+  order        Int // position within the exam
+  text         String
+  imageUrl     String? // re-hosted question image, if the scrape had one
+  explanation  String? // solution text, if the scrape had one
+  explanationImageUrl String? // re-hosted solution image, if any
+  sourceItemId String // original numeric "data-item" id from the scrape, for traceability
+
+  choices        Choice[]
+  attemptAnswers AttemptAnswer[]
+
+  @@unique([examId, sourceItemId])
+  @@index([examId, order])
+}
+
+model Choice {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  label      String // "A" | "B" | "C" | "D"
+  text       String
+  isCorrect  Boolean  @default(false)
+
+  attemptAnswers AttemptAnswer[]
+
+  @@unique([questionId, label])
+}
+
+// ---------- Users & activity ----------
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+
+  attempts Attempt[]
+}
+
+model Attempt {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id])
+  examId         String
+  exam           Exam      @relation(fields: [examId], references: [id])
+  startedAt      DateTime  @default(now())
+  finishedAt     DateTime?
+  score          Int? // number correct, filled in on submit
+  totalQuestions Int
+
+  answers AttemptAnswer[]
+
+  @@index([userId, examId])
+}
+
+model AttemptAnswer {
+  id         String   @id @default(cuid())
+  attemptId  String
+  attempt    Attempt  @relation(fields: [attemptId], references: [id])
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+  choiceId   String? // null if the user skipped the question
+  choice     Choice?  @relation(fields: [choiceId], references: [id])
+  isCorrect  Boolean  @default(false)
+  answeredAt DateTime @default(now())
+
+  @@unique([attemptId, questionId])
+}

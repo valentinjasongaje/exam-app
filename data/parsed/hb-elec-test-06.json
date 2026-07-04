@@ -1,0 +1,1515 @@
+{
+  "subject": {
+    "name": "HB Elec",
+    "slug": "hb-elec"
+  },
+  "exam": {
+    "title": "HB Elec - Test 06",
+    "slug": "hb-elec-test-06",
+    "sourceFile": "HB_Elec_-_Test_06.html",
+    "sourceTag": "1000"
+  },
+  "questions": [
+    {
+      "order": 1,
+      "sourceItemId": "13561687",
+      "text": "A resistive\ncircuit has\na/an ______ power factor.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "negative",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "unity",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "zero",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "infinity",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 2,
+      "sourceItemId": "13561696",
+      "text": "A bipolar\njunction\ntransistor has ______ region/s of operation.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "3",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "2",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "1",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "4",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 3,
+      "sourceItemId": "13561700",
+      "text": "In a parallel\nbank with\nunequal branch resistances:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "The current is equal in all the branches.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "The current is highest in the lowest R.",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "The voltage is highest across the lowest R.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "The current is equal in all branches.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 4,
+      "sourceItemId": "13561701",
+      "text": "What does a\nphototransistor\ndo?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Changes electrical energy to light energy.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Rectifies alternating current to direct current.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Amplifies electrical energy.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Changes light energy to electrical energy and amplifies it.",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 5,
+      "sourceItemId": "13561702",
+      "text": "What\nis the meter used to test insulation resistance?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Megohmmeter",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Insulation meter",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Multitester",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "VOM",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 6,
+      "sourceItemId": "13561703",
+      "text": "A\nregion of a PN junction with no holes and electrons is called ________.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "avalanche region",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "cut-off region",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "depletion region",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "void region",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 7,
+      "sourceItemId": "13561704",
+      "text": "What\nflux does not follow the intended path in a magnetic circuit?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Lost flux",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Linked flu",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Leakage flux",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Hysteresis",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 8,
+      "sourceItemId": "13561705",
+      "text": "Which\ntransistor\nconfiguration provides a phase reversal of 180 degrees?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Emitter follower",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Common collector",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Common emitter",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Common base",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 9,
+      "sourceItemId": "13561706",
+      "text": "The ripple\nfrequency of a\nhalf-wave rectifier that is operated with a 60 Hz power line is ____.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "120 Hz",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "180 Hz",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "30 Hz",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "60 Hz",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 10,
+      "sourceItemId": "13561707",
+      "text": "Which\none of the following is a vector quantity?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Relative permeability",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Relative permittivity",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Flux density",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Magnetic field intensity",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 11,
+      "sourceItemId": "13561708",
+      "text": "Which type of\nbonding where\ntwo atoms share one or more pair of electrons?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Metallic bonding",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Covalent bonding",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Molecular bonding",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Ionic bonding",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 12,
+      "sourceItemId": "13561709",
+      "text": "What\nis the capacitance of a 5 µF capacitor connected in series with a 10 µF\ncapacitor?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "7.5 µF",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "15 μF",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "50 µF",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "3.3 µF",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/2cbe35ee686a25da.png"
+    },
+    {
+      "order": 13,
+      "sourceItemId": "13561711",
+      "text": "Which of\nthe following\nalloys consists of 22 percent iron and 78 percent nickel?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Alnico",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Permalloy",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "German silver wire",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Manganin",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 14,
+      "sourceItemId": "13561712",
+      "text": "The address\nof the\ninstruction to be executed is stored in ________.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "RAM",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "ROM",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "program counter",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "accumulator",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 15,
+      "sourceItemId": "13561714",
+      "text": "The\nforce acting on a unit n-pole placed at that point is called _________.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "electromagnetic field intensity",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "electric flux",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "intensity of magnetization",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "electric field intensity",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 16,
+      "sourceItemId": "13561715",
+      "text": "Which\nof the following is not a secondary type of cell?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Silver cadmium",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Lead acid",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Nickel cadmium",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Carbon zinc",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 17,
+      "sourceItemId": "13561717",
+      "text": "Which\ntransistor terminal\nhandles most current?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Collector",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Base",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Emitter",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Drain",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 18,
+      "sourceItemId": "13561719",
+      "text": "Field-effect\ntransistor\n(FET) practically has ____ input resistance.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "low",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "infinity",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "high",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "zero",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 19,
+      "sourceItemId": "13561720",
+      "text": "What\nis the mixture of charged-particle gases?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Helium",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Nitrogen",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Oxygen",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Plasma",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 20,
+      "sourceItemId": "13561722",
+      "text": "What is the\nresistance\nbetween collector and emitter when an ideal transistor is at cut-off?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "A function of the output current",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Infinite",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Zero",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "A function of the load impedance",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 21,
+      "sourceItemId": "13561723",
+      "text": "What\ndo you call the evaporation of electrons from a heated surface?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Radiation",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Conduction",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Convection",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Thermionic emission",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 22,
+      "sourceItemId": "13561725",
+      "text": "The\nimpedance of a circuit is not dependent on:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "resistance",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "current",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "inductance",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "capacitance",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 23,
+      "sourceItemId": "13561727",
+      "text": "In\nan RLC circuit at resonance, the current that flows is a ______ current.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "minimum",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "lagging",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "leading",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "maximum",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 24,
+      "sourceItemId": "13561728",
+      "text": "The\napplied voltage equals the sum of the IR drops in what circuit?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Series circuit",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Parallel circuit",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Resonant circuit",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Magnetic circuit",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 25,
+      "sourceItemId": "13561729",
+      "text": "Which type of\ncircuit is\ncommonly employed to control the flow of data in the arithmetic section of a\ncomputer?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "A microprocessor",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Video card",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "A logic gate",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "A multivibrator",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 26,
+      "sourceItemId": "13561731",
+      "text": "A\nPN junction acts as a:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "bi-directional switch",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "three-way switch",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "two-way switch",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "unidirectional switch",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 27,
+      "sourceItemId": "13561733",
+      "text": "Data latch is\nthe other\nname of:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "RS flip-flop",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "MS flip-flop",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "JK flip-flop",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "D flip-flop",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 28,
+      "sourceItemId": "13561734",
+      "text": "What\nhappens to the breakdown voltage of a crystal diode when the doping level is\nincreased?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Stabilizes",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Decreases",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Unaffected",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Increases",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 29,
+      "sourceItemId": "13561735",
+      "text": "A/an _______\nis a coil of\nwire with more than one turn.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "armature",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "inductor",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "wire-wound resistor",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "solenoid",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 30,
+      "sourceItemId": "13561736",
+      "text": "What effect\nabout microwave\noscillation that occurs in a small block of N-type gallium arsenide when a\nconstant DC voltage above a critical value is applied to contact on opposite\nfaces?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Gunn effect",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Hall effect",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Edison effect",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Skin effect",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 31,
+      "sourceItemId": "13561738",
+      "text": "What\nis the other name of earth current?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Telluric current",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Ground current",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Conventional current",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Convection current",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 32,
+      "sourceItemId": "13561741",
+      "text": "What\nphenomenon is by which\na magnetic substance becomes a magnet when placed near a magnet?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Magnetic induction",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Magnetic phenomenon",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Electromagnetic induction",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Magnetic effect",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 33,
+      "sourceItemId": "13561743",
+      "text": "The\ntemperature coefficient of resistance of a semiconductor is ________.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "positive",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "infinite",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "zero",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "negative",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 34,
+      "sourceItemId": "13561745",
+      "text": "What\nthree-terminal thyristor device that is similar to SCR and SCS in construction\nand operation and whose most obvious advantage is the fact that it can easily\nbe switched ON and OFF using its single gate terminal?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "QUADRAC",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "TRIAC",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "LASCR",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "GTO",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 35,
+      "sourceItemId": "13561747",
+      "text": "Which of the\nfollowing\nalloys consists of 22 percent iron and 78 percent nickel?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Constantan",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Permalloy",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Manganin",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Alnico",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 36,
+      "sourceItemId": "13561749",
+      "text": "What\nis the frequency in which a 0.1 µF has an X_C equal to 1000 Ω?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "1590 MHz",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "1590 kHz",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "1590 MHz",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "1590 Hz",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/05afc3a350133e51.png"
+    },
+    {
+      "order": 37,
+      "sourceItemId": "13561752",
+      "text": "What\nIC has up to 9 gates?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "LSI",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "SSI",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "MSI",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "VLSI",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 38,
+      "sourceItemId": "13561753",
+      "text": "Which\ndevice conducts currents in either direction?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "NPN transistor",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "TRIAC",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "PNP transistor",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "SCR",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 39,
+      "sourceItemId": "13561755",
+      "text": "What is the\nmost stable\ntype of biasing?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Voltage feedback",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Fixed bias",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Voltage divider",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Emitter-stabilized",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 40,
+      "sourceItemId": "13561756",
+      "text": "The atoms of\npure silicon\nand germanium arrange themselves in an orderly pattern called ______.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "atomic structure",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "plasma",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Bohr`s model",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "crystal",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 41,
+      "sourceItemId": "13561758",
+      "text": "A cold solder\nconnection\ncan best be repaired by:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "cooling",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "resoldering",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "substitution",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "bridging",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 42,
+      "sourceItemId": "13561759",
+      "text": "When an atom\ngains an\nadditional electrons:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "a positive ion results",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "a neutral atom is formed",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "a negative ion results",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "covalent bonding is accomplished",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 43,
+      "sourceItemId": "13561761",
+      "text": "In\nan ionic crystal, what particles make up the lattice?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Protons",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Electrons",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Neutrons",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Atoms",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 44,
+      "sourceItemId": "13561762",
+      "text": "What\ncondition is required to turn on an SCR?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "The cathode must be positive with respect to the anode.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "The gate voltage is positive with respect to the anode.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "The anode must be positive with respect to the cathode",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "The anode must be positive with respect to the gate.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 45,
+      "sourceItemId": "13561765",
+      "text": "What is the\nspecific\nreluctance of a material?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Conductivity",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Reluctivity",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Permeability",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Resistivity",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 46,
+      "sourceItemId": "13561766",
+      "text": "What\nis the air space between poles of a magnet called?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Air gap",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Atmosphere",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Free space",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Vacuum",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 47,
+      "sourceItemId": "13561768",
+      "text": "In a junction\ndiode, the\nminority carriers cause the presence of:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "drift current",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "conventional current",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "leakage current",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "convection current",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 48,
+      "sourceItemId": "13561769",
+      "text": "The\nresistivity of semiconductors is:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "less than that of conductors",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "not related to the resistivity of insulator and conductor",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "more than that of insulators",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "between the resistivity of insulator and conductor",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 49,
+      "sourceItemId": "13561770",
+      "text": "What branch\nof engineering\nthat deals with the magnetic effects of electric current?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Electronics engineering",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Magnetism",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Electromagnetism",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Electrical engineering",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 50,
+      "sourceItemId": "13561772",
+      "text": "Metal oxide\nsemiconductor\nfield-effect transistor (MOSFET) uses what type of insulator?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Mica",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "CO₂",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "SiO₂",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Paper",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    }
+  ],
+  "issues": []
+}

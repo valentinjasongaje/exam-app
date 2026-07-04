@@ -1,0 +1,1515 @@
+{
+  "subject": {
+    "name": "ECT",
+    "slug": "ect"
+  },
+  "exam": {
+    "title": "ECT Pre Board Exam 1",
+    "slug": "ect-pre-board-exam-1",
+    "sourceFile": "ECT_Pre_Board_Exam_1.html",
+    "sourceTag": "1740"
+  },
+  "questions": [
+    {
+      "order": 1,
+      "sourceItemId": "15679475",
+      "text": "What components value is\nmeasured in millihenries?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Resistor",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Diode",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Inductor",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Capacitor",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 2,
+      "sourceItemId": "15679539",
+      "text": "When the frequency of an\napplied voltage is increased the capacitive reactance of a circuit will:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "decrease.",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "short all capacitors to ground.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "increase.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "stay unchanged.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 3,
+      "sourceItemId": "15679673",
+      "text": "An analog multimeter (AMM)\nchecks for:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "voltage, resistance and capacitance.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "current, resistance and capacitance.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "voltage, resistance and inductance.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "voltage, current and resistance.",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 4,
+      "sourceItemId": "15679693",
+      "text": "The formula to calculate\ndBm from mW is:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "10 log10 (P/1mW)",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "20 log10 (P/1mW)",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "10 log10 (P/ 0.5mW)",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "10 log10 (P²/1mW)",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 5,
+      "sourceItemId": "15679801",
+      "text": "What IEEE standard is for Ethernet?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "802.3",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "802.11",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "802.2",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "802.3af",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 6,
+      "sourceItemId": "15679854",
+      "text": "In a linear electronic voltage regulator:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "The conduction of a control element is varied in direct proportion to the line voltage or load current.",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "The output is a ramp voltage.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "The control device is switched on or off, with the duty cycle proportional to the line or load conditions.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "The pass transistor switches from the off state to the on state.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 7,
+      "sourceItemId": "15679859",
+      "text": "A MOSFET is comprised of\nwhat four elements?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Base, source, drain and dielectric",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Gate, source, collector and substrate",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Dielectric, source, drain and base",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Gate, source, drain and substrate",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 8,
+      "sourceItemId": "15679865",
+      "text": "In the circuit below, what\nis the voltage output at letter “X”, when input voltage is 25V?",
+      "imageUrl": "images/c2698b6725514479.png",
+      "choices": [
+        {
+          "label": "A",
+          "text": "25 V",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "10 V",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "5 V",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "15 V",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/1d10eab7f39e0ccd.png"
+    },
+    {
+      "order": 9,
+      "sourceItemId": "15679868",
+      "text": "When compared to a JFET,\nthe base of a bipolar transistor is similar to what element of the JFET?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Gate",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "Source",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Emitter",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Drain",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 10,
+      "sourceItemId": "15679873",
+      "text": "Current in a parallel\ncircuit is:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "inversely proportional to the circuits resistance.",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "equally divided among each branch.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "equal to the sum of the branch resistances.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "equal to the voltage source, minus the branch resistances.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 11,
+      "sourceItemId": "15679876",
+      "text": "What is\nthe digital gate\nequivalent for the circuit below?",
+      "imageUrl": "images/7ac0f27fb8f36ee4.png",
+      "choices": [
+        {
+          "label": "A",
+          "text": "OR",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "AND",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "NOR",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "NAND",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 12,
+      "sourceItemId": "15679884",
+      "text": "Which of the following expressions is equivalent to\n(2x² - 4x – 16)/(x² - 3x – 4)?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "(2x + 4)/(x + 1)",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "x² + 4x/3 + 4",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "x² - x – 12",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "(2x – 4)/(x – 1)",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/1dc0103b7ca669f0.png"
+    },
+    {
+      "order": 13,
+      "sourceItemId": "15679893",
+      "text": "For current to flow in\nan NPN silicon transistor’s emitter-collector junction, the base must be:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "At least 0.4 volts positive with respect to the emitter.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "At a negative voltage with respect to the emitter.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "At least 0.7 volts positive with respect to the emitter.",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "At least 0.7 volts negative with respect to the emitter.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 14,
+      "sourceItemId": "15679900",
+      "text": "In a series resistive and\nreactive circuit what formula is used to find total impedance?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Z = sqrt(R² + X²)/2",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Z = X²(R²/2)",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Z = sqrt(R² + X²)",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Z = R²(X²/2)",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 15,
+      "sourceItemId": "15679905",
+      "text": "The\nexpression “voltage regulation” as it applies to a shunt-wound\nDC generator operating at a constant frequency refers to:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Voltage output efficiency.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Voltage fluctuations from load to no-load.",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Rotor winding voltage ratio",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Voltage in the secondary compared to the primary.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 16,
+      "sourceItemId": "15679908",
+      "text": "What is the\nnumber one\nconcern in regards to electrical safety?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Proper grounding",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Faulty equipment",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "ESD",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Shock",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 17,
+      "sourceItemId": "15679914",
+      "text": "Bohr's Atomic Model\nconsists of what three components?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Protons, neutrons and cations",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Protons, neutrons and electrons",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "Tachyons gravitons and electrons",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Neutrons, ion, neutrinos",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 18,
+      "sourceItemId": "15679921",
+      "text": "In telecommunications, a computer, phone and fax\nmachine are defined as ________.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "equipment",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "device",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "neither equipment nor device",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "either equipment or device",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 19,
+      "sourceItemId": "15679928",
+      "text": "In the circuit below, what\nis the calculated power for R₃?",
+      "imageUrl": "images/5f56a15c09c6ed66.png",
+      "choices": [
+        {
+          "label": "A",
+          "text": "43.2 W",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "47.1 W",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "41.3 W",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "45.8 W",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/a207b19a86c094c6.png"
+    },
+    {
+      "order": 20,
+      "sourceItemId": "15679933",
+      "text": "What shall be used to measure the velocity of\npropagation?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Neither RF network analyzer or metallic time domain reflectometer",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Metallic time domain reflectometer",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Either RF network analyzer or metallic time domain reflectometer",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "RF network analyzer",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 21,
+      "sourceItemId": "15679937",
+      "text": "Which of the following is the most common connector\nused in telecom?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "4P4C",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "All choices are correct",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "RJ-11or RJ-25",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "RJ-45",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 22,
+      "sourceItemId": "15679944",
+      "text": "Which of the following equations represents this information:\n“Engr. Cuervo distributed 85 breakers among the z students in his science class?\nEach student received 5 breakers.”",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "5z = 85",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "5 = z/85",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "z = 5/85",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "85z = 5",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/84b5882748df13c3.png"
+    },
+    {
+      "order": 23,
+      "sourceItemId": "15679946",
+      "text": "Current amounts between\n______ and _____ can be lethal.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "33.3 mA, 75.6 mA",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "4 mA, 10 mA",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "10 mA, 33.3 mA",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "100 mA, 200 mA",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 24,
+      "sourceItemId": "15679949",
+      "text": "At a car dealership, each of three cars must be parked\nin one of six adjacent parking spaces, provided that there is exactly one empty\nparking space between any two occupied spaces. How many ways can the three cars\nbe arranged in the six spaces?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "20",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "12",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "4",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "16",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/9288d93925378793.png"
+    },
+    {
+      "order": 25,
+      "sourceItemId": "15679953",
+      "text": "The ideal method of removing insulation from wire is:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "The scissor action stripping tool.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "A mechanical wire stripper.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "The pocket knife.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "The thermal stripper.",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 26,
+      "sourceItemId": "15679958",
+      "text": "What are\nthe three basic\nparts of a transformer?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Primary winding, secondary winding and tertiary winding",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Primary winding, power diode and secondary winding",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Primary winding, secondary winding and core",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Primary winding, dielectric and core",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 27,
+      "sourceItemId": "15679960",
+      "text": "The time required to charge\na capacitor to 63 percent is known as:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Tau.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "a linear superposition.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "a time constant.",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Thevenin`s constant.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 28,
+      "sourceItemId": "15679963",
+      "text": "A piggy bank is full of just nickels and dimes. If the\nbank contains 65 coins with a total value of 5 dollars, how many nickels and\nhow many dimes are in the bank?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "32 nickels and 33 dimes",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "25 nickels and 40 dimes",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "28 nickels and 37 dimes",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "30 nickels and 35 dimes",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/0c7b7d7976cfc93d.png"
+    },
+    {
+      "order": 29,
+      "sourceItemId": "15679968",
+      "text": "All of the students in a history class are juniors or\nseniors. There are twice as many girls as boys in the class and there are 3\ntimes as many senior girls as junior girls. If a student is selected at random,\nwhat is the probability that the student is a junior girl?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "1/6",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "1/2",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "1/8",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "1/4",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/68d18d30876689a4.png"
+    },
+    {
+      "order": 30,
+      "sourceItemId": "15679971",
+      "text": "The National Building Code of the Philippines is\nPresidential Decree No. _______.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "1096",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "1690",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "1069",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "1609",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 31,
+      "sourceItemId": "15679976",
+      "text": "In data communications, a ______ is a place of\nconvergence where data arrives from one or more directions and then forwarded\nto one or more other directions.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "hub",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "jack",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "switch",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "box",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 32,
+      "sourceItemId": "15679977",
+      "text": "A sound changes in volume\nby – 13 dB. If the original sound power is 1 W, what is the final sound power?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "70 mW",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "80 mW",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "50 mW",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "60 mW",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/b831e331ca33d273.png"
+    },
+    {
+      "order": 33,
+      "sourceItemId": "15679981",
+      "text": "Voltage or potential\ndifference is the measure of potential energy between two points in a circuit\nand is commonly referred to as:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "difference in conduction.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "voltage flow.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "potential resistance.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "voltage drop.",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 34,
+      "sourceItemId": "15679986",
+      "text": "If you have a 12-strand\nconductor and each strand has a radius (one-half the diameter) of 2/10 inch,\nwhat is the circular mil area of the conductor?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "1,920,000",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "1,248,000",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "1,057,680",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "1,822,400",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/df27ffaea73916c7.png"
+    },
+    {
+      "order": 35,
+      "sourceItemId": "15679988",
+      "text": "Total resistance in a\nseries circuit equals:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "The sum of the power dissipated by each resistor.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "the average value of the voltage drops across each resistor within the circuit.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "half the measured resistance multiplied by the applied voltage.",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "the sum of all the resistor values within the circuit.",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 36,
+      "sourceItemId": "15679991",
+      "text": "At a certain time of day, a 25-foot-tall radio antenna casts a 7\nfoot-long shadow. What is the length of the shadow of a 90-foot-tall radio\nantenna at the same time?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "15-1/2",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "25-1/5",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "18",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "14",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/c81864d5f28a0906.png"
+    },
+    {
+      "order": 37,
+      "sourceItemId": "15679996",
+      "text": "What shall be used to measure frequency response and\ncable loss of coaxial cable?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Either RF network analyzer or metallic time domain reflectometer",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Metallic time domain reflectometer",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Neither RF network analyzer or metallic time domain reflectometer",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "RF network analyzer",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 38,
+      "sourceItemId": "15679999",
+      "text": "Using a scientific\ncalculator, a 3300 ohm resistor can be entered with scientific notation as:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "33 x 10³",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "330 x 10²",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "3.3 x 10²",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "3.3 x 10³",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 39,
+      "sourceItemId": "15680001",
+      "text": "Which bipolar transistor\nconfiguration has a current gain of less than 1?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Common emitter",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Emitter follower",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Common collector",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "Common base",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 40,
+      "sourceItemId": "15680002",
+      "text": "Electrons are arranged in\n_____ around a nucleus.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "spheres",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "shells",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "orthogonal lattices",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "loops",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 41,
+      "sourceItemId": "15680007",
+      "text": "Silicon diodes have an\napproximate voltage drop of:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "0.3V",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "1.414V",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "0.9V",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "0.7V",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 42,
+      "sourceItemId": "15680189",
+      "text": "How does the gain of a\nparabolic dish antenna change when the operating frequency is doubled?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "Gain does not change.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "Gain increases 3 dB.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "Gain increases 6 dB.",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "Gain is multiplied by 0.707.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 43,
+      "sourceItemId": "15680191",
+      "text": "What is the product of all of the positive integers\nfactors of 10?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "100",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "200",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "50",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "10",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/22378ee1032e21f6.png"
+    },
+    {
+      "order": 44,
+      "sourceItemId": "15680195",
+      "text": "Two basic uses for\ntransformers are:",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "voltage regulation and rectification.",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "power supplies and bias control.",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "signal matching and power supplies.",
+          "isCorrect": true
+        },
+        {
+          "label": "D",
+          "text": "signal matching and voltage regulation.",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 45,
+      "sourceItemId": "15680197",
+      "text": "Zener diodes are designed\nto operate in the _____ bias region.",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "depletion",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "reverse",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "reactive",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "forward",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 46,
+      "sourceItemId": "15680201",
+      "text": "To\nproperly bias the NPN transistor\nbelow, which voltages are correct?",
+      "imageUrl": "images/cd6a01c6c7f7ae6d.png",
+      "choices": [
+        {
+          "label": "A",
+          "text": "E = -1; B = +1; C = +10",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "E = -1.7; B = -2.7; C = -5",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "E = 0; B = 0; C = +12",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "E = +3; B = +1; C = -7",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 47,
+      "sourceItemId": "15680207",
+      "text": "A sphere with a radius of 4 is inscribed in a cube\nwhose edge length is 8. What is the distance from the center of the sphere to a\ncorner of the cube?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "8 sqrt 2",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "8 sqrt 3",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "8",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "4 sqrt 3",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/49b5385be09c6b68.png"
+    },
+    {
+      "order": 48,
+      "sourceItemId": "15680208",
+      "text": "Josh sells a total of 225 bagels and muffins in one\nday at his cafe. If the number of muffins he sells is 15 more than twice the\nnumber of bagels sold, how much bagels does he sell?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "145",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "80",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "60",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "70",
+          "isCorrect": true
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/a7a4c6e9e02b5064.png"
+    },
+    {
+      "order": 49,
+      "sourceItemId": "15680209",
+      "text": "What is the radix of the\nhexadecimal number system?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "16",
+          "isCorrect": true
+        },
+        {
+          "label": "B",
+          "text": "2",
+          "isCorrect": false
+        },
+        {
+          "label": "C",
+          "text": "32",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "8",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": null
+    },
+    {
+      "order": 50,
+      "sourceItemId": "15680218",
+      "text": "A rectangle with area 21 and one side of length 3 has\none vertex at the point (0,0) on the rectangular coordinate plane. Which of the\nfollowing points could lie on the interior of this rectangle?",
+      "imageUrl": null,
+      "choices": [
+        {
+          "label": "A",
+          "text": "(0, 4)",
+          "isCorrect": false
+        },
+        {
+          "label": "B",
+          "text": "(5, 2)",
+          "isCorrect": true
+        },
+        {
+          "label": "C",
+          "text": "(7, 1)",
+          "isCorrect": false
+        },
+        {
+          "label": "D",
+          "text": "(4, 4)",
+          "isCorrect": false
+        }
+      ],
+      "explanation": null,
+      "explanationImageUrl": "images/c09cd7982347a047.png"
+    }
+  ],
+  "issues": []
+}
