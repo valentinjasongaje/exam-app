@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
+import { signOutAction } from "./sign-out-action";
 
 export default async function Nav() {
   const session = await auth();
@@ -15,23 +16,16 @@ export default async function Nav() {
           {user ? (
             <>
               <Link href="/dashboard">Dashboard</Link>
+              <Link href="/settings">Settings</Link>
               {user.role === "ADMIN" && <Link href="/admin">Admin</Link>}
-              <form
-                action={async () => {
-                  "use server";
-                  await signOut({ redirectTo: "/" });
-                }}
-              >
+              <form action={signOutAction}>
                 <button type="submit" className="underline">
                   Logout
                 </button>
               </form>
             </>
           ) : (
-            <>
-              <Link href="/login">Log in</Link>
-              <Link href="/register">Sign up</Link>
-            </>
+            <Link href="/login">Log in</Link>
           )}
         </div>
       </nav>

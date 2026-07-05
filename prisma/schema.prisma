@@ -75,27 +75,35 @@ enum Role {
   ADMIN
 }
 
+enum AttemptLayout {
+  ALL_AT_ONCE
+  ONE_AT_A_TIME
+}
+
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
+  id              String        @id @default(cuid())
+  email           String        @unique
+  name            String?
+  role            Role          @default(USER)
+  preferredLayout AttemptLayout @default(ALL_AT_ONCE)
+  shuffleEnabled  Boolean       @default(true)
+  createdAt       DateTime      @default(now())
 
   attempts Attempt[]
 }
 
 model Attempt {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   userId         String
-  user           User      @relation(fields: [userId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
   examId         String
-  exam           Exam      @relation(fields: [examId], references: [id])
-  startedAt      DateTime  @default(now())
+  exam           Exam          @relation(fields: [examId], references: [id])
+  startedAt      DateTime      @default(now())
   finishedAt     DateTime?
   score          Int? // number correct, filled in on submit
   totalQuestions Int
+  layout         AttemptLayout @default(ALL_AT_ONCE)
+  shuffleSeed    Int? // null = no shuffle; see lib/shuffle.ts
 
   answers AttemptAnswer[]
 

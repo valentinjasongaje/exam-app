@@ -14,17 +14,9 @@ export default async function HomePage() {
       <p className="text-neutral-600">
         Practice licensure exam questions and track your progress.
       </p>
-      <div className="flex gap-4">
-        <Link href="/login" className="rounded-md bg-neutral-900 px-4 py-2 text-white">
-          Log in
-        </Link>
-        <Link
-          href="/register"
-          className="rounded-md border border-neutral-300 px-4 py-2"
-        >
-          Sign up
-        </Link>
-      </div>
+      <Link href="/login" className="rounded-md bg-neutral-900 px-4 py-2 text-white">
+        Log in
+      </Link>
     </main>
   );
 }

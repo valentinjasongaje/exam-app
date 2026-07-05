@@ -1,43 +1,42 @@
 import NextAuth, { type Session } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import type { JWT } from "next-auth/jwt";
-import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
-    Credentials({
-      credentials: {
-        email: {},
-        password: {},
-      },
-      async authorize(credentials) {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
-        if (!email || !password) return null;
-
-        const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return null;
-
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
-      },
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
   session: { strategy: "jwt" },
+  trustHost: true,
   pages: { signIn: "/login" },
   callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = user.role as "USER" | "ADMIN";
+    async signIn({ user }) {
+      if (!user.email) return false;
+
+      const isAdmin = user.email.toLowerCase() === process.env.ADMIN_EMAIL?.trim().toLowerCase();
+      await prisma.user.upsert({
+        where: { email: user.email },
+        update: { name: user.name },
+        create: {
+          email: user.email,
+          name: user.name,
+          role: isAdmin ? "ADMIN" : "USER",
+        },
+      });
+
+      return true;
+    },
+    async jwt({ token, user }) {
+      if (user?.email) {
+        const dbUser = await prisma.user.findUnique({ where: { email: user.email } });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
