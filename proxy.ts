@@ -12,11 +12,14 @@ export default auth((req) => {
     return;
   }
 
-  if (pathname.startsWith("/dashboard") && !isLoggedIn) {
+  if (
+    (pathname.startsWith("/dashboard") || pathname.startsWith("/stats")) &&
+    !isLoggedIn
+  ) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/stats/:path*", "/admin/:path*"],
 };

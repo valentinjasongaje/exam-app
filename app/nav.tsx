@@ -16,6 +16,7 @@ export default async function Nav() {
           {user ? (
             <>
               <Link href="/dashboard">Dashboard</Link>
+              <Link href="/stats">Progress</Link>
               <Link href="/settings">Settings</Link>
               {user.role === "ADMIN" && <Link href="/admin">Admin</Link>}
               <form action={signOutAction}>

@@ -248,10 +248,14 @@ build time didn't surface anything layout-specific.
    Blob upload) still hasn't been exercised with a real
    `BLOB_READ_WRITE_TOKEN` — only the parse/preview half has been verified
    so far (see `.env`, `BLOB_READ_WRITE_TOKEN` is currently empty).
-7. **Stats/progress dashboard** for regular users (their own accuracy by
-   topic, trend over time, weakest questions) — the admin-facing version
-   of this already exists per-user; this is the same idea for a user
-   looking at their own data.
+7. ~~Stats/progress dashboard for regular users~~ — done (`app/stats/`,
+   linked as "Progress" in the nav, login-gated via `proxy.ts`): summary
+   cards (exams completed, overall accuracy, questions answered), accuracy
+   by subject, score trend (one bar per completed attempt, linking to its
+   review page), and top-10 weakest questions. Verified by typecheck, the
+   unauthenticated `/stats` → `/login` redirect, and re-running the page's
+   exact Prisma aggregations against the real DB (test account: 1 attempt,
+   11/50 = 22%, 39 wrong-answer rows — matches the known-good data).
 8. **Deploy** — push to a GitHub remote (currently local-only, git
    initialized but no remote configured) and deploy to Vercel. Will need
    the production URL added as an authorized redirect URI in the Google
@@ -280,6 +284,7 @@ proxy.ts                      Route protection (login required / admin-only)
 app/login/                    Sign-in page (Google only)
 app/settings/                 Per-user preferences (layout, shuffle)
 app/dashboard/                Exam list for the logged-in user (Start/Resume/Retake)
+app/stats/                    User's own progress dashboard (accuracy, trend, weakest questions)
 app/exam/[examId]/            Start-or-resume entry point for one exam
 app/attempt/[attemptId]/      Exam-taking UI (both layouts) + review/score page
 app/admin/                    Admin: users, content (CRUD), import
