@@ -22,7 +22,13 @@ export type PreviewedQuestion = {
 
 export type PreviewedExam = {
   subject: { name: string; slug: string };
-  exam: { title: string; slug: string; sourceFile: string; sourceTag: string | null };
+  exam: {
+    title: string;
+    slug: string;
+    sourceFile: string;
+    sourceTag: string | null;
+    isBoardExam: boolean;
+  };
   questions: PreviewedQuestion[];
   issues: unknown[];
 };
@@ -54,7 +60,7 @@ export async function previewImportAction(
     const parsed = parseExamHtml(html, file.name);
     exams.push({
       subject: parsed.subject,
-      exam: parsed.exam,
+      exam: { ...parsed.exam, isBoardExam: false },
       issues: parsed.issues,
       questions: parsed.questions.map(
         (q: {

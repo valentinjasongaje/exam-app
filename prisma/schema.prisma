@@ -24,14 +24,15 @@ model Subject {
 }
 
 model Exam {
-  id         String   @id @default(cuid())
-  subjectId  String
-  subject    Subject  @relation(fields: [subjectId], references: [id])
-  title      String // e.g. "ECT Pre Board Exam 1"
-  slug       String   @unique
-  sourceFile String // original scraped filename, for traceability
-  sourceTag  String? // the old "data-id" grouping value from the scrape, if present
-  createdAt  DateTime @default(now())
+  id          String   @id @default(cuid())
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  title       String // e.g. "ECT Pre Board Exam 1"
+  slug        String   @unique
+  sourceFile  String // original scraped filename, for traceability
+  sourceTag   String? // the old "data-id" grouping value from the scrape, if present
+  isBoardExam Boolean  @default(false) // true = full board/preboard exam (e.g. 100 items); enables the timed Board exam mode. Most imported exams are shorter practice sets (25/50 items) and stay false.
+  createdAt   DateTime @default(now())
 
   questions Question[]
   attempts  Attempt[]

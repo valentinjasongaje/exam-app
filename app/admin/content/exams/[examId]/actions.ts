@@ -45,3 +45,10 @@ export async function reassignSubjectAction(examId: string, formData: FormData) 
   revalidatePath("/admin/content");
   revalidatePath("/dashboard");
 }
+
+export async function setBoardExamAction(examId: string, formData: FormData) {
+  const isBoardExam = formData.get("isBoardExam") === "on";
+  await prisma.exam.update({ where: { id: examId }, data: { isBoardExam } });
+  revalidatePath(`/admin/content/exams/${examId}`);
+  revalidatePath(`/exam/${examId}`);
+}

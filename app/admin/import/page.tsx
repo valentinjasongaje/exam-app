@@ -1,6 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState } from "react";
+import { Pencil, Upload, FileText } from "lucide-react";
+import { clsx } from "clsx";
 import {
   previewImportAction,
   commitImportAction,
@@ -10,6 +12,10 @@ import {
 } from "./actions";
 import { PageHeader, Card, Button, Badge } from "@/components/ui";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
+import { ImageEditor } from "@/components/image-editor";
+
+type ImageField = "image" | "explanationImage";
+type EditingTarget = { examIndex: number; questionIndex: number; field: ImageField };
 
 const initialState: PreviewState = { exams: [], error: null };
 
@@ -30,8 +36,27 @@ export default function ImportPage() {
   const [edited, setEdited] = useState<PreviewedExam[] | null>(null);
   const [committing, setCommitting] = useState(false);
   const [results, setResults] = useState<CommitResult[] | null>(null);
+  const [editing, setEditing] = useState<EditingTarget | null>(null);
+  const [fileNames, setFileNames] = useState<string[]>([]);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeExams = edited ?? (state.exams.length > 0 ? state.exams : null);
+
+  function handleFiles(files: FileList | null) {
+    if (!files) return;
+    setFileNames(Array.from(files).map((f) => f.name));
+  }
+
+  function handleDrop(ev: React.DragEvent<HTMLLabelElement>) {
+    ev.preventDefault();
+    setDragActive(false);
+    const files = ev.dataTransfer.files;
+    if (fileInputRef.current && files.length > 0) {
+      fileInputRef.current.files = files;
+    }
+    handleFiles(files);
+  }
 
   function updateTitle(index: number, title: string) {
     const base = edited ?? state.exams;
@@ -49,6 +74,34 @@ export default function ImportPage() {
     setEdited(
       base.map((e, i) =>
         i === index ? { ...e, subject: { name: canonical.name, slug: canonical.slug } } : e
+      )
+    );
+  }
+
+  function updateBoardExamFlag(index: number, isBoardExam: boolean) {
+    const base = edited ?? state.exams;
+    setEdited(
+      base.map((e, i) => (i === index ? { ...e, exam: { ...e.exam, isBoardExam } } : e))
+    );
+  }
+
+  function updateQuestionImage(
+    examIndex: number,
+    questionIndex: number,
+    field: ImageField,
+    dataUrl: string
+  ) {
+    const base = edited ?? state.exams;
+    setEdited(
+      base.map((e, i) =>
+        i !== examIndex
+          ? e
+          : {
+              ...e,
+              questions: e.questions.map((q, qi) =>
+                qi !== questionIndex ? q : { ...q, [field]: { mime: "image/png", dataUrl } }
+              ),
+            }
       )
     );
   }
@@ -95,7 +148,50 @@ export default function ImportPage() {
         <PageHeader title="Import exams" subtitle="Upload scraped HTML files to preview before committing." />
         <Card>
           <form action={formAction} className="flex flex-col gap-4">
-            <input type="file" name="files" accept=".html,.htm" multiple required className="text-sm" />
+            <label
+              htmlFor="import-files"
+              onDragOver={(ev) => {
+                ev.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={handleDrop}
+              className={clsx(
+                "flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors",
+                dragActive ? "border-accent bg-accent-soft" : "border-border-strong hover:border-accent"
+              )}
+            >
+              <Upload size={22} className="text-ink-faint" />
+              <p className="text-sm font-medium">
+                {fileNames.length > 0
+                  ? `${fileNames.length} file${fileNames.length > 1 ? "s" : ""} selected`
+                  : "Click to browse or drag files here"}
+              </p>
+              <p className="text-xs text-ink-muted">.html or .htm files, multiple allowed</p>
+              <input
+                ref={fileInputRef}
+                id="import-files"
+                type="file"
+                name="files"
+                accept=".html,.htm"
+                multiple
+                required
+                onChange={(ev) => handleFiles(ev.target.files)}
+                className="sr-only"
+              />
+            </label>
+
+            {fileNames.length > 0 && (
+              <ul className="flex flex-col gap-1 text-sm text-ink-muted">
+                {fileNames.map((name) => (
+                  <li key={name} className="flex items-center gap-2">
+                    <FileText size={14} className="shrink-0" />
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             {state.error && <p className="text-sm text-danger">{state.error}</p>}
             <Button type="submit" disabled={previewPending} className="self-start">
               {previewPending ? "Parsing…" : "Preview"}
@@ -139,6 +235,14 @@ export default function ImportPage() {
                 />
               </label>
             </div>
+            <label className="mb-3 flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={e.exam.isBoardExam}
+                onChange={(ev) => updateBoardExamFlag(i, ev.target.checked)}
+              />
+              This is a full board/preboard exam (enables the 4-hour timed mode)
+            </label>
             <p className="text-sm text-ink-muted">
               {e.questions.length} questions · {e.issues.length} issue(s)
             </p>
@@ -149,23 +253,52 @@ export default function ImportPage() {
                 ))}
               </div>
             )}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {e.questions
-                .filter((q) => q.image)
-                .slice(0, 6)
-                .map((q, j) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={j}
-                    src={q.image!.dataUrl}
-                    alt=""
-                    className="h-16 w-16 rounded-lg border border-border object-cover"
-                  />
-                ))}
+            <div className="mt-3 flex flex-wrap gap-3">
+              {e.questions.flatMap((q, qi) => {
+                const thumbs: { field: ImageField; label: string; dataUrl: string }[] = [];
+                if (q.image) thumbs.push({ field: "image", label: `Q${q.order}`, dataUrl: q.image.dataUrl });
+                if (q.explanationImage)
+                  thumbs.push({
+                    field: "explanationImage",
+                    label: `Q${q.order} sol.`,
+                    dataUrl: q.explanationImage.dataUrl,
+                  });
+                return thumbs.map((t) => (
+                  <div key={`${qi}-${t.field}`} className="group relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={t.dataUrl}
+                      alt=""
+                      className="h-20 w-20 rounded-lg border border-border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setEditing({ examIndex: i, questionIndex: qi, field: t.field })}
+                      className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 text-transparent transition-colors group-hover:bg-black/40 group-hover:text-white"
+                      aria-label={`Edit image for ${t.label}`}
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <p className="mt-1 text-center text-xs text-ink-muted">{t.label}</p>
+                  </div>
+                ));
+              })}
             </div>
           </Card>
         ))}
       </div>
+
+      {editing &&
+        activeExams[editing.examIndex]?.questions[editing.questionIndex]?.[editing.field] && (
+          <ImageEditor
+            src={activeExams[editing.examIndex].questions[editing.questionIndex][editing.field]!.dataUrl}
+            onSave={(dataUrl) => {
+              updateQuestionImage(editing.examIndex, editing.questionIndex, editing.field, dataUrl);
+              setEditing(null);
+            }}
+            onClose={() => setEditing(null)}
+          />
+        )}
       <div className="flex flex-col items-start gap-2">
         <Button onClick={handleCommit} disabled={committing || hasUnassignedSubjects} className="self-start">
           {committing ? "Importing…" : "Confirm import"}

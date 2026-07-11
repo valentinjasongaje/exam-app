@@ -34,19 +34,27 @@ export default async function ExamStartPage({
         </p>
         <h1 className="mb-2 text-2xl font-semibold">{exam.title}</h1>
         <p className="mb-6 text-sm text-ink-muted">{exam._count.questions} questions</p>
-        <div className="flex flex-col gap-2.5">
+        {exam.isBoardExam ? (
+          <div className="flex flex-col gap-2.5">
+            <form action={startAttemptAction.bind(null, examId, "PRACTICE")}>
+              <Button type="submit" variant="secondary" className="w-full">
+                Practice (untimed)
+              </Button>
+            </form>
+            <form action={startAttemptAction.bind(null, examId, "BOARD_EXAM")}>
+              <Button type="submit" className="w-full">
+                <Clock size={16} />
+                Take as board exam · 4:00:00
+              </Button>
+            </form>
+          </div>
+        ) : (
           <form action={startAttemptAction.bind(null, examId, "PRACTICE")}>
-            <Button type="submit" variant="secondary" className="w-full">
-              Practice (untimed)
-            </Button>
-          </form>
-          <form action={startAttemptAction.bind(null, examId, "BOARD_EXAM")}>
             <Button type="submit" className="w-full">
-              <Clock size={16} />
-              Take as board exam · 4:00:00
+              Start exam
             </Button>
           </form>
-        </div>
+        )}
       </Card>
     </main>
   );

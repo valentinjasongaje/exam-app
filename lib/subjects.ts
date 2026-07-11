@@ -8,11 +8,11 @@
  * CONTEXT.md.
  */
 export const CANONICAL_SUBJECTS = [
-  { name: "Math", slug: "math" },
-  { name: "GEAS", slug: "geas" },
-  { name: "Elex", slug: "elex" },
-  { name: "EST", slug: "est" },
-  { name: "ECT", slug: "ect" },
+  { name: "Math", slug: "math", group: "Electronics Engineering" },
+  { name: "GEAS", slug: "geas", group: "Electronics Engineering" },
+  { name: "Elex", slug: "elex", group: "Electronics Engineering" },
+  { name: "EST", slug: "est", group: "Electronics Engineering" },
+  { name: "ECT", slug: "ect", group: "Electronics Technician" },
 ] as const;
 
 export type CanonicalSubjectSlug = (typeof CANONICAL_SUBJECTS)[number]["slug"];

@@ -290,12 +290,22 @@ to `localStorage`, applied pre-hydration via `next/script`
 `suppressHydrationWarning` on `<html>` since the pre-hydration script
 intentionally differs from the server-rendered markup.
 
-**Dashboard is now subject-tile-first**: `/dashboard` shows a responsive
-grid of subject tiles (`grid-cols-1 sm:grid-cols-2` — 1-wide on mobile,
-2x2 once there are 4 subjects) with a per-subject completion/accuracy
-progress bar, each linking to a new `app/subject/[subjectId]/page.tsx`
-that has the actual exam list + Start/Resume/Retake (this is where the
-old flat per-subject exam list from the dashboard moved to).
+**Dashboard is now subject-tile-first, grouped by exam track**:
+`/dashboard` shows two labeled sections — "Electronics Engineering"
+(Math, GEAS, Elex, EST — a `grid-cols-1 sm:grid-cols-2` grid, 1-wide on
+mobile / 2x2 on desktop) and "Electronics Technician" below it (just the
+ECT tile). `CANONICAL_SUBJECTS` in `lib/subjects.ts` carries a `group`
+field per subject for exactly this; the dashboard groups/orders DB
+subjects by matching `slug` against it (any subject whose slug isn't in
+the canonical list falls into a defensive "Other" section rather than
+disappearing — shouldn't happen now that subjects are a fixed list, but
+cheap insurance). Each tile has a per-subject completion/accuracy
+progress bar and links to `app/subject/[subjectId]/page.tsx`, which has
+the actual exam list + Start/Resume/Retake (this is where the old flat
+per-subject exam list from the dashboard moved to). Verified the
+grouping/ordering logic against the real DB with a scratch script —
+produces exactly `{Electronics Engineering: [Math, GEAS, Elex, EST]},
+{Electronics Technician: [ECT]}` in that order.
 
 **Subjects are now a fixed list, not free text — fragmentation fixed.**
 `lib/subjects.ts` exports `CANONICAL_SUBJECTS`: Math, GEAS, Elex, EST (the
@@ -324,6 +334,33 @@ user's own description of what belongs under Elex). `ECT Pre Board Exam
 there once ECT was recognized as a legitimate 5th subject rather than
 something to merge away. Final state: exactly 5 subjects, matching
 `CANONICAL_SUBJECTS`, zero stray ones.
+
+**Watermark removal in the import review screen**: since these exams are
+scraped from another site, `components/image-editor.tsx` is a canvas-based
+editor (rectangle patch / freehand brush / eyedropper-to-match-background
+/ undo) opened by clicking a pencil overlay on any question or explanation
+image thumbnail in `app/admin/import/page.tsx`. Purely client-side —
+edits happen in-memory on the `PreviewedExam` state (mutating that
+question's `image`/`explanationImage` `dataUrl` to the canvas's
+`toDataURL("image/png")` output) before the existing commit/Blob-upload
+path runs, so no server-side changes were needed at all; `fromDataUrl` in
+`actions.ts` already derives mime/ext generically from the data URL
+itself. Only covers the import flow (not yet the admin question-edit
+form, which can only *replace* an image outright, not touch the existing
+one) — a natural follow-up if watermarks turn up on already-imported
+questions too. Doesn't handle a tiled/repeating watermark across a whole
+image, only a single logo/text overlay (the common case) — patch or
+brush over it manually, there's no auto-detection.
+
+Verified by temporarily mounting `ImageEditor` on an unauthenticated
+throwaway route (`app/dev-test-image-editor/`, deleted immediately after
+— **do not leave routes like this around**, `git status` was re-checked
+clean afterward) with a synthetic SVG test image, since the real import
+screen needs an admin session Google OAuth can't provide here. Confirmed
+in the browser: canvas mounts and displays the source image, rectangle
+drag paints a filled patch, Undo correctly reverts to the pre-operation
+snapshot, and Save produces a valid `data:image/png` URL that re-renders
+correctly.
 
 **Board exam / pre-board timed mode**: `Attempt` gained `mode`
 (`AttemptMode`: `PRACTICE` | `BOARD_EXAM`) and `timeLimitMinutes` (Int?,
@@ -360,6 +397,37 @@ fields and the expiry-boundary math read back correctly, then cleaned
 them up. Worth clicking through "Take as board exam" once logged in to
 confirm the timer UI itself looks right.
 
+**Board-exam mode is now gated per exam, not offered on every exam.**
+Real board/preboard exams are ~100 items; most imported exams are 25-50
+item practice sets, where a 4-hour timer makes no sense. `Exam` gained
+`isBoardExam` (Boolean, default `false`) — migration
+`20260711155530_add_exam_is_board_exam`, additive. Set it either at
+import time (a checkbox on `app/admin/import/page.tsx`, defaults
+unchecked, flows through `PreviewedExam.exam.isBoardExam` →
+`commitImportAction` → `lib/seed-exam.js`'s upsert) or retroactively for
+an already-imported exam (checkbox + Save on
+`app/admin/content/exams/[examId]/page.tsx`, `setBoardExamAction`). The
+exam start page only shows the Practice/Board-exam choice when
+`exam.isBoardExam` is true; otherwise it's a single plain "Start exam"
+button (always `PRACTICE` mode). As of 2026-07-12 all 5 currently-
+imported exams default to `false` — none of them are actual full-length
+board exams yet (confirmed via direct DB query), so this is really
+waiting on the real 100-item files being imported and flagged.
+
+**Bug fixed: "Finishing…" flashed on the `ONE_AT_A_TIME` Finish button
+even when Finish was never clicked.** `one-at-a-time.tsx` shared one
+`useTransition()` between saving an answer (`saveAnswerAction`) and
+finishing the attempt (`finishAttemptAction`). Selecting a choice then
+immediately clicking Next (before that save's round-trip resolved)
+landed on the last question while the shared `pending` flag was still
+`true` from the *unrelated* in-flight save, so the Finish button
+rendered "Finishing…" until that save resolved on its own. Fixed by
+giving save and finish their own separate `useTransition()`s. Verified
+by reproducing the exact race on a throwaway unauthenticated test route
+(`app/dev-test-timing-bug/`, deleted after) with a deliberately slowed
+fake save — confirmed present with the old shared-transition logic and
+gone with the fix.
+
 ## Repo layout
 
 ```
@@ -390,6 +458,7 @@ app/attempt/[attemptId]/      Exam-taking UI (both layouts, incl. board-exam tim
 app/admin/                    Admin: users, content (CRUD), import
 components/ui.tsx             Shared design-system primitives (Button, Card, Badge, PageHeader, ...)
 components/exam-timer.tsx     Countdown banner (presentational; logic lives in lib/use-countdown.ts)
+components/image-editor.tsx   Canvas watermark-removal editor (rect/brush/eyedropper/undo), used by admin import
 components/question-form.tsx  Shared create/edit question form
 README.md                     Shorter, pipeline-focused setup instructions
 CONTEXT.md                    This file

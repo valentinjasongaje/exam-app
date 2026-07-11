@@ -26,7 +26,8 @@ export default function OneAtATime({
 }) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
-  const [pending, startTransition] = useTransition();
+  const [, startSaveTransition] = useTransition();
+  const [finishPending, startFinishTransition] = useTransition();
   const { ready, expired, label } = useCountdown(deadline);
 
   const question = questions[index];
@@ -36,13 +37,13 @@ export default function OneAtATime({
   function selectChoice(choiceId: string) {
     if (expired) return;
     setAnswers((prev) => ({ ...prev, [question.id]: choiceId }));
-    startTransition(async () => {
+    startSaveTransition(async () => {
       await saveAnswerAction(attemptId, question.id, choiceId);
     });
   }
 
   function handleFinish() {
-    startTransition(async () => {
+    startFinishTransition(async () => {
       await finishAttemptAction(attemptId);
     });
   }
@@ -102,8 +103,8 @@ export default function OneAtATime({
           Previous
         </Button>
         {isLast || expired ? (
-          <Button type="button" onClick={handleFinish} disabled={pending}>
-            {pending ? "Finishing…" : "Finish"}
+          <Button type="button" onClick={handleFinish} disabled={finishPending}>
+            {finishPending ? "Finishing…" : "Finish"}
           </Button>
         ) : (
           <Button type="button" onClick={() => setIndex((i) => Math.min(questions.length - 1, i + 1))}>

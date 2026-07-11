@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { deleteQuestionAction, reassignSubjectAction } from "./actions";
+import { deleteQuestionAction, reassignSubjectAction, setBoardExamAction } from "./actions";
 import { PageHeader, Card, LinkButton, Button } from "@/components/ui";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
 
@@ -61,6 +61,19 @@ export default async function AdminExamPage({
         </select>
         <Button type="submit" variant="secondary" size="sm">
           Move
+        </Button>
+      </form>
+
+      <form
+        action={setBoardExamAction.bind(null, examId)}
+        className="flex items-center gap-2 text-sm"
+      >
+        <label className="flex items-center gap-2">
+          <input type="checkbox" name="isBoardExam" defaultChecked={exam.isBoardExam} />
+          Full board/preboard exam (enables the 4-hour timed mode)
+        </label>
+        <Button type="submit" variant="secondary" size="sm">
+          Save
         </Button>
       </form>
 
