@@ -1,7 +1,9 @@
 import { notFound, redirect } from "next/navigation";
+import { Clock } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { startAttemptAction } from "./actions";
+import { Card, Button } from "@/components/ui";
 
 export default async function ExamStartPage({
   params,
@@ -25,16 +27,27 @@ export default async function ExamStartPage({
   if (inProgress) redirect(`/attempt/${inProgress.id}`);
 
   return (
-    <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
-      <h1 className="text-2xl font-semibold">{exam.title}</h1>
-      <p className="text-neutral-600">
-        {exam.subject.name} · {exam._count.questions} questions
-      </p>
-      <form action={startAttemptAction.bind(null, examId)}>
-        <button type="submit" className="rounded-md bg-neutral-900 px-4 py-2 text-white">
-          Start exam
-        </button>
-      </form>
+    <main className="flex w-full flex-1 flex-col items-center justify-center px-4">
+      <Card className="w-full max-w-md text-center">
+        <p className="mb-1.5 text-xs font-medium tracking-wide text-accent uppercase">
+          {exam.subject.name}
+        </p>
+        <h1 className="mb-2 text-2xl font-semibold">{exam.title}</h1>
+        <p className="mb-6 text-sm text-ink-muted">{exam._count.questions} questions</p>
+        <div className="flex flex-col gap-2.5">
+          <form action={startAttemptAction.bind(null, examId, "PRACTICE")}>
+            <Button type="submit" variant="secondary" className="w-full">
+              Practice (untimed)
+            </Button>
+          </form>
+          <form action={startAttemptAction.bind(null, examId, "BOARD_EXAM")}>
+            <Button type="submit" className="w-full">
+              <Clock size={16} />
+              Take as board exam · 4:00:00
+            </Button>
+          </form>
+        </div>
+      </Card>
     </main>
   );
 }

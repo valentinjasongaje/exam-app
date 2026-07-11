@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import QuestionForm from "@/components/question-form";
 import { updateQuestionAction } from "./actions";
+import { PageHeader } from "@/components/ui";
 
 export default async function EditQuestionPage({
   params,
@@ -17,7 +18,7 @@ export default async function EditQuestionPage({
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">Edit question — {question.exam.title}</h1>
+      <PageHeader eyebrow={question.exam.title} title="Edit question" />
       <QuestionForm
         action={updateQuestionAction.bind(null, examId, questionId)}
         submitLabel="Save changes"

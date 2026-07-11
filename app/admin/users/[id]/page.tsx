@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
 
 export default async function AdminUserDetailPage({
   params,
@@ -40,58 +41,69 @@ export default async function AdminUserDetailPage({
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-xl font-semibold">{user.name || user.email}</h1>
-        <p className="text-sm text-neutral-500">
-          {user.email} · {user.role}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={user.role}
+        title={user.name || user.email}
+        subtitle={user.email}
+      />
 
       <section>
-        <h2 className="mb-2 font-medium">Attempt history</h2>
+        <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">
+          Attempt history
+        </h2>
         {user.attempts.length === 0 ? (
-          <p className="text-sm text-neutral-500">No attempts yet.</p>
+          <EmptyState>No attempts yet.</EmptyState>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-200 text-left text-neutral-500">
-                <th className="py-2 pr-4 font-normal">Exam</th>
-                <th className="py-2 pr-4 font-normal">Subject</th>
-                <th className="py-2 pr-4 font-normal">Score</th>
-                <th className="py-2 pr-4 font-normal">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {user.attempts.map((a) => (
-                <tr key={a.id} className="border-b border-neutral-100">
-                  <td className="py-2 pr-4">{a.exam.title}</td>
-                  <td className="py-2 pr-4">{a.exam.subject.name}</td>
-                  <td className="py-2 pr-4">
-                    {a.finishedAt ? `${a.score}/${a.totalQuestions}` : "In progress"}
-                  </td>
-                  <td className="py-2 pr-4">{a.startedAt.toLocaleDateString()}</td>
+          <Card className="p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-ink-muted">
+                  <th className="px-5 py-3 font-normal">Exam</th>
+                  <th className="px-5 py-3 font-normal">Subject</th>
+                  <th className="px-5 py-3 font-normal">Score</th>
+                  <th className="px-5 py-3 font-normal">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {user.attempts.map((a) => (
+                  <tr key={a.id} className="border-b border-border last:border-0">
+                    <td className="px-5 py-3">{a.exam.title}</td>
+                    <td className="px-5 py-3">{a.exam.subject.name}</td>
+                    <td className="px-5 py-3">
+                      {a.finishedAt ? (
+                        `${a.score}/${a.totalQuestions}`
+                      ) : (
+                        <Badge tone="accent">In progress</Badge>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-ink-muted">
+                      {a.startedAt.toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
         )}
       </section>
 
       <section>
-        <h2 className="mb-2 font-medium">Weakest questions</h2>
+        <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">
+          Weakest questions
+        </h2>
         {weakest.length === 0 ? (
-          <p className="text-sm text-neutral-500">No incorrect answers yet.</p>
+          <EmptyState>No incorrect answers yet.</EmptyState>
         ) : (
-          <ul className="flex flex-col gap-2 text-sm">
+          <div className="flex flex-col gap-3">
             {weakest.map((q, i) => (
-              <li key={i} className="border-b border-neutral-100 pb-2">
-                <span className="text-neutral-500">
-                  {q.examTitle} · missed {q.count}x
-                </span>
-                <p>{q.text}</p>
-              </li>
+              <Card key={i}>
+                <p className="mb-1 text-xs text-ink-muted">
+                  {q.examTitle} · missed {q.count}×
+                </p>
+                <p className="text-sm">{q.text}</p>
+              </Card>
             ))}
-          </ul>
+          </div>
         )}
       </section>
     </div>

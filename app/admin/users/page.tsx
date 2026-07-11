@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { PageHeader, Card, Badge } from "@/components/ui";
 
 export default async function AdminUsersPage() {
   const users = await prisma.user.findMany({
@@ -35,37 +36,40 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">Users</h1>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-neutral-200 text-left text-neutral-500">
-            <th className="py-2 pr-4 font-normal">Name</th>
-            <th className="py-2 pr-4 font-normal">Email</th>
-            <th className="py-2 pr-4 font-normal">Role</th>
-            <th className="py-2 pr-4 font-normal">Exams taken</th>
-            <th className="py-2 pr-4 font-normal">Accuracy</th>
-            <th className="py-2 pr-4 font-normal">Last activity</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-b border-neutral-100">
-              <td className="py-2 pr-4">
-                <Link href={`/admin/users/${r.id}`} className="underline">
-                  {r.name || "—"}
-                </Link>
-              </td>
-              <td className="py-2 pr-4">{r.email}</td>
-              <td className="py-2 pr-4">{r.role}</td>
-              <td className="py-2 pr-4">{r.examsTaken}</td>
-              <td className="py-2 pr-4">{r.accuracy !== null ? `${r.accuracy}%` : "—"}</td>
-              <td className="py-2 pr-4">
-                {r.lastActivity ? r.lastActivity.toLocaleDateString() : "—"}
-              </td>
+      <PageHeader title="Users" subtitle={`${rows.length} registered`} />
+      <Card className="p-0">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-ink-muted">
+              <th className="px-5 py-3 font-normal">Name</th>
+              <th className="px-5 py-3 font-normal">Role</th>
+              <th className="px-5 py-3 font-normal">Exams taken</th>
+              <th className="px-5 py-3 font-normal">Accuracy</th>
+              <th className="px-5 py-3 font-normal">Last activity</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-b border-border last:border-0">
+                <td className="px-5 py-3">
+                  <Link href={`/admin/users/${r.id}`} className="font-medium text-accent hover:underline">
+                    {r.name || "—"}
+                  </Link>
+                  <p className="text-xs text-ink-muted">{r.email}</p>
+                </td>
+                <td className="px-5 py-3">
+                  <Badge tone={r.role === "ADMIN" ? "accent" : "muted"}>{r.role}</Badge>
+                </td>
+                <td className="px-5 py-3">{r.examsTaken}</td>
+                <td className="px-5 py-3">{r.accuracy !== null ? `${r.accuracy}%` : "—"}</td>
+                <td className="px-5 py-3 text-ink-muted">
+                  {r.lastActivity ? r.lastActivity.toLocaleDateString() : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }

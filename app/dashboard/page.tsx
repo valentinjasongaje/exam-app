@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { PageHeader, EmptyState } from "@/components/ui";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -12,10 +14,8 @@ export default async function DashboardPage() {
     include: {
       exams: {
         include: {
-          _count: { select: { questions: true } },
           attempts: {
             where: { userId: session.user.id },
-            orderBy: { startedAt: "desc" },
           },
         },
       },
@@ -24,50 +24,64 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
-      <h1 className="mb-6 text-2xl font-semibold">
-        Welcome{session.user.name ? `, ${session.user.name}` : ""}
-      </h1>
+      <PageHeader
+        eyebrow="Your library"
+        title={`Welcome${session.user.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
+        subtitle="Pick a subject to keep studying."
+      />
 
       {subjects.length === 0 ? (
-        <p className="text-sm text-neutral-500">No exams available yet.</p>
+        <EmptyState>No exams available yet.</EmptyState>
       ) : (
-        <div className="flex flex-col gap-8">
-          {subjects.map((s) => (
-            <div key={s.id}>
-              <h2 className="mb-2 font-medium">{s.name}</h2>
-              <ul className="flex flex-col gap-2">
-                {s.exams.map((e) => {
-                  const inProgress = e.attempts.find((a) => !a.finishedAt);
-                  const finished = e.attempts.filter((a) => a.finishedAt);
-                  const bestAttempt = finished.length
-                    ? finished.reduce((best, a) => ((a.score ?? 0) > (best.score ?? 0) ? a : best))
-                    : null;
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {subjects.map((s) => {
+            const examCount = s.exams.length;
+            const completedCount = s.exams.filter((e) =>
+              e.attempts.some((a) => a.finishedAt)
+            ).length;
+            const finishedAttempts = s.exams.flatMap((e) =>
+              e.attempts.filter((a) => a.finishedAt)
+            );
+            const totalCorrect = finishedAttempts.reduce((sum, a) => sum + (a.score ?? 0), 0);
+            const totalQuestions = finishedAttempts.reduce((sum, a) => sum + a.totalQuestions, 0);
+            const accuracy =
+              totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : null;
+            const progressPct = examCount > 0 ? (completedCount / examCount) * 100 : 0;
 
-                  return (
-                    <li
-                      key={e.id}
-                      className="flex items-center justify-between gap-4 border-b border-neutral-100 pb-2 text-sm"
-                    >
-                      <div>
-                        <p>{e.title}</p>
-                        <p className="text-neutral-500">
-                          {e._count.questions} questions
-                          {bestAttempt &&
-                            ` · best score ${bestAttempt.score}/${bestAttempt.totalQuestions}`}
-                        </p>
-                      </div>
-                      <Link
-                        href={`/exam/${e.id}`}
-                        className="shrink-0 rounded-md bg-neutral-900 px-3 py-1.5 text-white"
-                      >
-                        {inProgress ? "Resume" : finished.length ? "Retake" : "Start"}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+            return (
+              <Link
+                key={s.id}
+                href={`/subject/${s.id}`}
+                className="group rounded-xl border border-border bg-bg-elevated p-6 transition-colors hover:border-accent"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="font-serif text-xl font-semibold">{s.name}</h2>
+                    <p className="mt-1 text-sm text-ink-muted">{examCount} exams</p>
+                  </div>
+                  <ArrowRight
+                    size={18}
+                    className="mt-1 shrink-0 text-ink-faint transition-colors group-hover:text-accent"
+                  />
+                </div>
+
+                <div className="mt-6">
+                  <div className="mb-1.5 flex items-center justify-between text-xs text-ink-muted">
+                    <span>
+                      {completedCount}/{examCount} completed
+                    </span>
+                    {accuracy !== null && <span>{accuracy}% accuracy</span>}
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-bg-muted">
+                    <div
+                      className="h-full rounded-full bg-accent transition-[width]"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </main>

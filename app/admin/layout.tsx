@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { auth } from "@/auth";
+import AdminNav from "./admin-nav";
 
 export default async function AdminLayout({
   children,
@@ -13,13 +13,12 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 gap-8 px-4 py-8">
-      <aside className="w-40 shrink-0">
-        <nav className="flex flex-col gap-2 text-sm">
-          <Link href="/admin/users">Users</Link>
-          <Link href="/admin/content">Content</Link>
-          <Link href="/admin/import">Import</Link>
-        </nav>
+    <div className="mx-auto flex w-full max-w-5xl flex-1 gap-8 px-4 py-10">
+      <aside className="w-44 shrink-0">
+        <p className="mb-3 px-3 text-xs font-medium tracking-wide text-accent uppercase">
+          Admin
+        </p>
+        <AdminNav />
       </aside>
       <div className="flex-1">{children}</div>
     </div>

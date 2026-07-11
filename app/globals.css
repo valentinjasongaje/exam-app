@@ -1,26 +1,186 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #faf7f1;
+  --bg-elevated: #ffffff;
+  --bg-muted: #f1ebdf;
+  --border: #e6dfd0;
+  --border-strong: #d8ceb9;
+  --ink: #201c14;
+  --ink-muted: #6e6455;
+  --ink-faint: #9c9280;
+  --accent: #a8571f;
+  --accent-hover: #8f481a;
+  --accent-soft: #f3e1ce;
+  --accent-ink: #fffdf9;
+  --success: #2e6b4e;
+  --success-soft: #e1eee3;
+  --danger: #a3392b;
+  --danger-soft: #f5e1dc;
+  --ring: rgba(168, 87, 31, 0.35);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #17140f;
+  --bg-elevated: #1d1912;
+  --bg-muted: #221d15;
+  --border: #332c20;
+  --border-strong: #453b2a;
+  --ink: #f2ecdf;
+  --ink-muted: #b0a48d;
+  --ink-faint: #7c725d;
+  --accent: #e0a05b;
+  --accent-hover: #edb374;
+  --accent-soft: #3a2a18;
+  --accent-ink: #1a1509;
+  --success: #7cbe96;
+  --success-soft: #1e2f24;
+  --danger: #e08a79;
+  --danger-soft: #3a2019;
+  --ring: rgba(224, 160, 91, 0.35);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --bg: #17140f;
+    --bg-elevated: #1d1912;
+    --bg-muted: #221d15;
+    --border: #332c20;
+    --border-strong: #453b2a;
+    --ink: #f2ecdf;
+    --ink-muted: #b0a48d;
+    --ink-faint: #7c725d;
+    --accent: #e0a05b;
+    --accent-hover: #edb374;
+    --accent-soft: #3a2a18;
+    --accent-ink: #1a1509;
+    --success: #7cbe96;
+    --success-soft: #1e2f24;
+    --danger: #e08a79;
+    --danger-soft: #3a2019;
+    --ring: rgba(224, 160, 91, 0.35);
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-muted: var(--bg-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-serif: var(--font-fraunces);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: light dark;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif), Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@layer components {
+  .field {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: 0.625rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--ink);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .field:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+    outline: none;
+  }
+
+  .choice-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 0.625rem;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.875rem;
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+
+  .choice-row:hover {
+    border-color: var(--border-strong);
+  }
+
+  .choice-row:has(input:checked) {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .choice-row.is-correct {
+    border-color: var(--success);
+    background: var(--success-soft);
+  }
+
+  .choice-row.is-incorrect {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+  }
+}
+
+.bg-hero-glow {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 15%, var(--accent-soft) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 25%, var(--accent-soft) 0%, transparent 55%);
 }

@@ -13,6 +13,11 @@ async function requireOwnAttempt(attemptId: string) {
   return attempt;
 }
 
+function isTimeExpired(attempt: { mode: string; timeLimitMinutes: number | null; startedAt: Date }) {
+  if (attempt.mode !== "BOARD_EXAM" || !attempt.timeLimitMinutes) return false;
+  return Date.now() > attempt.startedAt.getTime() + attempt.timeLimitMinutes * 60_000;
+}
+
 async function scoreAttempt(attemptId: string) {
   const correctCount = await prisma.attemptAnswer.count({
     where: { attemptId, isCorrect: true },
@@ -51,7 +56,7 @@ export async function submitAllAction(attemptId: string, formData: FormData) {
 
 export async function saveAnswerAction(attemptId: string, questionId: string, choiceId: string) {
   const attempt = await requireOwnAttempt(attemptId);
-  if (attempt.finishedAt) return;
+  if (attempt.finishedAt || isTimeExpired(attempt)) return;
 
   const choice = await prisma.choice.findUnique({ where: { id: choiceId } });
   if (!choice || choice.questionId !== questionId) return;

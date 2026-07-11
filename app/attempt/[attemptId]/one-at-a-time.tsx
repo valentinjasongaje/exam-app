@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { saveAnswerAction, finishAttemptAction } from "./actions";
+import { Button, Card } from "@/components/ui";
+import { useCountdown } from "@/lib/use-countdown";
+import { ExamTimer } from "@/components/exam-timer";
 
 type Question = {
   id: string;
@@ -14,19 +17,24 @@ export default function OneAtATime({
   attemptId,
   questions,
   initialAnswers,
+  deadline,
 }: {
   attemptId: string;
   questions: Question[];
   initialAnswers: Record<string, string>;
+  deadline: string | null;
 }) {
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>(initialAnswers);
   const [pending, startTransition] = useTransition();
+  const { ready, expired, label } = useCountdown(deadline);
 
   const question = questions[index];
   const isLast = index === questions.length - 1;
+  const progress = ((index + 1) / questions.length) * 100;
 
   function selectChoice(choiceId: string) {
+    if (expired) return;
     setAnswers((prev) => ({ ...prev, [question.id]: choiceId }));
     startTransition(async () => {
       await saveAnswerAction(attemptId, question.id, choiceId);
@@ -41,53 +49,66 @@ export default function OneAtATime({
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-sm text-neutral-500">
-        Question {index + 1} of {questions.length}
-      </p>
-      <p className="whitespace-pre-line">{question.text}</p>
-      {question.imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={question.imageUrl} alt="" className="max-w-xs rounded border" />
-      )}
-      <div className="flex flex-col gap-2">
-        {question.choices.map((c) => (
-          <label key={c.id} className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="choice"
-              checked={answers[question.id] === c.id}
-              onChange={() => selectChoice(c.id)}
-            />
-            {c.text}
-          </label>
-        ))}
+      {deadline && ready && <ExamTimer label={label!} expired={expired} />}
+
+      <div>
+        <div className="mb-2 h-1.5 w-full overflow-hidden rounded-full bg-bg-muted">
+          <div
+            className="h-full rounded-full bg-accent transition-[width]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="text-sm text-ink-muted">
+          Question {index + 1} of {questions.length}
+        </p>
       </div>
+
+      <Card>
+        <p className="whitespace-pre-line">{question.text}</p>
+        {question.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={question.imageUrl}
+            alt=""
+            className="mt-3 max-w-xs rounded-lg border border-border"
+          />
+        )}
+        <div className="mt-4 flex flex-col gap-2">
+          {question.choices.map((c) => (
+            <label
+              key={c.id}
+              className={`choice-row ${expired ? "cursor-not-allowed opacity-60" : ""}`}
+            >
+              <input
+                type="radio"
+                name="choice"
+                checked={answers[question.id] === c.id}
+                disabled={expired}
+                onChange={() => selectChoice(c.id)}
+              />
+              {c.text}
+            </label>
+          ))}
+        </div>
+      </Card>
+
       <div className="flex justify-between">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={() => setIndex((i) => Math.max(0, i - 1))}
           disabled={index === 0}
-          className="rounded-md border border-neutral-300 px-4 py-2 text-sm disabled:opacity-50"
         >
           Previous
-        </button>
-        {isLast ? (
-          <button
-            type="button"
-            onClick={handleFinish}
-            disabled={pending}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50"
-          >
+        </Button>
+        {isLast || expired ? (
+          <Button type="button" onClick={handleFinish} disabled={pending}>
             {pending ? "Finishing…" : "Finish"}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={() => setIndex((i) => Math.min(questions.length - 1, i + 1))}
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm text-white"
-          >
+          <Button type="button" onClick={() => setIndex((i) => Math.min(questions.length - 1, i + 1))}>
             Next
-          </button>
+          </Button>
         )}
       </div>
     </div>

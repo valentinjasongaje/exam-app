@@ -80,6 +80,11 @@ enum AttemptLayout {
   ONE_AT_A_TIME
 }
 
+enum AttemptMode {
+  PRACTICE
+  BOARD_EXAM
+}
+
 model User {
   id              String        @id @default(cuid())
   email           String        @unique
@@ -104,6 +109,8 @@ model Attempt {
   totalQuestions Int
   layout         AttemptLayout @default(ALL_AT_ONCE)
   shuffleSeed    Int? // null = no shuffle; see lib/shuffle.ts
+  mode           AttemptMode   @default(PRACTICE)
+  timeLimitMinutes Int? // set for BOARD_EXAM attempts (e.g. 240); null = untimed
 
   answers AttemptAnswer[]
 

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { updateSettingsAction, type SettingsState } from "./actions";
+import { Button } from "@/components/ui";
 
 const initialState: SettingsState = { error: null };
 
@@ -17,42 +18,28 @@ export default function SettingsForm({
   return (
     <form action={formAction} className="flex flex-col gap-6">
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Question layout</legend>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="radio"
-            name="preferredLayout"
-            value="ALL_AT_ONCE"
-            defaultChecked={initialLayout === "ALL_AT_ONCE"}
-          />
+        <legend className="mb-2 text-sm font-medium">Question layout</legend>
+        <label className="choice-row">
+          <input type="radio" name="preferredLayout" value="ALL_AT_ONCE" defaultChecked={initialLayout === "ALL_AT_ONCE"} />
           All questions on one page
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="radio"
-            name="preferredLayout"
-            value="ONE_AT_A_TIME"
-            defaultChecked={initialLayout === "ONE_AT_A_TIME"}
-          />
+        <label className="choice-row">
+          <input type="radio" name="preferredLayout" value="ONE_AT_A_TIME" defaultChecked={initialLayout === "ONE_AT_A_TIME"} />
           One question at a time
         </label>
       </fieldset>
 
-      <label className="flex items-center gap-2 text-sm">
+      <label className="choice-row">
         <input type="checkbox" name="shuffleEnabled" defaultChecked={initialShuffle} />
         Shuffle questions and choices
       </label>
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-      {state.success && <p className="text-sm text-green-600">Saved.</p>}
+      {state.error && <p className="text-sm text-danger">{state.error}</p>}
+      {state.success && <p className="text-sm text-success">Saved.</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="self-start rounded-md bg-neutral-900 px-4 py-2 text-sm text-white disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending} className="self-start">
         {pending ? "Saving…" : "Save settings"}
-      </button>
+      </Button>
     </form>
   );
 }

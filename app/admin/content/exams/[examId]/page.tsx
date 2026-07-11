@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { deleteQuestionAction } from "./actions";
+import { deleteQuestionAction, reassignSubjectAction } from "./actions";
+import { PageHeader, Card, LinkButton, Button } from "@/components/ui";
+import { CANONICAL_SUBJECTS } from "@/lib/subjects";
 
 export default async function AdminExamPage({
   params,
@@ -19,46 +21,72 @@ export default async function AdminExamPage({
 
   if (!exam) notFound();
 
+  const currentCanonicalSlug = CANONICAL_SUBJECTS.find((s) => s.slug === exam.subject.slug)?.slug;
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">{exam.title}</h1>
-        <p className="text-sm text-neutral-500">{exam.subject.name}</p>
-      </div>
+      <PageHeader
+        eyebrow={exam.subject.name}
+        title={exam.title}
+        action={
+          <LinkButton href={`/admin/content/exams/${examId}/questions/new`} size="sm">
+            Add question
+          </LinkButton>
+        }
+      />
 
-      <Link
-        href={`/admin/content/exams/${examId}/questions/new`}
-        className="self-start rounded-md bg-neutral-900 px-3 py-2 text-sm text-white"
+      <form
+        action={reassignSubjectAction.bind(null, examId)}
+        className="flex items-center gap-2 text-sm"
       >
-        Add question
-      </Link>
+        <label htmlFor="subjectSlug" className="text-ink-muted">
+          Subject
+        </label>
+        <select
+          id="subjectSlug"
+          name="subjectSlug"
+          defaultValue={currentCanonicalSlug ?? ""}
+          className="field"
+        >
+          {!currentCanonicalSlug && (
+            <option value="" disabled>
+              {exam.subject.name} (not a canonical subject)
+            </option>
+          )}
+          {CANONICAL_SUBJECTS.map((s) => (
+            <option key={s.slug} value={s.slug}>
+              {s.name}
+            </option>
+          ))}
+        </select>
+        <Button type="submit" variant="secondary" size="sm">
+          Move
+        </Button>
+      </form>
 
-      <ul className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {exam.questions.map((q) => (
-          <li
-            key={q.id}
-            className="flex items-start justify-between gap-4 border-b border-neutral-100 pb-3 text-sm"
-          >
+          <Card key={q.id} className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-neutral-500">Q{q.order}</p>
-              <p>{q.text}</p>
+              <p className="mb-1 text-xs text-ink-muted">Q{q.order}</p>
+              <p className="text-sm">{q.text}</p>
             </div>
-            <div className="flex shrink-0 gap-3">
+            <div className="flex shrink-0 gap-4 text-sm">
               <Link
                 href={`/admin/content/exams/${examId}/questions/${q.id}/edit`}
-                className="underline"
+                className="text-accent hover:underline"
               >
                 Edit
               </Link>
               <form action={deleteQuestionAction.bind(null, examId, q.id)}>
-                <button type="submit" className="text-red-600 underline">
+                <button type="submit" className="text-danger hover:underline">
                   Delete
                 </button>
               </form>
             </div>
-          </li>
+          </Card>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

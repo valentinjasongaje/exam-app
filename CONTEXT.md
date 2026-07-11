@@ -244,10 +244,18 @@ build time didn't surface anything layout-specific.
 5. ~~Exam-taking flow~~ — done, confirmed working end-to-end (see above).
 6. Run the full set of scraped HTML files through the admin **import UI**
    (not the CLI) — check the review screen for subject-name misfires or
-   parse issues before committing. The admin import commit step (Vercel
-   Blob upload) still hasn't been exercised with a real
-   `BLOB_READ_WRITE_TOKEN` — only the parse/preview half has been verified
-   so far (see `.env`, `BLOB_READ_WRITE_TOKEN` is currently empty).
+   parse issues before committing. Vercel Blob is now set up: a public
+   store `exam-app-images` (`store_guWdLacLay74y7PR`) was created via
+   `vercel blob create-store`, linked to the `exam-app` Vercel project,
+   and `BLOB_READ_WRITE_TOKEN` auto-pulled into `.env.local`. A real
+   upload + public read + delete was verified with
+   `scripts/_test-blob-upload.mjs`. The admin import **commit step in the
+   UI** itself still hasn't been exercised end-to-end (needs a logged-in
+   admin session) — that's the remaining check when doing the full import.
+   Gotcha: `.env.local` also contains `VERCEL_OIDC_TOKEN`, so `vercel
+   blob` CLI subcommands error with "must both be set" — pass
+   `--rw-token "$BLOB_READ_WRITE_TOKEN"` explicitly; the app/SDK path is
+   unaffected.
 7. ~~Stats/progress dashboard for regular users~~ — done (`app/stats/`,
    linked as "Progress" in the nav, login-gated via `proxy.ts`): summary
    cards (exams completed, overall accuracy, questions answered), accuracy
@@ -265,6 +273,93 @@ build time didn't surface anything layout-specific.
 9. **Polish** — responsive design pass, maybe a "retry weak questions"
    mode.
 
+## UI redesign, subject tiles, and board-exam timer (2026-07-11)
+
+The whole app UI was redesigned away from the generic Tailwind-scaffold
+look: warm paper palette (light/dark via `prefers-color-scheme`, plus a
+manual toggle — see below), a Fraunces (serif headings) + Geist Sans
+(body) type pairing, shared primitives in `components/ui.tsx` (`Button`,
+`LinkButton`, `Card`, `Badge`, `PageHeader`, `EmptyState`), and a
+`.choice-row` CSS class (globals.css, uses `:has()`) shared by every
+place a radio/checkbox choice is rendered (attempt pages, review,
+settings). A manual light/dark toggle lives in the nav
+(`app/theme-toggle.tsx`) — `data-theme` attribute on `<html>`, persisted
+to `localStorage`, applied pre-hydration via `next/script`
+`beforeInteractive` (not a raw `<script>` tag — that triggers a
+"scripts inside React components" dev warning) with
+`suppressHydrationWarning` on `<html>` since the pre-hydration script
+intentionally differs from the server-rendered markup.
+
+**Dashboard is now subject-tile-first**: `/dashboard` shows a responsive
+grid of subject tiles (`grid-cols-1 sm:grid-cols-2` — 1-wide on mobile,
+2x2 once there are 4 subjects) with a per-subject completion/accuracy
+progress bar, each linking to a new `app/subject/[subjectId]/page.tsx`
+that has the actual exam list + Start/Resume/Retake (this is where the
+old flat per-subject exam list from the dashboard moved to).
+
+**Subjects are now a fixed list, not free text — fragmentation fixed.**
+`lib/subjects.ts` exports `CANONICAL_SUBJECTS`: Math, GEAS, Elex, EST (the
+4 subjects of the Electronics Engineer board exam) plus ECT (Electronics
+Technician — a separate, distinct exam/certification that mixes basic
+Math and Elex content but is tracked as its own subject/tile, not folded
+into the other 4; confirmed explicitly by the user). Both the admin
+import-review screen (`app/admin/import/page.tsx`) and a new per-exam
+"Subject: [dropdown] [Move]" control
+(`app/admin/content/exams/[examId]/page.tsx`,
+`reassignSubjectAction` in that route's `actions.ts`) now only let you
+pick from this fixed list — no free text, so no more stray subjects.
+`reassignSubjectAction` upserts the target canonical subject (creating it
+on first use) and deletes the exam's *previous* subject if that leaves it
+with zero exams, so moving exams out of a stray subject cleans it up
+automatically. The import commit button is disabled with an inline error
+until every previewed exam has a subject chosen.
+
+As of 2026-07-11 this already ran once against the real DB: seeded all 5
+canonical subjects, and reassigned the exams that had gotten fragmented
+into their own stand-alone subjects — `HB Elec` → `Elex`,
+`RC Exam - Elec 02` → `Elex`, `Review Exam - GEAS 07` → `GEAS`,
+`Review Exam - GEAS 09` → `GEAS` (all confirmed unambiguous from the
+user's own description of what belongs under Elex). `ECT Pre Board Exam
+1` was already correctly on its own `ECT` subject — no change needed
+there once ECT was recognized as a legitimate 5th subject rather than
+something to merge away. Final state: exactly 5 subjects, matching
+`CANONICAL_SUBJECTS`, zero stray ones.
+
+**Board exam / pre-board timed mode**: `Attempt` gained `mode`
+(`AttemptMode`: `PRACTICE` | `BOARD_EXAM`) and `timeLimitMinutes` (Int?,
+240 for board exam, null for practice) — migration
+`20260711143711_add_attempt_mode_and_timer`, purely additive. The exam
+start page (`app/exam/[examId]/page.tsx`) now offers two buttons,
+"Practice (untimed)" and "Take as board exam · 4:00:00", both binding
+`startAttemptAction(examId, mode)`. A shared `lib/use-countdown.ts` hook
+computes `{ expired, label }` from a `deadline` ISO string
+(`startedAt + timeLimitMinutes`), used by both layouts
+(`all-at-once.tsx` — new client component split out of the exam-taking
+page specifically so it can lock inputs; `one-at-a-time.tsx`). Per
+explicit user decision: **at expiry, answering locks but nothing
+auto-submits** — the user must still tap Submit/Finish themselves.
+`ONE_AT_A_TIME` locks via `disabled` on the radio inputs (safe there,
+since answers are saved via explicit server-action calls, not FormData).
+`ALL_AT_ONCE` can't use `disabled` — disabled radios are excluded from
+FormData, which would silently drop already-selected answers — so it
+guards via `onClick`/`onKeyDown` `preventDefault()` on the wrapping
+label instead, leaving inputs enabled (and thus submittable) but
+un-clickable once expired. `saveAnswerAction` also has a server-side
+`isTimeExpired` check (defense in depth against a devtools bypass of the
+client-side lock in `ONE_AT_A_TIME`); `submitAllAction` intentionally
+does **not** get an equivalent check — it must always accept whatever
+was in the form when Submit was clicked, since that's the only place
+`ALL_AT_ONCE` answers are ever persisted at all.
+
+Not yet visually verified end-to-end in a browser (same long-standing
+limitation: Google OAuth can't be driven by the automated browser tool
+here) — verified instead via typecheck/lint/build all passing, and a
+scratch script that created real `BOARD_EXAM` attempts (one already-
+expired, one fresh) directly via Prisma and confirmed both the schema
+fields and the expiry-boundary math read back correctly, then cleaned
+them up. Worth clicking through "Take as board exam" once logged in to
+confirm the timer UI itself looks right.
+
 ## Repo layout
 
 ```
@@ -274,6 +369,8 @@ lib/seed-exam.js              Upsert logic (shared by CLI + admin import)
 lib/prisma.ts                 Prisma client singleton (app runtime)
 lib/blob.ts                   Vercel Blob upload wrapper
 lib/shuffle.ts                Seeded deterministic shuffle for exam question/choice order
+lib/use-countdown.ts          Client hook: deadline ISO string -> { expired, label }
+lib/subjects.ts               Fixed 5-subject list (Math/GEAS/Elex/EST/ECT) - no free-text subjects
 scripts/parse-html.js         CLI: data/raw/*.html -> data/parsed/*.json
 scripts/seed.js               CLI: data/parsed/*.json -> Postgres
 scripts/verify-with-sqlite.js Historical, no longer needed
@@ -281,13 +378,18 @@ data/raw/                     Scraped HTML files (2 samples included)
 data/parsed/                  Parser output for the 2 samples
 auth.ts                       Auth.js config (Google provider)
 proxy.ts                      Route protection (login required / admin-only)
+app/theme-toggle.tsx          Manual light/dark toggle (localStorage + data-theme)
+app/nav-links.tsx             Client nav links with active-route highlighting
 app/login/                    Sign-in page (Google only)
 app/settings/                 Per-user preferences (layout, shuffle)
-app/dashboard/                Exam list for the logged-in user (Start/Resume/Retake)
+app/dashboard/                Subject tile grid (2x2 desktop / 1-col mobile) with progress bars
+app/subject/[subjectId]/      Exam list for one subject (Start/Resume/Retake) — was on /dashboard
 app/stats/                    User's own progress dashboard (accuracy, trend, weakest questions)
-app/exam/[examId]/            Start-or-resume entry point for one exam
-app/attempt/[attemptId]/      Exam-taking UI (both layouts) + review/score page
+app/exam/[examId]/            Start-or-resume entry point; Practice vs Board-exam mode choice
+app/attempt/[attemptId]/      Exam-taking UI (both layouts, incl. board-exam timer/lock) + review
 app/admin/                    Admin: users, content (CRUD), import
+components/ui.tsx             Shared design-system primitives (Button, Card, Badge, PageHeader, ...)
+components/exam-timer.tsx     Countdown banner (presentational; logic lives in lib/use-countdown.ts)
 components/question-form.tsx  Shared create/edit question form
 README.md                     Shorter, pipeline-focused setup instructions
 CONTEXT.md                    This file

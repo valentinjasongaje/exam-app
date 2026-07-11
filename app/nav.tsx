@@ -1,33 +1,28 @@
 import Link from "next/link";
 import { auth } from "@/auth";
-import { signOutAction } from "./sign-out-action";
+import NavLinks from "./nav-links";
+import ThemeToggle from "./theme-toggle";
 
 export default async function Nav() {
   const session = await auth();
   const user = session?.user;
 
   return (
-    <header className="border-b border-neutral-200">
-      <nav className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-        <Link href="/" className="font-semibold">
+    <header className="sticky top-0 z-10 border-b border-border bg-bg/80 backdrop-blur-sm">
+      <nav className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+        <Link href="/" className="flex items-center gap-1.5 font-serif text-lg font-semibold">
           Exam App
+          <span className="text-accent">.</span>
         </Link>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-4">
           {user ? (
-            <>
-              <Link href="/dashboard">Dashboard</Link>
-              <Link href="/stats">Progress</Link>
-              <Link href="/settings">Settings</Link>
-              {user.role === "ADMIN" && <Link href="/admin">Admin</Link>}
-              <form action={signOutAction}>
-                <button type="submit" className="underline">
-                  Logout
-                </button>
-              </form>
-            </>
+            <NavLinks isAdmin={user.role === "ADMIN"} />
           ) : (
-            <Link href="/login">Log in</Link>
+            <Link href="/login" className="text-sm text-ink-muted transition-colors hover:text-ink">
+              Log in
+            </Link>
           )}
+          <ThemeToggle />
         </div>
       </nav>
     </header>

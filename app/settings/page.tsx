@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import SettingsForm from "./settings-form";
+import { PageHeader, Card } from "@/components/ui";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -11,8 +12,14 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-10">
-      <h1 className="mb-6 text-xl font-semibold">Settings</h1>
-      <SettingsForm initialLayout={user.preferredLayout} initialShuffle={user.shuffleEnabled} />
+      <PageHeader
+        eyebrow="Preferences"
+        title="Settings"
+        subtitle="Applies to exams you start from now on."
+      />
+      <Card>
+        <SettingsForm initialLayout={user.preferredLayout} initialShuffle={user.shuffleEnabled} />
+      </Card>
     </main>
   );
 }

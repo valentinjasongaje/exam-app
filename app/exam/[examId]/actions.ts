@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function startAttemptAction(examId: string) {
+const BOARD_EXAM_MINUTES = 240;
+
+export async function startAttemptAction(examId: string, mode: "PRACTICE" | "BOARD_EXAM") {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -26,6 +28,8 @@ export async function startAttemptAction(examId: string) {
       totalQuestions: questionCount,
       layout: user.preferredLayout,
       shuffleSeed: user.shuffleEnabled ? Math.floor(Math.random() * 2 ** 31) : null,
+      mode,
+      timeLimitMinutes: mode === "BOARD_EXAM" ? BOARD_EXAM_MINUTES : null,
     },
   });
 

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import QuestionForm from "@/components/question-form";
 import { createQuestionAction } from "./actions";
+import { PageHeader } from "@/components/ui";
 
 export default async function NewQuestionPage({
   params,
@@ -14,11 +15,8 @@ export default async function NewQuestionPage({
 
   return (
     <div>
-      <h1 className="mb-4 text-xl font-semibold">Add question — {exam.title}</h1>
-      <QuestionForm
-        action={createQuestionAction.bind(null, examId)}
-        submitLabel="Add question"
-      />
+      <PageHeader eyebrow={exam.title} title="Add question" />
+      <QuestionForm action={createQuestionAction.bind(null, examId)} submitLabel="Add question" />
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { LinkButton } from "@/components/ui";
 
 export default async function HomePage() {
   const session = await auth();
@@ -9,14 +9,20 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-6 px-4 text-center">
-      <h1 className="text-3xl font-semibold">Exam App</h1>
-      <p className="text-neutral-600">
-        Practice licensure exam questions and track your progress.
+    <main className="bg-hero-glow flex w-full flex-1 flex-col items-center justify-center px-4 text-center">
+      <p className="mb-4 text-xs font-medium tracking-wide text-accent uppercase">
+        Licensure exam practice
       </p>
-      <Link href="/login" className="rounded-md bg-neutral-900 px-4 py-2 text-white">
-        Log in
-      </Link>
+      <h1 className="max-w-lg text-4xl font-semibold text-ink sm:text-5xl">
+        Study with purpose, not guesswork.
+      </h1>
+      <p className="mt-4 max-w-sm text-ink-muted">
+        Practice real exam questions, track your accuracy over time, and see
+        exactly where to focus next.
+      </p>
+      <LinkButton href="/login" className="mt-8" size="md">
+        Log in to start
+      </LinkButton>
     </main>
   );
 }
