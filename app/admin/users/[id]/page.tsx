@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { attemptTitle } from "@/lib/composed-attempt";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
 
 export default async function AdminUserDetailPage({
@@ -14,7 +15,7 @@ export default async function AdminUserDetailPage({
     include: {
       attempts: {
         orderBy: { startedAt: "desc" },
-        include: { exam: { include: { subject: true } } },
+        include: { exam: true, subject: true },
       },
     },
   });
@@ -54,7 +55,7 @@ export default async function AdminUserDetailPage({
         {user.attempts.length === 0 ? (
           <EmptyState>No attempts yet.</EmptyState>
         ) : (
-          <Card className="p-0">
+          <Card className="overflow-x-auto p-0">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left text-ink-muted">
@@ -67,8 +68,8 @@ export default async function AdminUserDetailPage({
               <tbody>
                 {user.attempts.map((a) => (
                   <tr key={a.id} className="border-b border-border last:border-0">
-                    <td className="px-5 py-3">{a.exam.title}</td>
-                    <td className="px-5 py-3">{a.exam.subject.name}</td>
+                    <td className="px-5 py-3">{attemptTitle(a)}</td>
+                    <td className="px-5 py-3">{a.subject?.name ?? "—"}</td>
                     <td className="px-5 py-3">
                       {a.finishedAt ? (
                         `${a.score}/${a.totalQuestions}`

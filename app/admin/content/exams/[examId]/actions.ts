@@ -5,7 +5,11 @@ import { revalidatePath } from "next/cache";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
 
 export async function deleteQuestionAction(examId: string, questionId: string) {
+  // AttemptAnswer rows must go first: Question/Choice have no onDelete
+  // cascade, so deleting an already-answered question would otherwise
+  // fail on the foreign key.
   await prisma.$transaction([
+    prisma.attemptAnswer.deleteMany({ where: { questionId } }),
     prisma.choice.deleteMany({ where: { questionId } }),
     prisma.question.delete({ where: { id: questionId } }),
   ]);

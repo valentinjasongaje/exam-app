@@ -37,6 +37,9 @@ export function ImageEditor({
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
     const img = new Image();
+    // Remote images (Vercel Blob) need CORS opt-in or toDataURL() throws
+    // on the tainted canvas; data: URLs must not set it.
+    if (!src.startsWith("data:")) img.crossOrigin = "anonymous";
     img.onload = () => {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;

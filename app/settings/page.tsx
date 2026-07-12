@@ -18,7 +18,11 @@ export default async function SettingsPage() {
         subtitle="Applies to exams you start from now on."
       />
       <Card>
-        <SettingsForm initialLayout={user.preferredLayout} initialShuffle={user.shuffleEnabled} />
+        <SettingsForm
+          initialLayout={user.preferredLayout}
+          initialShuffle={user.shuffleEnabled}
+          initialInstantFeedback={user.instantFeedback}
+        />
       </Card>
     </main>
   );

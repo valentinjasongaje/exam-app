@@ -2,7 +2,18 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { PageHeader, Card, EmptyState, LinkButton } from "@/components/ui";
+import { attemptTitle } from "@/lib/composed-attempt";
+import { PageHeader, Card, EmptyState, LinkButton, Button } from "@/components/ui";
+import { startWeakDrillAction } from "./actions";
+
+const PASS_PCT = 70;
+
+function formatDuration(start: Date, end: Date) {
+  const totalMinutes = Math.max(1, Math.round((end.getTime() - start.getTime()) / 60_000));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
 
 export default async function StatsPage() {
   const session = await auth();
@@ -12,7 +23,7 @@ export default async function StatsPage() {
   const attempts = await prisma.attempt.findMany({
     where: { userId, finishedAt: { not: null } },
     orderBy: { finishedAt: "asc" },
-    include: { exam: { include: { subject: true } } },
+    include: { exam: true, subject: true },
   });
 
   const wrongAnswers = await prisma.attemptAnswer.findMany({
@@ -24,16 +35,16 @@ export default async function StatsPage() {
   const totalQuestions = attempts.reduce((sum, a) => sum + a.totalQuestions, 0);
   const overallAccuracy =
     totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : null;
-  const uniqueExams = new Set(attempts.map((a) => a.examId)).size;
+  const uniqueExams = new Set(attempts.filter((a) => a.examId).map((a) => a.examId)).size;
 
   const bySubject = new Map<
     string,
     { name: string; attempts: number; correct: number; total: number }
   >();
   for (const a of attempts) {
-    const key = a.exam.subjectId;
-    const existing = bySubject.get(key) ?? {
-      name: a.exam.subject.name,
+    if (!a.subject) continue; // cross-subject drills don't belong to one subject
+    const existing = bySubject.get(a.subject.id) ?? {
+      name: a.subject.name,
       attempts: 0,
       correct: 0,
       total: 0,
@@ -41,7 +52,7 @@ export default async function StatsPage() {
     existing.attempts += 1;
     existing.correct += a.score ?? 0;
     existing.total += a.totalQuestions;
-    bySubject.set(key, existing);
+    bySubject.set(a.subject.id, existing);
   }
   const subjectRows = [...bySubject.values()].sort((a, b) => a.name.localeCompare(b.name));
 
@@ -80,7 +91,9 @@ export default async function StatsPage() {
               <p className="text-2xl font-semibold">
                 {overallAccuracy !== null ? `${overallAccuracy}%` : "—"}
               </p>
-              <p className="text-sm text-ink-muted">Overall accuracy</p>
+              <p className="text-sm text-ink-muted">
+                Overall accuracy · pass line is {PASS_PCT}%
+              </p>
             </Card>
             <Card>
               <p className="text-2xl font-semibold">{totalQuestions}</p>
@@ -92,7 +105,7 @@ export default async function StatsPage() {
             <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">
               Accuracy by subject
             </h2>
-            <Card className="p-0">
+            <Card className="overflow-x-auto p-0">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left text-ink-muted">
@@ -131,15 +144,23 @@ export default async function StatsPage() {
                     <span className="w-24 shrink-0 text-ink-muted">
                       {a.finishedAt!.toLocaleDateString()}
                     </span>
-                    <span className="w-48 shrink-0 truncate">{a.exam.title}</span>
-                    <span className="h-2 flex-1 rounded-full bg-bg-muted">
+                    <span className="w-48 shrink-0 truncate">{attemptTitle(a)}</span>
+                    <span className="relative h-2 flex-1 rounded-full bg-bg-muted">
                       <span
                         className="block h-2 rounded-full bg-accent"
                         style={{ width: `${pct}%` }}
                       />
+                      <span
+                        className="absolute top-1/2 h-3.5 w-px -translate-y-1/2 bg-ink-faint"
+                        style={{ left: `${PASS_PCT}%` }}
+                        title={`${PASS_PCT}% pass line`}
+                      />
                     </span>
                     <span className="w-16 shrink-0 text-right">
                       {a.score}/{a.totalQuestions}
+                    </span>
+                    <span className="hidden w-14 shrink-0 text-right text-ink-faint sm:inline">
+                      {formatDuration(a.startedAt, a.finishedAt!)}
                     </span>
                     <Link href={`/attempt/${a.id}/review`} className="shrink-0 text-accent hover:underline">
                       Review
@@ -147,13 +168,25 @@ export default async function StatsPage() {
                   </div>
                 );
               })}
+              <p className="text-xs text-ink-faint">
+                The tick on each bar marks the {PASS_PCT}% pass line.
+              </p>
             </Card>
           </section>
 
           <section>
-            <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">
-              Weakest questions
-            </h2>
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-medium tracking-wide text-ink-muted uppercase">
+                Weakest questions
+              </h2>
+              {weakest.length > 0 && (
+                <form action={startWeakDrillAction}>
+                  <Button type="submit" size="sm" variant="secondary">
+                    Drill weakest questions
+                  </Button>
+                </form>
+              )}
+            </div>
             {weakest.length === 0 ? (
               <EmptyState>No incorrect answers yet.</EmptyState>
             ) : (

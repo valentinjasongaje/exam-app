@@ -37,7 +37,7 @@ export default async function AdminUsersPage() {
   return (
     <div>
       <PageHeader title="Users" subtitle={`${rows.length} registered`} />
-      <Card className="p-0">
+      <Card className="overflow-x-auto p-0">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-ink-muted">

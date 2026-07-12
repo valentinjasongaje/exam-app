@@ -9,9 +9,11 @@ const initialState: SettingsState = { error: null };
 export default function SettingsForm({
   initialLayout,
   initialShuffle,
+  initialInstantFeedback,
 }: {
   initialLayout: "ALL_AT_ONCE" | "ONE_AT_A_TIME";
   initialShuffle: boolean;
+  initialInstantFeedback: boolean;
 }) {
   const [state, formAction, pending] = useActionState(updateSettingsAction, initialState);
 
@@ -32,6 +34,16 @@ export default function SettingsForm({
       <label className="choice-row">
         <input type="checkbox" name="shuffleEnabled" defaultChecked={initialShuffle} />
         Shuffle questions and choices
+      </label>
+
+      <label className="choice-row">
+        <input type="checkbox" name="instantFeedback" defaultChecked={initialInstantFeedback} />
+        <span>
+          Show the answer right after each question
+          <span className="mt-0.5 block text-xs text-ink-muted">
+            Practice mode with one-question-at-a-time layout only — never during board exams.
+          </span>
+        </span>
       </label>
 
       {state.error && <p className="text-sm text-danger">{state.error}</p>}

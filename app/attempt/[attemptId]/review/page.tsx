@@ -3,8 +3,18 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { seededShuffle, choiceSeedFor } from "@/lib/shuffle";
+import { questionIdsOf, attemptTitle } from "@/lib/composed-attempt";
 import { Card, Badge } from "@/components/ui";
 import { clsx } from "clsx";
+
+const PASS_PCT = 70;
+
+function formatDuration(start: Date, end: Date) {
+  const totalMinutes = Math.max(1, Math.round((end.getTime() - start.getTime()) / 60_000));
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
 
 export default async function AttemptReviewPage({
   params,
@@ -26,6 +36,7 @@ export default async function AttemptReviewPage({
           },
         },
       },
+      subject: true,
       answers: true,
     },
   });
@@ -33,25 +44,37 @@ export default async function AttemptReviewPage({
   if (!attempt || attempt.userId !== session.user.id) notFound();
   if (!attempt.finishedAt) redirect(`/attempt/${attemptId}`);
 
-  let questions = attempt.exam.questions;
-  if (attempt.shuffleSeed != null) {
-    const seed = attempt.shuffleSeed;
-    questions = seededShuffle(questions, seed).map((q) => ({
-      ...q,
-      choices: seededShuffle(q.choices, choiceSeedFor(seed, q.order)),
-    }));
+  const composedIds = questionIdsOf(attempt);
+  let questions;
+  if (composedIds) {
+    const rows = await prisma.question.findMany({
+      where: { id: { in: composedIds } },
+      include: { choices: { orderBy: { label: "asc" } } },
+    });
+    const byId = new Map(rows.map((q) => [q.id, q]));
+    questions = composedIds.map((id) => byId.get(id)).filter((q) => q !== undefined);
+  } else {
+    questions = attempt.exam!.questions;
+    if (attempt.shuffleSeed != null) {
+      const seed = attempt.shuffleSeed;
+      questions = seededShuffle(questions, seed).map((q) => ({
+        ...q,
+        choices: seededShuffle(q.choices, choiceSeedFor(seed, q.order)),
+      }));
+    }
   }
 
   const answersByQuestion = new Map(attempt.answers.map((a) => [a.questionId, a.choiceId]));
   const pct = Math.round(((attempt.score ?? 0) / attempt.totalQuestions) * 100);
+  const passed = pct >= PASS_PCT;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
       <div className="mb-4 flex items-center gap-2.5">
-        <h1 className="font-serif text-xl font-semibold">{attempt.exam.title}</h1>
+        <h1 className="font-serif text-xl font-semibold">{attemptTitle(attempt)}</h1>
         {attempt.mode === "BOARD_EXAM" && <Badge tone="accent">Board exam</Badge>}
       </div>
-      <Card className="mb-8 flex items-center justify-between">
+      <Card className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs font-medium tracking-wide text-ink-muted uppercase">
             Final score
@@ -59,8 +82,19 @@ export default async function AttemptReviewPage({
           <p className="text-2xl font-semibold">
             {attempt.score} / {attempt.totalQuestions}
           </p>
+          <p className="mt-1 text-xs text-ink-muted">
+            Completed in {formatDuration(attempt.startedAt, attempt.finishedAt)} ·{" "}
+            {PASS_PCT}% needed to pass
+          </p>
         </div>
-        <Badge tone={pct >= 70 ? "success" : pct >= 40 ? "accent" : "danger"}>{pct}%</Badge>
+        <div className="flex items-center gap-2">
+          <Badge tone={passed ? "success" : "danger"}>
+            {passed ? "PASSED" : "FAILED"}
+          </Badge>
+          <Badge tone={pct >= PASS_PCT ? "success" : pct >= 40 ? "accent" : "danger"}>
+            {pct}%
+          </Badge>
+        </div>
       </Card>
 
       <div className="flex flex-col gap-5">

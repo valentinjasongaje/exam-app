@@ -16,10 +16,11 @@ export async function updateSettingsAction(
   const preferredLayout =
     formData.get("preferredLayout") === "ONE_AT_A_TIME" ? "ONE_AT_A_TIME" : "ALL_AT_ONCE";
   const shuffleEnabled = formData.get("shuffleEnabled") === "on";
+  const instantFeedback = formData.get("instantFeedback") === "on";
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { preferredLayout, shuffleEnabled },
+    data: { preferredLayout, shuffleEnabled, instantFeedback },
   });
 
   revalidatePath("/settings");

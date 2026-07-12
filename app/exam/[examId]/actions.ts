@@ -16,8 +16,9 @@ export async function startAttemptAction(examId: string, mode: "PRACTICE" | "BOA
   });
   if (existing) redirect(`/attempt/${existing.id}`);
 
-  const [user, questionCount] = await Promise.all([
+  const [user, exam, questionCount] = await Promise.all([
     prisma.user.findUniqueOrThrow({ where: { id: session.user.id } }),
+    prisma.exam.findUniqueOrThrow({ where: { id: examId } }),
     prisma.question.count({ where: { examId } }),
   ]);
 
@@ -25,11 +26,13 @@ export async function startAttemptAction(examId: string, mode: "PRACTICE" | "BOA
     data: {
       userId: session.user.id,
       examId,
+      subjectId: exam.subjectId,
       totalQuestions: questionCount,
       layout: user.preferredLayout,
       shuffleSeed: user.shuffleEnabled ? Math.floor(Math.random() * 2 ** 31) : null,
       mode,
       timeLimitMinutes: mode === "BOARD_EXAM" ? BOARD_EXAM_MINUTES : null,
+      showFeedback: mode === "PRACTICE" && user.instantFeedback,
     },
   });
 

@@ -16,6 +16,20 @@ async function uploadIfPresent(file: File | null, prefix: string) {
   return uploadImage(buffer, `${prefix}-${crypto.randomUUID()}.${ext}`, file.type);
 }
 
+/** Same, for a data: URL produced by the in-browser watermark editor. */
+async function uploadIfEdited(dataUrl: FormDataEntryValue | null, prefix: string) {
+  if (typeof dataUrl !== "string" || !dataUrl) return undefined;
+  const match = /^data:(.+?);base64,([\s\S]+)$/.exec(dataUrl);
+  if (!match) return undefined;
+  const [, mime, base64] = match;
+  const ext = mime.split("/")[1] || "png";
+  return uploadImage(
+    Buffer.from(base64, "base64"),
+    `${prefix}-${crypto.randomUUID()}.${ext}`,
+    mime
+  );
+}
+
 export async function updateQuestionAction(
   examId: string,
   questionId: string,
@@ -37,10 +51,16 @@ export async function updateQuestionAction(
     return { error: "Select the correct choice." };
   }
 
-  const [imageUrl, explanationImageUrl] = await Promise.all([
+  // A freshly uploaded replacement file wins over an in-browser edit of the
+  // old image (editing the outgoing image would be pointless anyway).
+  const [uploadedImage, uploadedExplanation, editedImage, editedExplanation] = await Promise.all([
     uploadIfPresent(formData.get("questionImage") as File | null, "question"),
     uploadIfPresent(formData.get("explanationImage") as File | null, "explanation"),
+    uploadIfEdited(formData.get("editedQuestionImage"), "question"),
+    uploadIfEdited(formData.get("editedExplanationImage"), "explanation"),
   ]);
+  const imageUrl = uploadedImage ?? editedImage;
+  const explanationImageUrl = uploadedExplanation ?? editedExplanation;
 
   await prisma.question.update({
     where: { id: questionId },

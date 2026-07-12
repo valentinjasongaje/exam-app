@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { questionIdsOf } from "@/lib/composed-attempt";
 
 async function requireOwnAttempt(attemptId: string) {
   const session = await auth();
@@ -32,8 +33,9 @@ export async function submitAllAction(attemptId: string, formData: FormData) {
   const attempt = await requireOwnAttempt(attemptId);
   if (attempt.finishedAt) redirect(`/attempt/${attemptId}/review`);
 
+  const composedIds = questionIdsOf(attempt);
   const questions = await prisma.question.findMany({
-    where: { examId: attempt.examId },
+    where: composedIds ? { id: { in: composedIds } } : { examId: attempt.examId! },
     include: { choices: true },
   });
 
@@ -76,4 +78,19 @@ export async function finishAttemptAction(attemptId: string) {
     await scoreAttempt(attemptId);
   }
   redirect(`/attempt/${attemptId}/review`);
+}
+
+/** Deletes an unfinished attempt so the user can start over (or switch mode). */
+export async function discardAttemptAction(attemptId: string) {
+  const attempt = await requireOwnAttempt(attemptId);
+  if (attempt.finishedAt) redirect(`/attempt/${attemptId}/review`);
+
+  await prisma.$transaction([
+    prisma.attemptAnswer.deleteMany({ where: { attemptId } }),
+    prisma.attempt.delete({ where: { id: attemptId } }),
+  ]);
+
+  if (attempt.examId) redirect(`/exam/${attempt.examId}`);
+  if (attempt.subjectId) redirect(`/subject/${attempt.subjectId}`);
+  redirect("/dashboard");
 }

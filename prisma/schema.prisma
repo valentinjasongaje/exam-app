@@ -20,7 +20,8 @@ model Subject {
   slug      String   @unique
   createdAt DateTime @default(now())
 
-  exams Exam[]
+  exams    Exam[]
+  attempts Attempt[]
 }
 
 model Exam {
@@ -93,6 +94,7 @@ model User {
   role            Role          @default(USER)
   preferredLayout AttemptLayout @default(ALL_AT_ONCE)
   shuffleEnabled  Boolean       @default(true)
+  instantFeedback Boolean       @default(false) // practice + one-at-a-time only: reveal answer/explanation right after answering
   createdAt       DateTime      @default(now())
 
   attempts Attempt[]
@@ -102,8 +104,11 @@ model Attempt {
   id             String        @id @default(cuid())
   userId         String
   user           User          @relation(fields: [userId], references: [id])
-  examId         String
-  exam           Exam          @relation(fields: [examId], references: [id])
+  examId         String? // null for composed attempts (mock board exam / weak-question drill)
+  exam           Exam?         @relation(fields: [examId], references: [id])
+  subjectId      String? // denormalized from exam, or set directly for mock board exams; null for cross-subject drills
+  subject        Subject?      @relation(fields: [subjectId], references: [id])
+  questionIds    Json? // ordered question-id array for composed attempts; null = use exam.questions
   startedAt      DateTime      @default(now())
   finishedAt     DateTime?
   score          Int? // number correct, filled in on submit
@@ -112,10 +117,12 @@ model Attempt {
   shuffleSeed    Int? // null = no shuffle; see lib/shuffle.ts
   mode           AttemptMode   @default(PRACTICE)
   timeLimitMinutes Int? // set for BOARD_EXAM attempts (e.g. 240); null = untimed
+  showFeedback   Boolean       @default(false) // frozen from User.instantFeedback at creation
 
   answers AttemptAnswer[]
 
   @@index([userId, examId])
+  @@index([userId, subjectId])
 }
 
 model AttemptAnswer {

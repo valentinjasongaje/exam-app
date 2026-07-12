@@ -428,6 +428,73 @@ by reproducing the exact race on a throwaway unauthenticated test route
 fake save — confirmed present with the old shared-transition logic and
 gone with the fix.
 
+## Audit-driven feature batch (2026-07-12)
+
+A codebase audit turned into one large implementation pass. Migration
+`20260711170752_composed_attempts_and_feedback` (additive; `Attempt.examId`
+made nullable, new `Attempt.subjectId`/`questionIds`/`showFeedback`,
+`User.instantFeedback`; `subjectId` backfilled from each attempt's exam).
+
+**Composed attempts** are the core new concept: an attempt with
+`examId = null` whose question set is the ordered id array in
+`Attempt.questionIds` (see `lib/composed-attempt.ts` — `questionIdsOf`,
+`attemptTitle`, `sampleShuffled`). Two features build on it:
+- **Mock board exam** (subject page): up to 100 questions sampled across
+  all exams in a subject, 4-hour timer, `mode: BOARD_EXAM`. The stored
+  sample order is already random so `shuffleSeed` stays null.
+- **Weakest-questions drill** (stats page): top-20 most-missed questions,
+  untimed practice, forced `ONE_AT_A_TIME` layout.
+Attempt/review pages branch on `questionIds` to load questions by id
+(preserving stored order) instead of via the exam relation. Anything that
+assumed `attempt.exam` was non-null (stats, admin user detail) now uses
+`attemptTitle()` + the `subject` relation.
+
+**Exam-taking UX**: one-at-a-time resumes at the first unanswered
+question (was: always Q1); clickable question-navigator grid
+(answered/current states); keyboard shortcuts (A–D answer, arrows
+navigate); "N unanswered — finish anyway?" confirm in both layouts;
+all-at-once now autosaves every pick via `saveAnswerAction` with a
+sticky Saved/Saving indicator (was: answers lived only in the DOM until
+submit). "Discard attempt" (header of the taking page) deletes an
+unfinished attempt so users can restart or switch practice/board mode —
+previously impossible, the in-progress attempt trapped you.
+
+**Instant feedback mode**: `User.instantFeedback` setting (Settings
+page), frozen to `Attempt.showFeedback` at creation, PRACTICE +
+one-at-a-time only. Reveals correct/incorrect + explanation immediately
+after answering; the first pick locks (otherwise scores were gameable);
+correct-choice ids/explanations are only sent to the client when the
+flag is on, so board-exam attempts never ship answers to the browser.
+
+**Pass-line framing**: review page shows PASSED/FAILED at 70% plus
+completion duration; stats trend bars have a 70% tick and per-attempt
+durations.
+
+**Fixes**: deleting an already-answered question no longer FK-crashes
+(`deleteQuestionAction` deletes `AttemptAnswer` rows first — schema has
+no cascades); themed `app/error.tsx` / `not-found.tsx` / `loading.tsx`
+(the error page specifically mentions retrying because of Neon
+cold-starts); admin layout/tables now work on mobile (sidebar stacks,
+tables scroll); the question-edit form got the watermark `ImageEditor`
+(edits produce a data URL in a hidden field → `uploadIfEdited` in the
+update action re-uploads to Blob; a plain replacement upload wins over
+an edit; `ImageEditor` sets `crossOrigin="anonymous"` for non-data URLs —
+Vercel Blob serves `Access-Control-Allow-Origin: *`, verified).
+
+**Data repair (2026-07-12)**: the two originally CLI-seeded exams stored
+*local* image refs (`images/<hash>.png`) that the app can't serve —
+those images were silently broken in the browser the whole time. All 20
+refs (18 questions) re-uploaded to Blob from `data/parsed/images/` and
+the DB updated; zero local refs remain. The CLI seed path
+(`scripts/parse-html.js` + `scripts/seed.js`) still writes local refs —
+don't use it for real imports, use the admin UI (which the user has now
+done for real: 100+ Blob-hosted images exist from their own imports).
+
+**Also discovered**: the GitHub repo is already connected to the Vercel
+project (`vercel git connect` reported as much) — **pushes to master
+auto-deploy to production**. Prod and dev share the same Neon DB, so
+migrations applied locally are already live for prod.
+
 ## Repo layout
 
 ```
@@ -439,6 +506,7 @@ lib/blob.ts                   Vercel Blob upload wrapper
 lib/shuffle.ts                Seeded deterministic shuffle for exam question/choice order
 lib/use-countdown.ts          Client hook: deadline ISO string -> { expired, label }
 lib/subjects.ts               Fixed 5-subject list (Math/GEAS/Elex/EST/ECT) - no free-text subjects
+lib/composed-attempt.ts       Helpers for exam-less attempts (mock board exams, weak-question drills)
 scripts/parse-html.js         CLI: data/raw/*.html -> data/parsed/*.json
 scripts/seed.js               CLI: data/parsed/*.json -> Postgres
 scripts/verify-with-sqlite.js Historical, no longer needed
