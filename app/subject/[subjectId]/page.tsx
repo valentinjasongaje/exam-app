@@ -20,6 +20,7 @@ export default async function SubjectPage({
       where: { id: subjectId },
       include: {
         exams: {
+          orderBy: { title: "asc" },
           include: {
             _count: { select: { questions: true } },
             attempts: {
@@ -44,6 +45,7 @@ export default async function SubjectPage({
   if (!subject) notFound();
 
   const mockItems = Math.min(100, questionCount);
+  const hasFullPool = questionCount >= 100;
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
@@ -55,9 +57,14 @@ export default async function SubjectPage({
       {questionCount > 0 && (
         <Card className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-medium">Mock board exam</p>
+            <div className="flex items-center gap-2">
+              <p className="font-medium">Mock board exam</p>
+              {!hasFullPool && <Badge tone="accent">{mockItems}/100 available</Badge>}
+            </div>
             <p className="mt-1 text-sm text-ink-muted">
-              {mockItems} questions sampled across all {subject.name} exams · 4-hour timer
+              {hasFullPool
+                ? `100 questions sampled across all ${subject.name} exams · 4-hour timer`
+                : `Only ${mockItems} question${mockItems === 1 ? "" : "s"} imported so far — import more ${subject.name} exams for a full 100-item mock · 4-hour timer`}
             </p>
           </div>
           {inProgressMock ? (

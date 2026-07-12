@@ -37,7 +37,36 @@ export default async function AdminUsersPage() {
   return (
     <div>
       <PageHeader title="Users" subtitle={`${rows.length} registered`} />
-      <Card className="overflow-x-auto p-0">
+
+      {/* Mobile: stacked cards */}
+      <div className="flex flex-col gap-3 sm:hidden">
+        {rows.map((r) => (
+          <Card key={r.id}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  href={`/admin/users/${r.id}`}
+                  className="font-medium text-accent hover:underline"
+                >
+                  {r.name || "—"}
+                </Link>
+                <p className="truncate text-xs text-ink-muted">{r.email}</p>
+              </div>
+              <Badge tone={r.role === "ADMIN" ? "accent" : "muted"}>{r.role}</Badge>
+            </div>
+            <div className="mt-3 flex items-center gap-4 text-xs text-ink-muted">
+              <span>{r.examsTaken} exams</span>
+              <span>{r.accuracy !== null ? `${r.accuracy}% accuracy` : "No attempts"}</span>
+            </div>
+            <p className="mt-1 text-xs text-ink-faint">
+              Last activity: {r.lastActivity ? r.lastActivity.toLocaleDateString() : "—"}
+            </p>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <Card className="hidden overflow-x-auto p-0 sm:block">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-ink-muted">

@@ -89,44 +89,54 @@
   --font-mono: var(--font-geist-mono);
 }
 
-* {
-  border-color: var(--border);
-}
+/*
+ * Unlayered CSS always beats anything inside a Tailwind @layer block
+ * (including @layer utilities), regardless of specificity — a plain `*`
+ * selector here would silently out-rank every border-* utility class in
+ * the app. Wrapping these in @layer base lets Tailwind's utilities layer
+ * (which comes later) override them normally, same as Tailwind's own
+ * reset does.
+ */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
 
-html {
-  color-scheme: light dark;
-}
+  html {
+    color-scheme: light dark;
+  }
 
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-}
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-serif), Georgia, serif;
-  letter-spacing: -0.01em;
-}
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif), Georgia, serif;
+    letter-spacing: -0.01em;
+  }
 
-::selection {
-  background: var(--accent-soft);
-  color: var(--ink);
-}
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
 
-a {
-  text-underline-offset: 3px;
-}
+  a {
+    text-underline-offset: 3px;
+  }
 
-input[type="radio"],
-input[type="checkbox"] {
-  accent-color: var(--accent);
-}
+  input[type="radio"],
+  input[type="checkbox"] {
+    accent-color: var(--accent);
+  }
 
-:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
@@ -179,8 +189,10 @@ input[type="checkbox"] {
   }
 }
 
-.bg-hero-glow {
-  background:
-    radial-gradient(ellipse 60% 50% at 20% 15%, var(--accent-soft) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 85% 25%, var(--accent-soft) 0%, transparent 55%);
+@layer utilities {
+  .bg-hero-glow {
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 15%, var(--accent-soft) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 85% 25%, var(--accent-soft) 0%, transparent 55%);
+  }
 }

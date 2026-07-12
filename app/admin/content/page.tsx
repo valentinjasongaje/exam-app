@@ -5,7 +5,12 @@ import { PageHeader, Card, EmptyState } from "@/components/ui";
 export default async function AdminContentPage() {
   const subjects = await prisma.subject.findMany({
     orderBy: { name: "asc" },
-    include: { exams: { include: { _count: { select: { questions: true } } } } },
+    include: {
+      exams: {
+        orderBy: { title: "asc" },
+        include: { _count: { select: { questions: true } } },
+      },
+    },
   });
 
   return (

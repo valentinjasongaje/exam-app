@@ -232,6 +232,38 @@ build time didn't surface anything layout-specific.
   gets flagged and blocked by the harness as a credential-forging shortcut
   — don't fight it, ask the user to log in manually in their own browser
   instead and verify via direct DB queries afterward.
+- **Found 2026-07-12, fixed**: `app/globals.css` had `* { border-color:
+  var(--border); } ` and a handful of other base resets (`html`, `body`,
+  `h1-h3`, `::selection`, `a`, `input[type=radio/checkbox]`,
+  `:focus-visible`) declared as plain unlayered CSS. Per the CSS Cascade
+  Layers spec, **unlayered rules always beat anything inside a `@layer`
+  block, regardless of specificity** — and Tailwind wraps all of its
+  utility classes in `@layer utilities`. So that one unlayered `*` rule
+  was silently winning over every `border-*` color utility in the app
+  (`border-accent`, `border-danger`, `hover:border-accent`, etc.) the
+  entire time, on every page that used one. All of those base rules are
+  now wrapped in `@layer base` (matching Tailwind's own layer, which
+  comes before `utilities` in priority) so utility classes override them
+  normally again. Caught by inspecting `document.styleSheets` /
+  `getComputedStyle` in the browser when a user reported the answered-
+  vs-unanswered question navigator looked identical in light mode — the
+  border-color fix for that navigator wasn't taking effect at all until
+  this was found. If a `border-*`/`ring-*`/etc. utility ever silently
+  "doesn't work" again, check for unlayered CSS overriding it before
+  assuming the utility itself is wrong.
+- **Admin import now processes files in parallel, not one-at-a-time.**
+  `lib/concurrency.ts` exports `mapWithConcurrency` (order-preserving,
+  concurrency-capped map). `previewImportAction` parses every uploaded
+  file with plain `Promise.all` (pure CPU work, no I/O, no cap needed).
+  `commitImportAction` commits exams (Blob image uploads + DB write) with
+  `mapWithConcurrency(exams, 3, ...)` — capped at 3 exams in flight since
+  that step hits Vercel Blob and the DB connection pool, unlike parsing.
+  If two exams in one batch target the same subject slug, concurrent
+  `Subject.upsert()` calls are still safe — verified directly against
+  Neon: 5 concurrent upserts on a fresh slug produced exactly 1 row
+  (Postgres resolves `ON CONFLICT` atomically). Multi-file selection
+  already worked before this (`<input multiple>`); this made the
+  processing itself actually run concurrently instead of sequentially.
 
 ## Next steps (in the order they make sense)
 
@@ -507,6 +539,7 @@ lib/shuffle.ts                Seeded deterministic shuffle for exam question/cho
 lib/use-countdown.ts          Client hook: deadline ISO string -> { expired, label }
 lib/subjects.ts               Fixed 5-subject list (Math/GEAS/Elex/EST/ECT) - no free-text subjects
 lib/composed-attempt.ts       Helpers for exam-less attempts (mock board exams, weak-question drills)
+lib/concurrency.ts             mapWithConcurrency - order-preserving, capped-parallel map (used by admin import)
 scripts/parse-html.js         CLI: data/raw/*.html -> data/parsed/*.json
 scripts/seed.js               CLI: data/parsed/*.json -> Postgres
 scripts/verify-with-sqlite.js Historical, no longer needed

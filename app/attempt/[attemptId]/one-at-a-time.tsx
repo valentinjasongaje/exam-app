@@ -118,8 +118,8 @@ export default function OneAtATime({
               i === index
                 ? "bg-accent text-accent-ink"
                 : answers[q.id]
-                  ? "bg-accent-soft text-accent"
-                  : "bg-bg-muted text-ink-muted hover:text-ink"
+                  ? "border border-accent bg-accent-soft text-accent"
+                  : "border border-transparent bg-bg-muted text-ink-muted hover:text-ink"
             )}
           >
             {i + 1}

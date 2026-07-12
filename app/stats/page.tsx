@@ -133,41 +133,91 @@ export default async function StatsPage() {
             <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">
               Score trend
             </h2>
-            <Card className="flex flex-col gap-3">
-              {attempts.map((a) => {
-                const pct =
-                  a.totalQuestions > 0
-                    ? Math.round(((a.score ?? 0) / a.totalQuestions) * 100)
-                    : 0;
-                return (
-                  <div key={a.id} className="flex items-center gap-3 text-sm">
-                    <span className="w-24 shrink-0 text-ink-muted">
-                      {a.finishedAt!.toLocaleDateString()}
-                    </span>
-                    <span className="w-48 shrink-0 truncate">{attemptTitle(a)}</span>
-                    <span className="relative h-2 flex-1 rounded-full bg-bg-muted">
-                      <span
-                        className="block h-2 rounded-full bg-accent"
-                        style={{ width: `${pct}%` }}
-                      />
-                      <span
-                        className="absolute top-1/2 h-3.5 w-px -translate-y-1/2 bg-ink-faint"
-                        style={{ left: `${PASS_PCT}%` }}
-                        title={`${PASS_PCT}% pass line`}
-                      />
-                    </span>
-                    <span className="w-16 shrink-0 text-right">
-                      {a.score}/{a.totalQuestions}
-                    </span>
-                    <span className="hidden w-14 shrink-0 text-right text-ink-faint sm:inline">
-                      {formatDuration(a.startedAt, a.finishedAt!)}
-                    </span>
-                    <Link href={`/attempt/${a.id}/review`} className="shrink-0 text-accent hover:underline">
-                      Review
-                    </Link>
-                  </div>
-                );
-              })}
+            <Card className="flex flex-col gap-4 sm:gap-3">
+              {/* Mobile: stacked per-attempt block */}
+              <div className="flex flex-col gap-4 sm:hidden">
+                {attempts.map((a) => {
+                  const pct =
+                    a.totalQuestions > 0
+                      ? Math.round(((a.score ?? 0) / a.totalQuestions) * 100)
+                      : 0;
+                  return (
+                    <div
+                      key={a.id}
+                      className="flex flex-col gap-2 border-b border-border pb-4 text-sm last:border-0 last:pb-0"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{attemptTitle(a)}</p>
+                          <p className="text-xs text-ink-muted">
+                            {a.finishedAt!.toLocaleDateString()} ·{" "}
+                            {formatDuration(a.startedAt, a.finishedAt!)}
+                          </p>
+                        </div>
+                        <span className="shrink-0 font-medium">
+                          {a.score}/{a.totalQuestions}
+                        </span>
+                      </div>
+                      <span className="relative h-2 w-full rounded-full bg-bg-muted">
+                        <span
+                          className="block h-2 rounded-full bg-accent"
+                          style={{ width: `${pct}%` }}
+                        />
+                        <span
+                          className="absolute top-1/2 h-3.5 w-px -translate-y-1/2 bg-ink-faint"
+                          style={{ left: `${PASS_PCT}%` }}
+                          title={`${PASS_PCT}% pass line`}
+                        />
+                      </span>
+                      <Link
+                        href={`/attempt/${a.id}/review`}
+                        className="self-start text-xs text-accent hover:underline"
+                      >
+                        Review
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop: single-line row */}
+              <div className="hidden flex-col gap-3 sm:flex">
+                {attempts.map((a) => {
+                  const pct =
+                    a.totalQuestions > 0
+                      ? Math.round(((a.score ?? 0) / a.totalQuestions) * 100)
+                      : 0;
+                  return (
+                    <div key={a.id} className="flex items-center gap-3 text-sm">
+                      <span className="w-24 shrink-0 text-ink-muted">
+                        {a.finishedAt!.toLocaleDateString()}
+                      </span>
+                      <span className="w-48 shrink-0 truncate">{attemptTitle(a)}</span>
+                      <span className="relative h-2 flex-1 rounded-full bg-bg-muted">
+                        <span
+                          className="block h-2 rounded-full bg-accent"
+                          style={{ width: `${pct}%` }}
+                        />
+                        <span
+                          className="absolute top-1/2 h-3.5 w-px -translate-y-1/2 bg-ink-faint"
+                          style={{ left: `${PASS_PCT}%` }}
+                          title={`${PASS_PCT}% pass line`}
+                        />
+                      </span>
+                      <span className="w-16 shrink-0 text-right">
+                        {a.score}/{a.totalQuestions}
+                      </span>
+                      <span className="w-14 shrink-0 text-right text-ink-faint">
+                        {formatDuration(a.startedAt, a.finishedAt!)}
+                      </span>
+                      <Link href={`/attempt/${a.id}/review`} className="shrink-0 text-accent hover:underline">
+                        Review
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+
               <p className="text-xs text-ink-faint">
                 The tick on each bar marks the {PASS_PCT}% pass line.
               </p>
