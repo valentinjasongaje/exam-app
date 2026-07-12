@@ -84,8 +84,8 @@
   --color-success-soft: var(--success-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
-  --font-sans: var(--font-geist-sans);
-  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -115,7 +115,7 @@
   h1,
   h2,
   h3 {
-    font-family: var(--font-serif), Georgia, serif;
+    font-family: var(--font-serif), Arial, Helvetica, sans-serif;
     letter-spacing: -0.01em;
   }
 
