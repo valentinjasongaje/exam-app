@@ -22,12 +22,12 @@ export default function SettingsForm({
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-2 text-sm font-medium">Question layout</legend>
         <label className="choice-row">
-          <input type="radio" name="preferredLayout" value="ALL_AT_ONCE" defaultChecked={initialLayout === "ALL_AT_ONCE"} />
-          All questions on one page
-        </label>
-        <label className="choice-row">
           <input type="radio" name="preferredLayout" value="ONE_AT_A_TIME" defaultChecked={initialLayout === "ONE_AT_A_TIME"} />
           One question at a time
+        </label>
+        <label className="choice-row">
+          <input type="radio" name="preferredLayout" value="ALL_AT_ONCE" defaultChecked={initialLayout === "ALL_AT_ONCE"} />
+          All questions on one page
         </label>
       </fieldset>
 

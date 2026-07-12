@@ -264,6 +264,17 @@ build time didn't surface anything layout-specific.
   (Postgres resolves `ON CONFLICT` atomically). Multi-file selection
   already worked before this (`<input multiple>`); this made the
   processing itself actually run concurrently instead of sequentially.
+- **`User.preferredLayout` default changed to `ONE_AT_A_TIME`** (was
+  `ALL_AT_ONCE`) — migration `20260712041513_default_layout_one_at_a_time`.
+  Settings form radios reordered to match (one-at-a-time listed first).
+  Schema defaults only apply to new rows, so existing users keep whatever
+  they already had — checked both real accounts:
+  `shogunlee3214@gmail.com` already had `ONE_AT_A_TIME` (changed it
+  themselves previously), `valentinjasongaje@gmail.com` (the account
+  owner) still had the old `ALL_AT_ONCE` default and was updated directly
+  to match, since that's clearly the point of the request. Verified via a
+  scratch-created-then-deleted test user that fresh sign-ups now get
+  `ONE_AT_A_TIME` with no explicit value needed.
 
 ## Next steps (in the order they make sense)
 

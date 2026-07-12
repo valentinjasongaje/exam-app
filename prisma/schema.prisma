@@ -92,7 +92,7 @@ model User {
   email           String        @unique
   name            String?
   role            Role          @default(USER)
-  preferredLayout AttemptLayout @default(ALL_AT_ONCE)
+  preferredLayout AttemptLayout @default(ONE_AT_A_TIME)
   shuffleEnabled  Boolean       @default(true)
   instantFeedback Boolean       @default(false) // practice + one-at-a-time only: reveal answer/explanation right after answering
   createdAt       DateTime      @default(now())

@@ -79,11 +79,25 @@ export default async function AdminExamPage({
 
       <div className="flex flex-col gap-2">
         {exam.questions.map((q) => (
-          <Card key={q.id} className="flex items-start justify-between gap-4">
-            <div>
+          <Card key={q.id} className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <p className="mb-1 text-xs text-ink-muted">Q{q.order}</p>
               <p className="text-sm">{q.text}</p>
             </div>
+            {q.explanationImageUrl && (
+              <Link
+                href={`/admin/content/exams/${examId}/questions/${q.id}/edit`}
+                className="shrink-0"
+              >
+                <p className="mb-1 text-xs text-ink-muted">Solution</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={q.explanationImageUrl}
+                  alt="Solution"
+                  className="h-16 w-16 rounded-lg border border-border object-cover transition-colors hover:border-accent"
+                />
+              </Link>
+            )}
             <div className="flex shrink-0 gap-4 text-sm">
               <Link
                 href={`/admin/content/exams/${examId}/questions/${q.id}/edit`}
