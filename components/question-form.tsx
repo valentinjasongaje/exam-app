@@ -68,7 +68,16 @@ export default function QuestionForm({
   const [state, formAction, pending] = useActionState(action, { error: null });
   const [editedQuestionImage, setEditedQuestionImage] = useState<string | null>(null);
   const [editedExplanationImage, setEditedExplanationImage] = useState<string | null>(null);
+  // New questions have no existing answer to protect, so they start unlocked;
+  // editing an existing question locks the correct-answer radios until the
+  // admin explicitly asks to change it, so a stray click can't silently flip it.
+  const [answerUnlocked, setAnswerUnlocked] = useState(!initial);
   const choiceFor = (label: string) => initial?.choices.find((c) => c.label === label);
+  const currentCorrectLabel = initial?.choices.find((c) => c.isCorrect)?.label;
+
+  function guardAnswerChange(e: React.SyntheticEvent) {
+    if (!answerUnlocked) e.preventDefault();
+  }
 
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-5">
@@ -91,10 +100,38 @@ export default function QuestionForm({
       </label>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-sm font-medium">Choices (select the correct one)</legend>
+        <legend className="mb-1 text-sm font-medium">
+          Choices {answerUnlocked && "(select the correct one)"}
+        </legend>
+
+        {initial && !answerUnlocked && (
+          <div className="mb-1 flex items-center justify-between rounded-lg bg-bg-muted px-3 py-2 text-sm">
+            <span>
+              Correct answer: <strong>{currentCorrectLabel}</strong>
+            </span>
+            <button
+              type="button"
+              onClick={() => setAnswerUnlocked(true)}
+              className="text-accent hover:underline"
+            >
+              Change answer
+            </button>
+          </div>
+        )}
+
         {LABELS.map((label) => (
           <div key={label} className="flex items-center gap-3">
-            <input type="radio" name="correct" value={label} required defaultChecked={choiceFor(label)?.isCorrect} />
+            <input
+              type="radio"
+              name="correct"
+              value={label}
+              required
+              defaultChecked={choiceFor(label)?.isCorrect}
+              onClick={guardAnswerChange}
+              onKeyDown={guardAnswerChange}
+              className={!answerUnlocked ? "cursor-not-allowed opacity-50" : undefined}
+              aria-disabled={!answerUnlocked}
+            />
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-bg-muted text-xs font-medium text-ink-muted">
               {label}
             </span>

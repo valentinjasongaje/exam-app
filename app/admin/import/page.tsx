@@ -269,7 +269,7 @@ export default function ImportPage() {
                     <img
                       src={t.dataUrl}
                       alt=""
-                      className="h-20 w-20 rounded-lg border border-border object-cover"
+                      className="h-44 w-44 rounded-lg border border-border bg-bg-muted object-contain"
                     />
                     <button
                       type="button"
@@ -277,7 +277,7 @@ export default function ImportPage() {
                       className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/0 text-transparent transition-colors group-hover:bg-black/40 group-hover:text-white"
                       aria-label={`Edit image for ${t.label}`}
                     >
-                      <Pencil size={18} />
+                      <Pencil size={20} />
                     </button>
                     <p className="mt-1 text-center text-xs text-ink-muted">{t.label}</p>
                   </div>

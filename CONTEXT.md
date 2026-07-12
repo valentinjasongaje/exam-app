@@ -275,6 +275,19 @@ build time didn't surface anything layout-specific.
   to match, since that's clearly the point of the request. Verified via a
   scratch-created-then-deleted test user that fresh sign-ups now get
   `ONE_AT_A_TIME` with no explicit value needed.
+- **Question-edit form protects the correct answer from accidental
+  changes.** `components/question-form.tsx`: editing an existing
+  question now shows the correct answer as a read-only "Correct answer:
+  X" banner with an explicit "Change answer" button — the choice radios
+  are present but click-guarded (same `onClick`/`onKeyDown`
+  `preventDefault` pattern as the board-exam timer lock, not `disabled`,
+  since disabled radios are excluded from FormData and the untouched
+  correct answer still needs to submit). Clicking "Change answer" lifts
+  the guard. New questions (no existing answer to protect) skip the lock
+  entirely and the radios are editable immediately. Also bumped the
+  import-review image thumbnails from 80px to 176px and switched
+  `object-cover` → `object-contain` so the full image is visible (no
+  cropped corners) when checking for watermarks.
 
 ## Next steps (in the order they make sense)
 
