@@ -616,6 +616,25 @@ Migration `20261024150000_add_calendar` (hand-written, same reason as the
 tracker one) must be applied before deploying — the tracker overview reads
 `ScheduleOverride` too, so it breaks without it.
 
+## AI explanations (2026-10-24)
+
+"Explain my mistake" / "Explain this" button under each question on the
+attempt review page (`app/attempt/[attemptId]/review/explain-button.tsx`).
+It POSTs to `/api/explain`, which streams a plain-text explanation from the
+Claude API (`@anthropic-ai/sdk`).
+
+- The prompt (`lib/ai-explain.ts`) passes the answer key and the review
+  center's solution as authoritative, so Claude explains toward the known
+  answer rather than re-solving. Remote (https) question/solution images are
+  sent too.
+- Results are cached in `QuestionExplanation`, keyed by (question, picked
+  choice or "skipped"); cache hits are free. "Regenerate" deletes the cached
+  row and asks again.
+- Env vars: `ANTHROPIC_API_KEY` (required — the button is hidden without
+  it), `ANTHROPIC_MODEL` (default `claude-sonnet-5-5`), `AI_DAILY_LIMIT`
+  (new explanations per user per rolling 24h, default 40).
+- Migration `20261024160000_add_question_explanations`.
+
 ## Repo layout
 
 ```

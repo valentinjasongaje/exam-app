@@ -6,6 +6,8 @@ import { seededShuffle, choiceSeedFor } from "@/lib/shuffle";
 import { questionIdsOf, attemptTitle } from "@/lib/composed-attempt";
 import { Card, Badge } from "@/components/ui";
 import { clsx } from "clsx";
+import { aiConfigured } from "@/lib/ai-explain";
+import ExplainButton from "./explain-button";
 
 const PASS_PCT = 70;
 
@@ -66,6 +68,7 @@ export default async function AttemptReviewPage({
 
   const answersByQuestion = new Map(attempt.answers.map((a) => [a.questionId, a.choiceId]));
   const pct = Math.round(((attempt.score ?? 0) / attempt.totalQuestions) * 100);
+  const canExplain = aiConfigured();
   const passed = pct >= PASS_PCT;
 
   return (
@@ -150,6 +153,13 @@ export default async function AttemptReviewPage({
                   src={q.explanationImageUrl}
                   alt=""
                   className="mt-2 ml-9 max-w-xs rounded-lg border border-border"
+                />
+              )}
+              {canExplain && (
+                <ExplainButton
+                  attemptId={attempt.id}
+                  questionId={q.id}
+                  wrong={!q.choices.some((c) => c.id === pickedId && c.isCorrect)}
                 />
               )}
             </Card>

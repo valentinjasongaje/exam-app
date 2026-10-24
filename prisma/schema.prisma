@@ -52,6 +52,7 @@ model Question {
 
   choices        Choice[]
   attemptAnswers AttemptAnswer[]
+  aiExplanations QuestionExplanation[]
 
   @@unique([examId, sourceItemId])
   @@index([examId, order])
@@ -105,6 +106,7 @@ model User {
   overrides     ScheduleOverride[]
   events        CalendarEvent[]
   reminders     ReviewReminder[]
+  aiExplanations QuestionExplanation[]
 }
 
 model Attempt {
@@ -274,4 +276,24 @@ model ReviewReminder {
 
   @@index([userId, dueDate])
   @@index([topicId])
+}
+
+// ---------- AI explanations ----------
+
+/// Claude-written explanation of a question, cached so re-opening it is free.
+/// Keyed by the choice the user picked ("skipped" when they left it blank),
+/// since the explanation addresses that specific mistake.
+model QuestionExplanation {
+  id         String   @id @default(cuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  choiceKey  String // Choice.id the user picked, or "skipped"
+  userId     String // who generated it (for the daily limit)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  content    String
+  model      String
+  createdAt  DateTime @default(now())
+
+  @@unique([questionId, choiceKey])
+  @@index([userId, createdAt])
 }
