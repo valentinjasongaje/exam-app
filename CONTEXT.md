@@ -582,6 +582,40 @@ Migration `20261024140000_add_study_tracker` was hand-written (the build
 sandbox couldn't download Prisma engines) — run `npx prisma migrate deploy`
 (or `migrate dev`) against Neon before using the tracker.
 
+## Review calendar (2026-10-24)
+
+`/calendar` (nav: "Calendar") shows the review plan as a month or week view
+(`?view=month|week&date=…&day=…`), with a day panel on the side.
+
+- **Plan engine — `lib/schedule.ts`.** The weekly template (Mon big Elex
+  blocks, Tue–Fri office + lunch formulas + evening drills, Tue PTK online
+  class, Sat weakest-subject block + PTK face-to-face, Sun problems + timed
+  quiz) is generated in code from `PLAN_START` to the day before `EXAM_DATE`.
+  Office weeks, holiday weeks and exam week get their own variants; Sundays
+  switch to half mocks every other week in Phase 2 and full mocks in Phase 3.
+  Pure functions, shared by the page, the tracker targets and the ICS feed.
+  The tracker's weekly "Plan" is now the sum of these blocks (with the
+  user's overrides), not a fixed constant.
+- **Overrides (`ScheduleOverride`).** Only changes are stored: SKIP or MOVE
+  of one template block (`blockKey`, e.g. `tue-ptk`) on one day. "PTK moved
+  to Friday this week" writes two MOVEs (class → Fri 7pm, Fri EST drill →
+  Tue 8:30pm).
+- **Planned vs done.** Each day's status bar compares logged
+  `StudySession` minutes with planned review minutes. A catch-up card (rest
+  of the current week) lists per-subject shortfalls.
+- **Spaced reviews (`ReviewReminder`).** Marking a topic Done schedules
+  re-reviews at +3/+7/+21 days; Needs review at +1/+3/+7 (any later status
+  change replaces pending ones). Missed reminders roll forward onto today.
+- **Events (`CalendarEvent`).** One-off EVENT / BUSY / DEADLINE items, timed
+  or all-day.
+- **Google Calendar feed.** `User.calendarToken` enables a read-only ICS feed
+  at `/api/calendar/<token>` (plan blocks except Office, events, pending
+  reviews, milestones). Token can be reset or turned off from the page.
+
+Migration `20261024150000_add_calendar` (hand-written, same reason as the
+tracker one) must be applied before deploying — the tracker overview reads
+`ScheduleOverride` too, so it breaks without it.
+
 ## Repo layout
 
 ```

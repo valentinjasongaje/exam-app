@@ -59,12 +59,16 @@ export const PHASES = [
 
 export type WeekType = "normal" | "office" | "holiday" | "exam";
 
-/** Planned review minutes per week type (from the Weekly Schedule sheet). */
+/**
+ * Planned review minutes per week type with no overrides — these equal the
+ * sum of the template blocks in lib/schedule.ts (the tracker and calendar
+ * compute live targets from those blocks; this is the reference value).
+ */
 export const WEEKLY_TARGET_MINUTES: Record<WeekType, number> = {
   normal: 1340, // ~22.3 h: Monday off
-  office: 1000, // ~16.7 h: last week of the month, office Mon–Fri
-  holiday: 720,
-  exam: 480,
+  office: 980, // ~16.3 h: last week of the month, office Mon–Fri
+  holiday: 780, // 13 h
+  exam: 570, // 9.5 h
 };
 
 export const WEEK_TYPE_LABEL: Record<WeekType, string> = {

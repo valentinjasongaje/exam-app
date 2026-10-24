@@ -47,6 +47,9 @@ export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
       <NavLink href="/tracker" onNavigate={close}>
         Tracker
       </NavLink>
+      <NavLink href="/calendar" onNavigate={close}>
+        Calendar
+      </NavLink>
       <NavLink href="/settings" onNavigate={close}>
         Settings
       </NavLink>

@@ -10,12 +10,16 @@ type VideoOption = { id: string; title: string; subject: string; remaining: numb
 
 export default function LogSessionForm({
   today,
+  defaultDate = today,
   subjects,
   videos,
+  compact = false,
 }: {
   today: string;
+  defaultDate?: string;
   subjects: readonly { slug: string; name: string }[];
   videos: VideoOption[];
+  compact?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(logSessionAction, initialState);
   const [activity, setActivity] = useState("VIDEO");
@@ -35,10 +39,10 @@ export default function LogSessionForm({
 
   return (
     <form ref={formRef} action={formAction} className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className={compact ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-3 sm:grid-cols-4"}>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="text-ink-muted">Date</span>
-          <input type="date" name="date" defaultValue={today} max={today} className="field" />
+          <input type="date" name="date" defaultValue={defaultDate} max={today} className="field" />
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
           <span className="text-ink-muted">Subject</span>

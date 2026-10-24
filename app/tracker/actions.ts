@@ -11,6 +11,7 @@ import {
   toDbDate,
   todayLocal,
 } from "@/lib/study-plan";
+import { reviewDates } from "@/lib/schedule";
 
 export type FormState = { error: string | null; success?: boolean };
 
@@ -36,6 +37,7 @@ function optInt(formData: FormData, key: string): number | null | "invalid" {
 
 function refresh() {
   revalidatePath("/tracker", "layout");
+  revalidatePath("/calendar");
 }
 
 // ---------- study sessions ----------
@@ -113,14 +115,26 @@ export async function setTopicStatusAction(formData: FormData) {
   if (!STATUSES.includes(status)) return;
   const id = str(formData, "id");
   const topic = await prisma.studyTopic.findFirst({ where: { id, userId } });
-  if (!topic) return;
-  await prisma.studyTopic.update({
-    where: { id },
-    data: {
-      status,
-      completedAt: status === "DONE" ? (topic.completedAt ?? new Date()) : null,
-    },
-  });
+  if (!topic || topic.status === status) return;
+
+  // Re-plan spaced reviews: any change replaces the pending ones; Done and
+  // Needs review schedule a fresh sequence (see REVIEW_INTERVALS).
+  const reviews =
+    status === "DONE" || status === "NEEDS_REVIEW" ? reviewDates(todayLocal(), status) : [];
+
+  await prisma.$transaction([
+    prisma.studyTopic.update({
+      where: { id },
+      data: {
+        status,
+        completedAt: status === "DONE" ? (topic.completedAt ?? new Date()) : null,
+      },
+    }),
+    prisma.reviewReminder.deleteMany({ where: { topicId: id, userId, doneAt: null } }),
+    prisma.reviewReminder.createMany({
+      data: reviews.map((r) => ({ userId, topicId: id, step: r.step, dueDate: toDbDate(r.dueDate) })),
+    }),
+  ]);
   refresh();
 }
 

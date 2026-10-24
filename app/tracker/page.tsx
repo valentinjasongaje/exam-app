@@ -3,10 +3,11 @@ import { Trash2 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultTopics } from "@/lib/study-topics";
+import { loadOverrides } from "@/lib/calendar-data";
+import { weekPlannedMinutes } from "@/lib/schedule";
 import {
   EXAM_DATE,
   TRACKER_SUBJECTS,
-  WEEKLY_TARGET_MINUTES,
   WEEK_TYPE_LABEL,
   addDays,
   currentPhase,
@@ -43,7 +44,7 @@ export default async function TrackerPage() {
   const monday = weekStart(today);
   const historyStart = addDays(monday, -7 * (HISTORY_WEEKS - 1));
 
-  const [sessions, recent, topics, videos] = await Promise.all([
+  const [sessions, recent, topics, videos, overrides] = await Promise.all([
     prisma.studySession.findMany({
       where: { userId, date: { gte: toDbDate(historyStart) } },
       select: { date: true, subject: true, minutes: true, activity: true, score: true, total: true },
@@ -59,12 +60,13 @@ export default async function TrackerPage() {
       orderBy: [{ subject: "asc" }, { order: "asc" }],
       select: { id: true, title: true, subject: true, durationMinutes: true, watchedMinutes: true },
     }),
+    loadOverrides(userId),
   ]);
 
   // ---- this week ----
   const thisWeek = sessions.filter((s) => fromDbDate(s.date) >= monday);
   const thisType = weekType(monday);
-  const target = WEEKLY_TARGET_MINUTES[thisType];
+  const target = weekPlannedMinutes(monday, overrides);
   const weekMinutes = thisWeek.reduce((sum, s) => sum + s.minutes, 0);
   const bySubject = TRACKER_SUBJECTS.map((s) => ({
     ...s,
@@ -91,7 +93,7 @@ export default async function TrackerPage() {
           )
         : null;
     const type = weekType(start);
-    return { start, type, minutes, target: WEEKLY_TARGET_MINUTES[type], quizPct };
+    return { start, type, minutes, target: weekPlannedMinutes(start, overrides), quizPct };
   });
 
   // ---- topics & videos ----
@@ -140,7 +142,7 @@ export default async function TrackerPage() {
           </p>
           <ProgressBar
             value={weekMinutes}
-            max={target}
+            max={Math.max(target, 1)}
             tone={weekMinutes >= target * 0.9 ? "success" : "accent"}
             className="mt-3"
           />
@@ -239,7 +241,7 @@ export default async function TrackerPage() {
           </thead>
           <tbody>
             {weeks.map((w) => {
-              const pct = Math.round((w.minutes / w.target) * 100);
+              const pct = w.target > 0 ? Math.round((w.minutes / w.target) * 100) : 0;
               return (
                 <tr key={w.start} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">{formatDay(w.start)}</td>

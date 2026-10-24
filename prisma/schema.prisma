@@ -95,12 +95,16 @@ model User {
   preferredLayout AttemptLayout @default(ONE_AT_A_TIME)
   shuffleEnabled  Boolean       @default(true)
   instantFeedback Boolean       @default(false) // practice + one-at-a-time only: reveal answer/explanation right after answering
+  calendarToken   String?       @unique // secret for the read-only ICS feed at /api/calendar/<token>; null = feed off
   createdAt       DateTime      @default(now())
 
   attempts      Attempt[]
   studySessions StudySession[]
   studyTopics   StudyTopic[]
   studyVideos   StudyVideo[]
+  overrides     ScheduleOverride[]
+  events        CalendarEvent[]
+  reminders     ReviewReminder[]
 }
 
 model Attempt {
@@ -188,6 +192,8 @@ model StudyTopic {
   completedAt DateTime?
   createdAt   DateTime    @default(now())
 
+  reminders ReviewReminder[]
+
   @@index([userId, subject])
 }
 
@@ -205,4 +211,67 @@ model StudyVideo {
   createdAt       DateTime  @default(now())
 
   @@index([userId, subject])
+}
+
+// ---------- Calendar ----------
+// The weekly plan itself is generated in code (lib/schedule.ts); only the
+// user's changes to it are stored.
+
+enum OverrideAction {
+  SKIP
+  MOVE
+}
+
+/// A change to one generated plan block on one day (skip it, or move it).
+model ScheduleOverride {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime       @db.Date // the block's original day
+  blockKey  String // template block key from lib/schedule.ts, e.g. "tue-ptk"
+  action    OverrideAction
+  newDate   DateTime?      @db.Date // MOVE only
+  newStart  String? // MOVE only, "HH:MM"
+  newEnd    String? // MOVE only, "HH:MM"
+  createdAt DateTime       @default(now())
+
+  @@unique([userId, date, blockKey])
+  @@index([userId, newDate])
+}
+
+enum CalendarEventKind {
+  EVENT
+  DEADLINE
+  BUSY
+}
+
+model CalendarEvent {
+  id        String            @id @default(cuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime          @db.Date
+  start     String? // "HH:MM"; null = all-day
+  end       String?
+  title     String
+  kind      CalendarEventKind @default(EVENT)
+  note      String?
+  createdAt DateTime          @default(now())
+
+  @@index([userId, date])
+}
+
+/// Spaced re-review of a topic, created when the topic is marked Done or Needs review.
+model ReviewReminder {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topicId   String
+  topic     StudyTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  dueDate   DateTime   @db.Date
+  step      Int // 1-based position in the interval sequence
+  doneAt    DateTime?
+  createdAt DateTime   @default(now())
+
+  @@index([userId, dueDate])
+  @@index([topicId])
 }
