@@ -551,6 +551,37 @@ project (`vercel git connect` reported as much) — **pushes to master
 auto-deploy to production**. Prod and dev share the same Neon DB, so
 migrations applied locally are already live for prod.
 
+## Study tracker (2026-10-24)
+
+A personal review-plan tracker at `/tracker` (nav: "Tracker"), separate from
+exam content. Built to replace the ECE_Review_Schedule.xlsx spreadsheet for
+the March 2027 ECE boards.
+
+- **Overview (`/tracker`)**: this week's logged hours vs. the plan target
+  (per-subject bars), a "log a study session" form (date, subject, activity:
+  Video / Problems / Timed quiz / Formula review, duration as `90`, `1:30` or
+  `1h30`, optional quiz score and note), topic and video progress summaries,
+  an 8-week history table (hours, % of plan, quiz average), recent sessions.
+- **Topics (`/tracker/topics`)**: per-subject checklist with status
+  (Not started / In progress / Done / Needs review). The default ECE topic
+  list is seeded per user on first visit (`lib/study-topics.ts`).
+- **Videos (`/tracker/videos`)**: the user's saved review videos (title,
+  optional link, length) with watched progress. Logging a *Video* session and
+  picking a video adds the minutes to that video's progress.
+
+Plan constants live in `lib/study-plan.ts`: `EXAM_DATE` (placeholder
+2027-03-07 until PRC confirms), phases, weekly targets (normal ~22.3h; office
+Mon–Fri week, i.e. the week containing the month's last Friday, ~16.7h;
+holiday 12h; exam week 8h). Dates are handled as `YYYY-MM-DD` strings in
+Asia/Manila and stored in `@db.Date` columns.
+
+Models: `StudySession`, `StudyTopic`, `StudyVideo` (+ enums `StudyActivity`,
+`TopicStatus`), all cascade-deleted with the user. `subject` is a plain
+`CANONICAL_SUBJECTS` slug (`math`/`geas`/`elex`/`est`), not a `Subject` FK.
+Migration `20261024140000_add_study_tracker` was hand-written (the build
+sandbox couldn't download Prisma engines) — run `npx prisma migrate deploy`
+(or `migrate dev`) against Neon before using the tracker.
+
 ## Repo layout
 
 ```

@@ -44,6 +44,9 @@ export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
       <NavLink href="/stats" onNavigate={close}>
         Progress
       </NavLink>
+      <NavLink href="/tracker" onNavigate={close}>
+        Tracker
+      </NavLink>
       <NavLink href="/settings" onNavigate={close}>
         Settings
       </NavLink>

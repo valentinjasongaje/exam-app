@@ -97,7 +97,10 @@ model User {
   instantFeedback Boolean       @default(false) // practice + one-at-a-time only: reveal answer/explanation right after answering
   createdAt       DateTime      @default(now())
 
-  attempts Attempt[]
+  attempts      Attempt[]
+  studySessions StudySession[]
+  studyTopics   StudyTopic[]
+  studyVideos   StudyVideo[]
 }
 
 model Attempt {
@@ -137,4 +140,69 @@ model AttemptAnswer {
   answeredAt DateTime @default(now())
 
   @@unique([attemptId, questionId])
+}
+
+// ---------- Study tracker (personal review plan, not exam content) ----------
+// `subject` holds a CANONICAL_SUBJECTS slug from lib/subjects.ts ("math",
+// "geas", "elex", "est"), kept as a plain string like the import flow does,
+// so the tracker doesn't depend on Subject rows existing.
+
+enum StudyActivity {
+  VIDEO
+  PROBLEMS
+  QUIZ
+  REVIEW
+}
+
+enum TopicStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  DONE
+  NEEDS_REVIEW
+}
+
+model StudySession {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime      @db.Date // local (Asia/Manila) calendar day
+  subject   String
+  minutes   Int
+  activity  StudyActivity @default(VIDEO)
+  score     Int? // quiz only: number correct
+  total     Int? // quiz only: number of items
+  note      String?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, date])
+}
+
+model StudyTopic {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     String
+  name        String
+  order       Int         @default(0)
+  status      TopicStatus @default(NOT_STARTED)
+  completedAt DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([userId, subject])
+}
+
+model StudyVideo {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject         String
+  title           String
+  url             String?
+  durationMinutes Int
+  watchedMinutes  Int       @default(0)
+  order           Int       @default(0)
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([userId, subject])
 }
