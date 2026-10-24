@@ -600,6 +600,10 @@ sandbox couldn't download Prisma engines) — run `npx prisma migrate deploy`
   of one template block (`blockKey`, e.g. `tue-ptk`) on one day. "PTK moved
   to Friday this week" writes two MOVEs (class → Fri 7pm, Fri EST drill →
   Tue 8:30pm).
+- **D&D night.** Office D&D game (Thu/Fri 8–11pm, irregular): one tap on
+  that day adds a Busy "D&D night" event and moves the evening drill to
+  Saturday 7:30pm, skipping Saturday's light review (a second D&D night the
+  same week lands at 8:30pm). Undo reverses it. See `dndNightPlan`.
 - **Planned vs done.** Each day's status bar compares logged
   `StudySession` minutes with planned review minutes. A catch-up card (rest
   of the current week) lists per-subject shortfalls.

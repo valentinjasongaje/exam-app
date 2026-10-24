@@ -1,7 +1,7 @@
 import { clsx } from "clsx";
 import { Check, Clock, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { formatDay, formatMinutes, subjectName, TRACKER_SUBJECTS } from "@/lib/study-plan";
-import { formatTime, weekdayIndex } from "@/lib/schedule";
+import { DND_EVENT_TITLE, formatTime, weekdayIndex } from "@/lib/schedule";
 import { Badge, Card } from "@/components/ui";
 import LogSessionForm from "../tracker/log-session-form";
 import type { CalendarDay } from "./build-days";
@@ -10,6 +10,8 @@ import { AddEventForm, MoveBlockForm } from "./forms";
 import {
   completeReminderAction,
   deleteEventAction,
+  dndNightAction,
+  undoDndNightAction,
   ptkToFridayAction,
   restoreBlockAction,
   skipBlockAction,
@@ -47,6 +49,8 @@ export default function DayPanel({
   const isTuesday = weekdayIndex(day.date) === 1;
   const hasPtk = day.blocks.some((b) => b.key === "tue-ptk" && b.originalDate === day.date);
   const canLog = day.date <= today;
+  const isThuFri = weekdayIndex(day.date) === 3 || weekdayIndex(day.date) === 4;
+  const dndOn = day.events.some((e) => e.title === DND_EVENT_TITLE && e.kind === "BUSY");
 
   return (
     <Card className="flex flex-col gap-6">
@@ -182,6 +186,19 @@ export default function DayPanel({
             </button>
             {!ptkMoved && (
               <p className="text-xs text-ink-faint">Moves the class to Friday 7pm and Friday&rsquo;s EST drill to tonight.</p>
+            )}
+          </form>
+        )}
+        {isThuFri && (day.blocks.length > 0 || dndOn) && (
+          <form action={dndOn ? undoDndNightAction : dndNightAction} className="mt-3">
+            <input type="hidden" name="day" value={day.date} />
+            <button type="submit" className="text-sm text-accent hover:underline">
+              {dndOn ? "No D&D tonight after all (undo)" : "D&D night (8–11pm)"}
+            </button>
+            {!dndOn && (
+              <p className="text-xs text-ink-faint">
+                Marks tonight busy and moves this evening&rsquo;s drill to Saturday 7:30pm, in place of the light review.
+              </p>
             )}
           </form>
         )}

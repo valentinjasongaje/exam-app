@@ -6,7 +6,19 @@ import type { CalendarEventKind } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { addDays, isValidYmd, toDbDate, todayLocal } from "@/lib/study-plan";
-import { isValidTime, ptkToFridayOverrides, templateBlocks, toMinutes, weekdayIndex } from "@/lib/schedule";
+import { loadOverrides } from "@/lib/calendar-data";
+import {
+  DND_END,
+  DND_EVENT_TITLE,
+  DND_START,
+  dndNightPlan,
+  isValidTime,
+  ptkToFridayOverrides,
+  templateBlocks,
+  toMinutes,
+  weekdayIndex,
+  type OverrideInput,
+} from "@/lib/schedule";
 
 export type FormState = { error: string | null; success?: boolean };
 
@@ -123,6 +135,78 @@ export async function undoPtkToFridayAction(formData: FormData) {
         { date: toDbDate(addDays(tuesday, 3)), blockKey: "fri-eve" },
       ],
     },
+  });
+  refresh();
+}
+
+// ---------- D&D night ----------
+
+function upsertOverride(userId: string, o: OverrideInput) {
+  const data = {
+    action: o.action,
+    newDate: o.newDate ? toDbDate(o.newDate) : null,
+    newStart: o.newStart,
+    newEnd: o.newEnd,
+  };
+  return prisma.scheduleOverride.upsert({
+    where: { userId_date_blockKey: { userId, date: toDbDate(o.date), blockKey: o.blockKey } },
+    create: { userId, date: toDbDate(o.date), blockKey: o.blockKey, ...data },
+    update: data,
+  });
+}
+
+/** Office D&D game (Thu/Fri 8–11pm): mark the night busy and move that evening's drill to Saturday. */
+export async function dndNightAction(formData: FormData) {
+  const userId = await requireUserId();
+  if (!userId) return;
+  const day = str(formData, "day");
+  if (!isValidYmd(day)) return;
+  const plan = dndNightPlan(day, await loadOverrides(userId));
+  if (!plan) return;
+
+  const already = await prisma.calendarEvent.findFirst({
+    where: { userId, date: toDbDate(day), title: DND_EVENT_TITLE, kind: "BUSY" },
+  });
+
+  await prisma.$transaction([
+    ...(already
+      ? []
+      : [
+          prisma.calendarEvent.create({
+            data: { userId, date: toDbDate(day), title: DND_EVENT_TITLE, kind: "BUSY", start: DND_START, end: DND_END },
+          }),
+        ]),
+    ...(plan.drill ? [upsertOverride(userId, plan.drill)] : []),
+    ...(plan.skipSatEve ? [upsertOverride(userId, plan.skipSatEve)] : []),
+  ]);
+  refresh();
+}
+
+export async function undoDndNightAction(formData: FormData) {
+  const userId = await requireUserId();
+  if (!userId) return;
+  const day = str(formData, "day");
+  const wd = isValidYmd(day) ? weekdayIndex(day) : -1;
+  if (wd !== 3 && wd !== 4) return;
+  const saturday = addDays(day, 5 - wd);
+  const drillKey = wd === 3 ? "thu-eve" : "fri-eve";
+
+  await prisma.$transaction(async (tx) => {
+    await tx.calendarEvent.deleteMany({
+      where: { userId, date: toDbDate(day), title: DND_EVENT_TITLE, kind: "BUSY" },
+    });
+    await tx.scheduleOverride.deleteMany({
+      where: { userId, date: toDbDate(day), blockKey: drillKey, action: "MOVE", newDate: toDbDate(saturday) },
+    });
+    // Bring Saturday's light review back unless the other night's drill is still parked there.
+    const stillMovedIn = await tx.scheduleOverride.count({
+      where: { userId, action: "MOVE", newDate: toDbDate(saturday), blockKey: { in: ["thu-eve", "fri-eve"] } },
+    });
+    if (stillMovedIn === 0) {
+      await tx.scheduleOverride.deleteMany({
+        where: { userId, date: toDbDate(saturday), blockKey: "sat-eve", action: "SKIP" },
+      });
+    }
   });
   refresh();
 }

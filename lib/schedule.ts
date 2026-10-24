@@ -247,6 +247,54 @@ export function ptkToFridayOverrides(tuesday: string): OverrideInput[] {
   ];
 }
 
+/** Title of the Busy event that marks an office D&D night. */
+export const DND_EVENT_TITLE = "D&D night";
+export const DND_START = "20:00";
+export const DND_END = "23:00";
+
+/**
+ * "D&D night" on a Thursday or Friday (office game, 8–11pm): that evening's
+ * drill moves to Saturday evening, taking the place of Saturday's light
+ * review (which is skipped). If another D&D night already moved a drill into
+ * that Saturday, this one goes right after it (8:30pm). Returns null when the
+ * day can't host one; `drill` is null when there's no drill to move that
+ * night (holiday week, or Friday's drill already moved by the PTK switch).
+ */
+export function dndNightPlan(day: string, overrides: OverrideInput[]) {
+  const wd = weekdayIndex(day);
+  if (wd !== 3 && wd !== 4) return null;
+  const saturday = addDays(day, 5 - wd);
+  const drillKey = wd === 3 ? "thu-eve" : "fri-eve";
+
+  const hasDrill =
+    templateBlocks(day).some((b) => b.key === drillKey) &&
+    !overrides.some((o) => o.date === day && o.blockKey === drillKey);
+
+  const otherKey = wd === 3 ? "fri-eve" : "thu-eve";
+  const otherDay = addDays(saturday, wd === 3 ? -1 : -2);
+  const slotTaken = overrides.some(
+    (o) => o.date === otherDay && o.blockKey === otherKey && o.action === "MOVE" && o.newDate === saturday && o.newStart === "19:30"
+  );
+
+  const drill: OverrideInput | null = hasDrill
+    ? {
+        date: day,
+        blockKey: drillKey,
+        action: "MOVE",
+        newDate: saturday,
+        newStart: slotTaken ? "20:30" : "19:30",
+        newEnd: slotTaken ? "21:30" : "20:30",
+      }
+    : null;
+
+  const skipSatEve: OverrideInput | null =
+    hasDrill && templateBlocks(saturday).some((b) => b.key === "sat-eve")
+      ? { date: saturday, blockKey: "sat-eve", action: "SKIP", newDate: null, newStart: null, newEnd: null }
+      : null;
+
+  return { saturday, drillKey, drill, skipSatEve };
+}
+
 // ---------- day status ----------
 
 export type DayStatus = "none" | "future" | "done" | "partial" | "missed";
