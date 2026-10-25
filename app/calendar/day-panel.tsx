@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { clsx } from "clsx";
 import { Check, Clock, RotateCcw, Trash2, Undo2 } from "lucide-react";
 import { formatDay, formatMinutes, subjectName, TRACKER_SUBJECTS } from "@/lib/study-plan";
@@ -139,6 +140,11 @@ export default function DayPanel({
                 </span>
                 <span className={clsx("min-w-0 flex-1", b.skipped && "text-ink-faint line-through")}>
                   {b.title}
+                  {b.key.endsWith("-formulas") && !b.skipped && (
+                    <Link href="/notes/recall" className="ml-2 text-xs text-accent hover:underline">
+                      Recall formulas →
+                    </Link>
+                  )}
                   {b.moved && (
                     <Badge className="ml-2" tone="accent">
                       {b.originalDate !== day.date ? `from ${formatDay(b.originalDate, { weekday: "short" })}` : "moved"}

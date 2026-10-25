@@ -682,6 +682,24 @@ that Windows laptop; elsewhere the copy-path button is the fallback.
 To re-measure after the drive changes, regenerate the JSON from a fresh
 duration scan rather than editing it by hand.
 
+## Notes & formula recall (2026-10-25)
+
+`/notes` (nav: "Notes"): one note per topic (`StudyNote`: subject, topic,
+free-text body) with a list of formulas to memorize (`FormulaCard`: name =
+the prompt, formula = the answer, optional hint). The editor
+(`app/notes/note-editor.tsx`) has a symbol bar (π, ω, √, ², Ω, …) that
+inserts at the cursor, and topic suggestions from the review lectures and the
+topic checklist.
+
+Recall mode (`/notes/recall`, `?note=`, `?subject=`, `&all=1`): flashcards —
+show the name, reveal the formula, mark Got it / Missed. Spacing is Leitner
+boxes in `lib/recall.ts` (intervals 0/1/3/7/14/30 days; a miss resets to box
+0 and stays due today). Each answer is saved immediately
+(`recordRecallAction`). Cards are shuffled server-side so SSR and the
+browser agree. Editing a card's formula text resets it to box 0. The
+calendar's 20-minute "Formula review" blocks link to `/notes/recall`.
+Migration `20261025040000_add_notes_and_formula_cards`.
+
 ## Repo layout
 
 ```

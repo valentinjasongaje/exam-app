@@ -50,6 +50,9 @@ export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
       <NavLink href="/calendar" onNavigate={close}>
         Calendar
       </NavLink>
+      <NavLink href="/notes" onNavigate={close}>
+        Notes
+      </NavLink>
       <NavLink href="/settings" onNavigate={close}>
         Settings
       </NavLink>

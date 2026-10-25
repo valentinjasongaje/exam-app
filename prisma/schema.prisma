@@ -107,6 +107,8 @@ model User {
   events        CalendarEvent[]
   reminders     ReviewReminder[]
   aiExplanations QuestionExplanation[]
+  notes          StudyNote[]
+  formulaCards   FormulaCard[]
 }
 
 model Attempt {
@@ -298,4 +300,45 @@ model QuestionExplanation {
 
   @@unique([questionId, choiceKey])
   @@index([userId, createdAt])
+}
+
+// ---------- Notes & formula recall ----------
+
+/// A topic note: free-text notes plus the formulas to memorize for that topic.
+model StudyNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String // tracker subject slug ("math", "geas", "elex", "est")
+  topic     String
+  body      String   @default("")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cards FormulaCard[]
+
+  @@index([userId, subject])
+}
+
+/// One formula to recall. Spaced repetition (Leitner boxes): a correct recall
+/// moves it up a box and pushes dueDate out; a miss sends it back to box 0.
+model FormulaCard {
+  id             String    @id @default(cuid())
+  noteId         String
+  note           StudyNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String // what you're asked, e.g. "Capacitive reactance"
+  formula        String // the answer, e.g. "Xc = 1 / (2πfC)"
+  hint           String? // optional: units, when to use it
+  order          Int       @default(0)
+  box            Int       @default(0)
+  dueDate        DateTime? @db.Date // null = due now
+  lastReviewedAt DateTime?
+  correct        Int       @default(0)
+  wrong          Int       @default(0)
+  createdAt      DateTime  @default(now())
+
+  @@index([userId, dueDate])
+  @@index([noteId])
 }

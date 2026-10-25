@@ -16,7 +16,8 @@ export default auth((req) => {
     (pathname.startsWith("/dashboard") ||
       pathname.startsWith("/stats") ||
       pathname.startsWith("/tracker") ||
-      pathname.startsWith("/calendar")) &&
+      pathname.startsWith("/calendar") ||
+      pathname.startsWith("/notes")) &&
     !isLoggedIn
   ) {
     return NextResponse.redirect(new URL("/login", req.url));
@@ -24,5 +25,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/stats/:path*", "/tracker/:path*", "/calendar/:path*", "/admin/:path*"],
+  matcher: ["/dashboard/:path*", "/stats/:path*", "/tracker/:path*", "/calendar/:path*", "/notes/:path*", "/admin/:path*"],
 };
