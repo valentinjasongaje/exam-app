@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Menu, X } from "lucide-react";
 import { signOutAction } from "./sign-out-action";
 
@@ -23,7 +24,7 @@ function NavLink({
       href={href}
       onClick={onNavigate}
       className={clsx(
-        "transition-colors",
+        "py-2.5 transition-colors sm:py-0",
         active ? "text-ink" : "text-ink-muted hover:text-ink"
       )}
     >
@@ -35,6 +36,18 @@ function NavLink({
 export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const links = (
     <>
@@ -87,30 +100,44 @@ export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
         {open ? <X size={19} /> : <Menu size={19} />}
       </button>
 
-      {open && (
-        <>
-          <button
-            type="button"
-            aria-hidden="true"
-            tabIndex={-1}
-            onClick={close}
-            className="fixed inset-0 sm:hidden"
-          />
-          <div className="absolute inset-x-0 top-full border-b border-border bg-bg px-4 py-4 shadow-lg sm:hidden">
-            <div className="flex flex-col gap-4 text-sm">
-              {links}
-              <form action={signOutAction}>
+      {/* Rendered into <body> so no page element (pinned video, exam timer bar,
+          the header's own blur) can sit on top of the menu or clip it. */}
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-50 sm:hidden">
+            <button
+              type="button"
+              aria-label="Close menu"
+              tabIndex={-1}
+              onClick={close}
+              className="absolute inset-0 bg-black/30"
+            />
+            <div className="absolute inset-x-0 top-0 max-h-[100dvh] overflow-y-auto border-b border-border bg-bg px-4 pt-4 pb-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="font-serif text-lg font-semibold">
+                  Menu<span className="text-accent">.</span>
+                </span>
                 <button
-                  type="submit"
-                  className="text-ink-muted transition-colors hover:text-ink"
+                  type="button"
+                  onClick={close}
+                  aria-label="Close menu"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:bg-bg-muted hover:text-ink"
                 >
-                  Log out
+                  <X size={20} />
                 </button>
-              </form>
+              </div>
+              <div className="flex flex-col gap-1 text-base">
+                {links}
+                <form action={signOutAction}>
+                  <button type="submit" className="w-full py-2.5 text-left text-ink-muted transition-colors hover:text-ink">
+                    Log out
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 }
