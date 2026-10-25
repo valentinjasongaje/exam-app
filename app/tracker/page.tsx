@@ -58,7 +58,7 @@ export default async function TrackerPage() {
     prisma.studyVideo.findMany({
       where: { userId },
       orderBy: [{ subject: "asc" }, { order: "asc" }],
-      select: { id: true, title: true, subject: true, durationMinutes: true, watchedMinutes: true },
+      select: { id: true, title: true, subject: true, section: true, durationMinutes: true, watchedMinutes: true },
     }),
     loadOverrides(userId),
   ]);
@@ -102,7 +102,7 @@ export default async function TrackerPage() {
     return { ...s, total: mine.length, done: mine.filter((t) => t.status === "DONE").length };
   });
   const videoRows = TRACKER_SUBJECTS.map((s) => {
-    const mine = videos.filter((v) => v.subject === s.slug);
+    const mine = videos.filter((v) => v.subject === s.slug && v.section !== "optional-basics");
     return {
       ...s,
       count: mine.length,

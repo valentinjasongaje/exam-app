@@ -206,6 +206,8 @@ model StudyVideo {
   subject         String
   title           String
   url             String?
+  section         String? // watch-plan section from lib/video-library.ts ("core", "math-basics", "refresher", "optional-basics"); null = added by hand
+  localPath       String? // where the file lives on the user's drive, e.g. G:\\Excel Review Center\\...\\MATH01.mp4
   durationMinutes Int
   watchedMinutes  Int       @default(0)
   order           Int       @default(0)

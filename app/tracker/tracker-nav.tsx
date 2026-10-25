@@ -8,6 +8,7 @@ const tabs = [
   { href: "/tracker", label: "Overview" },
   { href: "/tracker/topics", label: "Topics" },
   { href: "/tracker/videos", label: "Videos" },
+  { href: "/tracker/library", label: "Library" },
 ];
 
 export default function TrackerNav() {

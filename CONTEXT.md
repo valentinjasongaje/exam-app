@@ -639,6 +639,32 @@ Claude API (`@anthropic-ai/sdk`).
   (new explanations per user per rolling 24h, default 40).
 - Migration `20261024160000_add_question_explanations`.
 
+## Video library and watch plan (2026-10-25)
+
+The user's review videos live on their G: drive (`Excel Review Center` and
+`REVIEW TUTORIAL`, 2,006 .mp4 files, ~1,098 h). They were measured once
+(lengths read from every file) and classified into
+`lib/video-library.json`, typed by `lib/video-library.ts`:
+
+- `plan`: one recording per topic — Oct 2024 batch, Version 1 — in four
+  sections: `core` (42 main lectures incl. the Canon F-789SGA calculator
+  video, ~95 h), `math-basics` (8 pre-season Math, ~12 h), `refresher`
+  (Phase 2, 22 videos, ~48 h), `optional-basics` (30 pre-season
+  Elex/EST/GEAS, not counted in totals).
+- `library`: every batch/version of every topic grouped by folder, plus
+  stats (total, exact copies).
+
+`StudyVideo.section` / `StudyVideo.localPath` (migration
+`20261025030000_video_plan_fields`) mark imported plan videos. The Videos
+tab's "Add watch plan" button imports missing sections idempotently (keyed
+by localPath). The headline total there is the content pass (core + Math
+basics + hand-added). `/tracker/library` shows the topic-by-batch table with
+copyable folder paths. The browser can't open local files, so the app only
+offers "copy path".
+
+To re-measure after the drive changes, regenerate the JSON from a fresh
+duration scan rather than editing it by hand.
+
 ## Repo layout
 
 ```

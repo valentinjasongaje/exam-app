@@ -12,6 +12,7 @@ import {
   todayLocal,
 } from "@/lib/study-plan";
 import { reviewDates } from "@/lib/schedule";
+import { WATCH_PLAN } from "@/lib/video-library";
 
 export type FormState = { error: string | null; success?: boolean };
 
@@ -180,7 +181,7 @@ export async function addVideoAction(_prev: FormState, formData: FormData): Prom
   if (!duration || duration <= 0) return { error: "Enter the video length, e.g. 45, 1:20 or 2h." };
   if (url && !/^https?:\/\//i.test(url)) return { error: "The link should start with http:// or https://." };
 
-  const last = await prisma.studyVideo.aggregate({ where: { userId, subject }, _max: { order: true } });
+  const last = await prisma.studyVideo.aggregate({ where: { userId }, _max: { order: true } });
   await prisma.studyVideo.create({
     data: { userId, subject, title, url, durationMinutes: duration, order: (last._max.order ?? -1) + 1 },
   });
@@ -211,6 +212,40 @@ export async function updateVideoProgressAction(formData: FormData) {
       watchedMinutes: watched,
       completedAt: watched >= video.durationMinutes ? (video.completedAt ?? new Date()) : null,
     },
+  });
+  refresh();
+}
+
+/**
+ * Adds the measured watch plan (lib/video-library.ts) to the user's videos.
+ * `sections` is a comma list of plan sections; videos already imported
+ * (same localPath) are skipped, so this is safe to press twice.
+ */
+export async function importWatchPlanAction(formData: FormData) {
+  const userId = await requireUserId();
+  if (!userId) return;
+  const wanted = str(formData, "sections").split(",").filter(Boolean);
+  const items = WATCH_PLAN.map((v, i) => ({ ...v, order: i })).filter((v) => wanted.includes(v.section));
+  if (items.length === 0) return;
+
+  const existing = await prisma.studyVideo.findMany({
+    where: { userId, localPath: { in: items.map((v) => v.localPath) } },
+    select: { localPath: true },
+  });
+  const have = new Set(existing.map((e) => e.localPath));
+
+  await prisma.studyVideo.createMany({
+    data: items
+      .filter((v) => !have.has(v.localPath))
+      .map((v) => ({
+        userId,
+        subject: v.subject,
+        title: v.title,
+        section: v.section,
+        localPath: v.localPath,
+        durationMinutes: v.minutes,
+        order: v.order,
+      })),
   });
   refresh();
 }
