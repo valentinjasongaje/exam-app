@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Cloud, Play, Trash2 } from "lucide-react";
 import { clsx } from "clsx";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +12,8 @@ import { deleteVideoAction, syncWatchPlanAction } from "../actions";
 import CopyPath from "./copy-path";
 import WatchCheckbox from "./watch-checkbox";
 import OpenVideo from "./open-video";
+import DrivePanel from "./drive-panel";
+import { DriveError, accessTokenFor, storageQuota } from "@/lib/google-drive";
 
 /**
  * Video checklist, modelled on the Watch Plan sheet of ECE_Review_Videos.xlsx:
@@ -33,6 +35,8 @@ type Row = {
   key: string;
   localPath?: string;
   id?: string;
+  videoId?: string;
+  driveFileId?: string | null;
   subject: string;
   title: string;
   minutes: number;
@@ -43,7 +47,7 @@ type Row = {
 export default async function VideosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ section?: string; subject?: string }>;
+  searchParams: Promise<{ section?: string; subject?: string; drive?: string }>;
 }) {
   const session = await auth();
   const userId = session!.user.id;
@@ -56,6 +60,22 @@ export default async function VideosPage({
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
   const byPath = new Map(videos.filter((v) => v.localPath).map((v) => [v.localPath!, v]));
+
+  // Google Drive status (quota is best effort: a slow or failing Drive call shouldn't break the checklist).
+  const driveConn = await prisma.driveConnection.findUnique({ where: { userId } });
+  let quota: Awaited<ReturnType<typeof storageQuota>> | null = null;
+  let quotaError: string | null = null;
+  let driveConnected = !!driveConn;
+  if (driveConn) {
+    try {
+      quota = await storageQuota((await accessTokenFor(userId)).token);
+    } catch (e) {
+      if (e instanceof DriveError && e.status === 401) driveConnected = false;
+      else quotaError = "Couldn't read your Drive storage right now.";
+    }
+  }
+  const onDrive = videos.filter((v) => v.driveFileId);
+  const planBytes = new Map(WATCH_PLAN.map((p) => [p.localPath, p.bytes]));
   const planByPath = new Map(WATCH_PLAN.map((p) => [p.localPath, p]));
 
   const planRows = (key: PlanSection): Row[] =>
@@ -64,6 +84,8 @@ export default async function VideosPage({
       return {
         key: p.localPath,
         localPath: p.localPath,
+        videoId: v?.id,
+        driveFileId: v?.driveFileId ?? null,
         subject: p.subject,
         title: p.title,
         minutes: p.minutes,
@@ -117,7 +139,7 @@ export default async function VideosPage({
       <PageHeader
         eyebrow="Study tracker"
         title="Video checklist"
-        subtitle="Tick a video when you finish it. Press ▶ to open it in your video player."
+        subtitle="Tick a video when you finish it. Videos marked ☁ are on your Google Drive and play right here; ▶ opens the file from G: on your laptop."
         action={
           <Link href="/tracker/library" className="text-sm text-accent hover:underline">
             Other batches in the Library →
@@ -157,6 +179,30 @@ export default async function VideosPage({
           <li>On a phone or another computer, ▶ won&rsquo;t work; use the folder icon to copy the path instead.</li>
         </ol>
       </details>
+
+      <Card className="mb-6">
+        <DrivePanel
+          connected={driveConnected}
+          email={driveConn?.googleEmail ?? null}
+          quota={quota}
+          quotaError={quotaError}
+          onDriveCount={onDrive.length}
+          onDriveBytes={onDrive.reduce((s, v) => s + (planBytes.get(v.localPath ?? "") ?? 0), 0)}
+          watchedOnDrive={onDrive.filter((v) => v.watchedMinutes >= v.durationMinutes).length}
+          status={params.drive ?? null}
+          candidates={WATCH_PLAN.map((p) => {
+            const v = byPath.get(p.localPath);
+            return {
+              localPath: p.localPath,
+              file: p.file,
+              title: p.title,
+              bytes: p.bytes,
+              onDrive: !!v?.driveFileId,
+              watched: !!v && v.watchedMinutes >= v.durationMinutes,
+            };
+          })}
+        />
+      </Card>
 
       {/* Section summary, tap to switch */}
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -206,15 +252,26 @@ export default async function VideosPage({
 
       {upNext.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {upNext.map((x) => (
-            <OpenVideo
-              key={x.s.slug}
-              localPath={x.r!.localPath!}
-              className="rounded-full border border-accent/40 bg-accent-soft/40 px-3 py-1.5 text-sm text-ink hover:border-accent"
-            >
-              <span className="text-ink-muted">Next:</span> {x.r!.title}
-            </OpenVideo>
-          ))}
+          {upNext.map((x) =>
+            x.r!.driveFileId && x.r!.videoId ? (
+              <Link
+                key={x.s.slug}
+                href={`/tracker/videos/watch/${x.r!.videoId}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft/40 px-3 py-1.5 text-sm text-ink hover:border-accent"
+              >
+                <Play size={14} className="shrink-0 fill-current text-accent" />
+                <span className="text-ink-muted">Next:</span> {x.r!.title}
+              </Link>
+            ) : (
+              <OpenVideo
+                key={x.s.slug}
+                localPath={x.r!.localPath!}
+                className="rounded-full border border-accent/40 bg-accent-soft/40 px-3 py-1.5 text-sm text-ink hover:border-accent"
+              >
+                <span className="text-ink-muted">Next:</span> {x.r!.title}
+              </OpenVideo>
+            )
+          )}
         </div>
       )}
 
@@ -242,9 +299,22 @@ export default async function VideosPage({
                   </td>
                   <td className="hidden py-2.5 text-xs text-ink-faint tabular-nums sm:table-cell">{i + 1}</td>
                   <td className="px-2 py-2.5">
-                    <OpenVideo localPath={r.localPath!} className={clsx("text-left", done ? "text-ink-muted" : "text-ink")}>
-                      <span className="hover:underline">{r.title}</span>
-                    </OpenVideo>
+                    {r.driveFileId && r.videoId ? (
+                      <span className="flex items-center gap-2">
+                        <Link
+                          href={`/tracker/videos/watch/${r.videoId}`}
+                          className={clsx("inline-flex items-center gap-1.5 hover:underline", done ? "text-ink-muted" : "text-ink")}
+                        >
+                          <Cloud size={14} className="shrink-0 text-accent" />
+                          {r.title}
+                        </Link>
+                        <OpenVideo localPath={r.localPath!} className="text-ink-faint hover:text-accent" />
+                      </span>
+                    ) : (
+                      <OpenVideo localPath={r.localPath!} className={clsx("text-left", done ? "text-ink-muted" : "text-ink")}>
+                        <span className="hover:underline">{r.title}</span>
+                      </OpenVideo>
+                    )}
                     {subject === "all" && section !== "calculator" && (
                       <span className="block pl-5 text-xs text-ink-faint">{subjectName(r.subject)}</span>
                     )}

@@ -109,6 +109,7 @@ model User {
   aiExplanations QuestionExplanation[]
   notes          StudyNote[]
   formulaCards   FormulaCard[]
+  drive          DriveConnection?
 }
 
 model Attempt {
@@ -210,6 +211,8 @@ model StudyVideo {
   url             String?
   section         String? // watch-plan section from lib/video-library.ts ("core", "math-basics", "refresher", "optional-basics"); null = added by hand
   localPath       String? // where the file lives on the user's drive, e.g. G:\\Excel Review Center\\...\\MATH01.mp4
+  driveFileId     String? // Google Drive copy uploaded through the app (watchable anywhere); null = not on Drive
+  driveUploadedAt DateTime?
   durationMinutes Int
   watchedMinutes  Int       @default(0)
   order           Int       @default(0)
@@ -341,4 +344,19 @@ model FormulaCard {
 
   @@index([userId, dueDate])
   @@index([noteId])
+}
+
+// ---------- Google Drive (video uploads) ----------
+
+/// The user's Google Drive link, separate from sign-in. Scope is drive.file:
+/// the app only sees files it uploaded itself.
+model DriveConnection {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  googleEmail     String?
+  refreshTokenEnc String // AES-256-GCM, key derived from AUTH_SECRET (lib/google-drive.ts)
+  folderId        String? // "ECE Review Videos" folder the app created
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

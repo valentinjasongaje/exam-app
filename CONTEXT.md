@@ -700,6 +700,48 @@ browser agree. Editing a card's formula text resets it to box 0. The
 calendar's 20-minute "Formula review" blocks link to `/notes/recall`.
 Migration `20261025040000_add_notes_and_formula_cards`.
 
+## Google Drive video uploads (2026-10-25)
+
+So plan videos can be watched away from the laptop. `lib/google-drive.ts`.
+
+- **Connect** (`/api/drive/connect` → Google → `/api/drive/callback`): a
+  separate OAuth consent for the `drive.file` scope (the app only sees files
+  it uploaded). The refresh token is stored AES-256-GCM-encrypted
+  (key derived from `AUTH_SECRET`) in `DriveConnection`, with the app's
+  "ECE Review Videos" folder id. CSRF protected by a state cookie.
+- **Upload** (`app/tracker/videos/drive-uploader.tsx`): the user picks the
+  `OCTOBER 2024\1ST SEM` folder (or files); the browser matches plan videos by
+  file name + exact size, pre-selects unwatched ones that fit the free quota,
+  then for each file calls `/api/drive/session` (server validates the plan
+  path and size, opens a resumable session with the browser's `Origin`, and
+  returns only the session URL; the Google token never reaches the browser)
+  and PUTs 32 MB chunks straight to Google with retry + resume via
+  `Content-Range: bytes */total`. `/api/drive/complete` verifies the file
+  size on Drive and sets `StudyVideo.driveFileId`. Each upload carries
+  `appProperties.planPath`, so "Check Drive" (`syncDriveAction`) can relink
+  uploads or clear links to deleted files.
+- **Watch** (`/tracker/videos/watch/[id]`): Drive's own player in an iframe
+  (`/file/d/<id>/preview`); private files play for whoever is signed in to
+  that Google account in the browser. Mark watched, next video on Drive,
+  "take notes on this topic", remove from Drive.
+- **Free space**: remove one video or all watched ones — permanent delete
+  (`DELETE files/<id>`), so space frees immediately; G: files and progress
+  are untouched.
+- **Setup needed in Google Cloud** (same OAuth client as sign-in): enable the
+  Google Drive API, add the `drive.file` scope to the consent screen, add
+  `https://<domain>/api/drive/callback` (and the localhost one) as an
+  authorized redirect URI. Consent screens left in "Testing" expire refresh
+  tokens after 7 days (the app then asks to reconnect); publishing the app
+  avoids that.
+- Migration `20261025050000_google_drive_videos`.
+
+## Search engines
+
+The site is private: `app/robots.ts` disallows everything, the root
+`metadata.robots` sets noindex/nofollow on every page, and `next.config.ts`
+sends `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` on every
+response (covers API routes and the calendar feed).
+
 ## Repo layout
 
 ```

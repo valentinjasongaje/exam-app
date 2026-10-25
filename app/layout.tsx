@@ -17,6 +17,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Exam App",
   description: "Practice licensure exam questions and track your progress.",
+  // Private study app: keep it out of search engines (see also app/robots.ts
+  // and the X-Robots-Tag header in next.config.ts).
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: { index: false, follow: false, noimageindex: true },
+  },
 };
 
 export default function RootLayout({

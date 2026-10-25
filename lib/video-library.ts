@@ -26,6 +26,7 @@ export type PlanVideo = {
   file: string;
   localPath: string;
   minutes: number;
+  bytes: number; // file size, used to match and verify Drive uploads
 };
 
 export type LibraryGroup = {
