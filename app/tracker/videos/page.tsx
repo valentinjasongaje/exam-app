@@ -1,230 +1,323 @@
 import Link from "next/link";
-import { ExternalLink, PlayCircle, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
+import { clsx } from "clsx";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { TRACKER_SUBJECTS, formatMinutes } from "@/lib/study-plan";
-import { SECTIONS, WATCH_PLAN, sectionLabel } from "@/lib/video-library";
-import { PageHeader, Card, Badge, Button } from "@/components/ui";
+import { TRACKER_SUBJECTS, subjectName } from "@/lib/study-plan";
+import { SECTIONS, WATCH_PLAN, type PlanSection } from "@/lib/video-library";
+import { PageHeader, Card, Button } from "@/components/ui";
 import ProgressBar from "../progress-bar";
 import { AddVideoForm } from "../add-item-form";
-import { deleteVideoAction, syncWatchPlanAction, updateVideoProgressAction } from "../actions";
+import { deleteVideoAction, syncWatchPlanAction } from "../actions";
 import CopyPath from "./copy-path";
+import WatchCheckbox from "./watch-checkbox";
+import OpenVideo from "./open-video";
+
+/**
+ * Video checklist, modelled on the Watch Plan sheet of ECE_Review_Videos.xlsx:
+ * one row per plan video with a watched box, length, 1.5x length and a
+ * running total, plus watched/left totals per section. Rows come from the
+ * plan (lib/video-library.ts) merged with the user's StudyVideo rows by
+ * localPath, so ticking works before anything is imported. ▶ opens the file
+ * through the ecevideo: handler (lib/video-opener.ts).
+ */
 
 function hm(min: number) {
-  return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`;
+  const m = Math.round(min);
+  return `${Math.floor(m / 60)}:${String(m % 60).padStart(2, "0")}`;
 }
 
-export default async function VideosPage() {
+const dateFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "Asia/Manila" });
+
+type Row = {
+  key: string;
+  localPath?: string;
+  id?: string;
+  subject: string;
+  title: string;
+  minutes: number;
+  watchedMinutes: number;
+  completedAt: Date | null;
+};
+
+export default async function VideosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ section?: string; subject?: string }>;
+}) {
   const session = await auth();
   const userId = session!.user.id;
+  const params = await searchParams;
+  const section: PlanSection = SECTIONS.some((s) => s.key === params.section) ? (params.section as PlanSection) : "core";
+  const subject = TRACKER_SUBJECTS.some((s) => s.slug === params.subject) ? params.subject! : "all";
 
   const videos = await prisma.studyVideo.findMany({
     where: { userId },
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
+  const byPath = new Map(videos.filter((v) => v.localPath).map((v) => [v.localPath!, v]));
+  const planByPath = new Map(WATCH_PLAN.map((p) => [p.localPath, p]));
 
-  // Compare what's imported with the plan: anything missing, re-sectioned,
-  // or dropped from the plan (e.g. the old basics) means "out of sync".
-  const planByPath = new Map(WATCH_PLAN.map((v) => [v.localPath, v]));
-  const importedPaths = new Set(videos.map((v) => v.localPath).filter(Boolean));
-  const missing = WATCH_PLAN.filter((v) => !importedPaths.has(v.localPath));
-  const stale = videos.filter(
-    (v) => v.section && (!v.localPath || !planByPath.has(v.localPath) || planByPath.get(v.localPath)!.section !== v.section)
+  const planRows = (key: PlanSection): Row[] =>
+    WATCH_PLAN.filter((p) => p.section === key).map((p) => {
+      const v = byPath.get(p.localPath);
+      return {
+        key: p.localPath,
+        localPath: p.localPath,
+        subject: p.subject,
+        title: p.title,
+        minutes: p.minutes,
+        watchedMinutes: v?.watchedMinutes ?? 0,
+        completedAt: v?.completedAt ?? null,
+      };
+    });
+
+  const handAdded: Row[] = videos
+    .filter((v) => !v.section && !(v.localPath && planByPath.has(v.localPath)))
+    .map((v) => ({
+      key: v.id,
+      id: v.id,
+      subject: v.subject,
+      title: v.title,
+      minutes: v.durationMinutes,
+      watchedMinutes: v.watchedMinutes,
+      completedAt: v.completedAt,
+    }));
+
+  // Rows imported under the earlier plan (pre-season basics, old sections).
+  const outOfDate = videos.filter(
+    (v) => v.section && (!v.localPath || planByPath.get(v.localPath)?.section !== v.section)
   );
-  const firstImport = !videos.some((v) => v.section);
-  const planTotal = WATCH_PLAN.reduce((sum, v) => sum + v.minutes, 0);
 
-  const total = videos.reduce((sum, v) => sum + v.durationMinutes, 0);
-  const watched = videos.reduce((sum, v) => sum + v.watchedMinutes, 0);
-  const left = total - watched;
+  const isDone = (r: Row) => r.watchedMinutes >= r.minutes;
+  const summary = SECTIONS.map((s) => {
+    const rows = planRows(s.key);
+    const total = rows.reduce((x, r) => x + r.minutes, 0);
+    const watched = rows.filter(isDone).reduce((x, r) => x + r.minutes, 0);
+    return { ...s, count: rows.length, done: rows.filter(isDone).length, total, watched };
+  });
 
-  // Next unwatched video per subject, following the plan order.
-  const upNext = TRACKER_SUBJECTS.map((s) => ({
-    subject: s,
-    video: videos.find((v) => v.subject === s.slug && v.watchedMinutes < v.durationMinutes),
-  })).filter((x) => x.video);
+  const allRows = planRows(section);
+  const rows = subject === "all" ? allRows : allRows.filter((r) => r.subject === subject);
+  const withRunning = rows.map((r, i) => ({
+    ...r,
+    running: rows.slice(0, i + 1).reduce((x, y) => x + y.minutes / 1.5, 0),
+  }));
+  const shownTotal = rows.reduce((x, r) => x + r.minutes, 0);
+  const shownWatched = rows.filter(isDone).reduce((x, r) => x + r.minutes, 0);
+  const upNext = TRACKER_SUBJECTS.filter((s) => subject === "all" || s.slug === subject)
+    .map((s) => ({ s, r: allRows.find((r) => r.subject === s.slug && !isDone(r)) }))
+    .filter((x) => x.r);
 
-  const groups = [
-    ...SECTIONS.map((s) => ({ key: s.key as string | null, label: s.label, hint: s.hint })),
-    { key: null, label: "Added by you", hint: "" },
-  ]
-    .map((g) => ({ ...g, items: videos.filter((v) => (v.section ?? null) === g.key) }))
-    .filter((g) => g.items.length > 0);
+  const href = (sec: string, subj: string) => `/tracker/videos?section=${sec}${subj !== "all" ? `&subject=${subj}` : ""}`;
+  const current = summary.find((s) => s.key === section)!;
 
   return (
     <>
       <PageHeader
         eyebrow="Study tracker"
-        title="Review videos"
-        subtitle={
-          videos.length
-            ? `${formatMinutes(watched)} of ${formatMinutes(total)} watched · ${formatMinutes(left)} left (${formatMinutes(Math.round(left / 1.5))} at 1.5x).`
-            : "Review lectures, refreshers and calculator techniques from your drive: one recording per topic."
-        }
+        title="Video checklist"
+        subtitle="Tick a video when you finish it. Press ▶ to open it in your video player."
         action={
           <Link href="/tracker/library" className="text-sm text-accent hover:underline">
-            See every batch in the Library →
+            Other batches in the Library →
           </Link>
         }
       />
 
-      {(missing.length > 0 || stale.length > 0) && (
-        <Card className="mb-8 border-accent/40 bg-accent-soft/40">
-          <h2 className="font-semibold">{firstImport ? "Add your watch plan" : "Update your watch plan"}</h2>
-          <p className="mt-1 text-sm text-ink-muted">
-            {firstImport
-              ? `${WATCH_PLAN.length} videos, ${formatMinutes(planTotal)} (${formatMinutes(Math.round(planTotal / 1.5))} at 1.5x): review lectures, calculator techniques and refreshers from the Oct 2024 batch, one recording per topic.`
-              : `The plan now has only review lectures, refreshers and calculator techniques. This ${[
-                  missing.length ? `adds ${missing.length} video${missing.length > 1 ? "s" : ""}` : "",
-                  stale.length ? `removes or re-sorts ${stale.length}` : "",
-                ]
-                  .filter(Boolean)
-                  .join(" and ")}. Progress on videos that stay is kept; videos you added yourself aren't touched.`}
+      {outOfDate.length > 0 && (
+        <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 border-accent/40 bg-accent-soft/40">
+          <p className="text-sm">
+            Some saved videos are from the earlier plan. Update to keep only review lectures, refreshers and calculator
+            techniques; your ticks on the rest are kept.
           </p>
-          <form action={syncWatchPlanAction} className="mt-4">
-            <Button type="submit">{firstImport ? "Add watch plan" : "Update plan"}</Button>
+          <form action={syncWatchPlanAction}>
+            <Button type="submit" size="sm">Update plan</Button>
           </form>
         </Card>
       )}
 
-      {upNext.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">Up next</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {upNext.map(({ subject, video }) => (
-              <Card key={subject.slug} className="flex items-start gap-3 p-4">
-                <PlayCircle size={20} className="mt-0.5 shrink-0 text-accent" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-ink-muted">{subject.name}</p>
-                  <p className="truncate font-medium">{video!.title}</p>
-                  <p className="text-xs text-ink-muted tabular-nums">
-                    {video!.watchedMinutes > 0 ? `${hm(video!.watchedMinutes)} of ` : ""}
-                    {formatMinutes(video!.durationMinutes)}
-                  </p>
-                </div>
-                {video!.localPath && <CopyPath path={video!.localPath} label="Path" />}
-              </Card>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-ink-faint">
-            Paste the path into File Explorer&rsquo;s address bar or your video player. Logging a &ldquo;Video&rdquo; session on
-            the Overview tab adds the time to the video you pick.
-          </p>
-        </div>
-      )}
+      <details className="mb-6 rounded-xl border border-border bg-bg-elevated text-sm">
+        <summary className="cursor-pointer px-4 py-3">
+          <span className="font-medium">Video not opening?</span>{" "}
+          <span className="text-ink-muted">One-time setup on your laptop</span>
+        </summary>
+        <ol className="list-decimal space-y-1.5 border-t border-border py-3 pr-4 pl-9 text-ink-muted">
+          <li>
+            Open <span className="font-mono text-ink">G:\ECE Video Opener</span> in File Explorer.
+          </li>
+          <li>
+            Double-click <span className="text-ink">Install video opener.bat</span>. If Windows warns about it, click{" "}
+            <span className="text-ink">More info → Run anyway</span>.
+          </li>
+          <li>
+            Back here, press ▶. The browser asks to open &ldquo;ECE Video Opener&rdquo;: tick{" "}
+            <span className="text-ink">Always allow</span> and click <span className="text-ink">Open</span>.
+          </li>
+          <li>On a phone or another computer, ▶ won&rsquo;t work; use the folder icon to copy the path instead.</li>
+        </ol>
+      </details>
 
-      <div className="flex flex-col gap-10">
-        {groups.map((g) => {
-          const gTotal = g.items.reduce((s, v) => s + v.durationMinutes, 0);
-          const gWatched = g.items.reduce((s, v) => s + v.watchedMinutes, 0);
+      {/* Section summary, tap to switch */}
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {summary.map((s) => (
+          <Link
+            key={s.key}
+            href={href(s.key, subject)}
+            className={clsx(
+              "rounded-xl border bg-bg-elevated p-4 transition-colors",
+              s.key === section ? "border-accent ring-1 ring-accent" : "border-border hover:border-border-strong"
+            )}
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="font-medium">{s.label}</p>
+              <p className="text-sm text-ink-muted tabular-nums">
+                {s.done}/{s.count}
+              </p>
+            </div>
+            <ProgressBar value={s.watched} max={Math.max(s.total, 1)} tone="success" className="mt-2.5" />
+            <p className="mt-2 text-xs text-ink-muted tabular-nums">
+              {hm(s.watched)} watched · {hm(s.total - s.watched)} left ({hm((s.total - s.watched) / 1.5)} at 1.5x)
+            </p>
+          </Link>
+        ))}
+      </div>
+
+      <p className="mb-3 text-sm text-ink-muted">{current.hint}</p>
+
+      <div className="mb-4 flex flex-wrap gap-1.5 text-sm">
+        {[{ slug: "all", name: "All" }, ...TRACKER_SUBJECTS].map((s) => {
+          const n = s.slug === "all" ? allRows.length : allRows.filter((r) => r.subject === s.slug).length;
+          if (n === 0) return null;
           return (
-            <section key={g.label}>
-              <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-lg font-semibold">{g.label}</h2>
-                <span className="text-sm tabular-nums text-ink-muted">
-                  {formatMinutes(gWatched)} / {formatMinutes(gTotal)}
-                </span>
-              </div>
-              {g.hint && <p className="mb-3 text-sm text-ink-muted">{g.hint}</p>}
-              <ProgressBar value={gWatched} max={Math.max(gTotal, 1)} tone="success" className="mb-4" />
-              <div className="flex flex-col gap-4">
-                {TRACKER_SUBJECTS.map((s) => {
-                  const mine = g.items.filter((v) => v.subject === s.slug);
-                  if (mine.length === 0) return null;
-                  const done = mine.filter((v) => v.watchedMinutes >= v.durationMinutes).length;
-                  return (
-                    <details key={s.slug} className="group rounded-xl border border-border bg-bg-elevated" open={g.key === "core"}>
-                      <summary className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm">
-                        <span className="font-medium">{s.name}</span>
-                        <span className="text-ink-muted tabular-nums">
-                          {done}/{mine.length} watched · {formatMinutes(mine.reduce((x, v) => x + v.durationMinutes, 0))}
-                        </span>
-                      </summary>
-                      <ul className="border-t border-border">
-                        {mine.map((v) => (
-                          <VideoRow key={v.id} v={v} />
-                        ))}
-                      </ul>
-                    </details>
-                  );
-                })}
-              </div>
-            </section>
+            <Link
+              key={s.slug}
+              href={href(section, s.slug)}
+              className={clsx(
+                "rounded-full border px-3 py-1 transition-colors",
+                subject === s.slug ? "border-accent bg-accent text-accent-ink" : "border-border-strong text-ink-muted hover:text-ink"
+              )}
+            >
+              {s.name}
+            </Link>
           );
         })}
       </div>
 
-      <Card className="mt-8">
-        <h2 className="mb-4 text-sm font-medium text-ink-muted">Add another video</h2>
-        <AddVideoForm subjects={TRACKER_SUBJECTS} />
+      {upNext.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {upNext.map((x) => (
+            <OpenVideo
+              key={x.s.slug}
+              localPath={x.r!.localPath!}
+              className="rounded-full border border-accent/40 bg-accent-soft/40 px-3 py-1.5 text-sm text-ink hover:border-accent"
+            >
+              <span className="text-ink-muted">Next:</span> {x.r!.title}
+            </OpenVideo>
+          ))}
+        </div>
+      )}
+
+      <Card className="overflow-hidden p-0">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-bg-muted/50 text-left text-xs text-ink-muted">
+              <th className="w-11 px-3 py-2.5 font-medium">✓</th>
+              <th className="hidden w-8 py-2.5 font-medium sm:table-cell">#</th>
+              <th className="px-2 py-2.5 font-medium">Video</th>
+              <th className="px-2 py-2.5 text-right font-medium">Length</th>
+              <th className="hidden px-2 py-2.5 text-right font-medium sm:table-cell">At 1.5x</th>
+              <th className="hidden px-2 py-2.5 text-right font-medium md:table-cell">Running (1.5x)</th>
+              <th className="hidden px-2 py-2.5 font-medium md:table-cell">Watched</th>
+              <th className="w-10 px-2 py-2.5" />
+            </tr>
+          </thead>
+          <tbody>
+            {withRunning.map((r, i) => {
+              const done = isDone(r);
+              return (
+                <tr key={r.key} className={clsx("border-b border-border last:border-0", done && "bg-success-soft/40")}>
+                  <td className="px-3 py-2.5 align-middle">
+                    <WatchCheckbox key={`${r.key}-${done}`} localPath={r.localPath} watched={done} label={r.title} />
+                  </td>
+                  <td className="hidden py-2.5 text-xs text-ink-faint tabular-nums sm:table-cell">{i + 1}</td>
+                  <td className="px-2 py-2.5">
+                    <OpenVideo localPath={r.localPath!} className={clsx("text-left", done ? "text-ink-muted" : "text-ink")}>
+                      <span className="hover:underline">{r.title}</span>
+                    </OpenVideo>
+                    {subject === "all" && section !== "calculator" && (
+                      <span className="block pl-5 text-xs text-ink-faint">{subjectName(r.subject)}</span>
+                    )}
+                    {!done && r.watchedMinutes > 0 && (
+                      <span className="block pl-5 text-xs text-accent">
+                        {hm(r.watchedMinutes)} of {hm(r.minutes)} so far
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-2 py-2.5 text-right tabular-nums">{hm(r.minutes)}</td>
+                  <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums sm:table-cell">{hm(r.minutes / 1.5)}</td>
+                  <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums md:table-cell">{hm(r.running)}</td>
+                  <td className="hidden px-2 py-2.5 text-xs text-ink-muted md:table-cell">
+                    {done && r.completedAt ? dateFmt.format(r.completedAt) : ""}
+                  </td>
+                  <td className="px-2 py-2.5 text-right">{r.localPath && <CopyPath path={r.localPath} label="" />}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-border-strong bg-bg-muted/50 text-sm font-medium">
+              <td className="px-3 py-2.5" />
+              <td className="hidden sm:table-cell" />
+              <td className="px-2 py-2.5">
+                {rows.filter(isDone).length} of {rows.length} watched
+                <span className="block text-xs font-normal text-ink-muted">
+                  {hm(shownTotal - shownWatched)} left · {hm((shownTotal - shownWatched) / 1.5)} at 1.5x
+                </span>
+              </td>
+              <td className="px-2 py-2.5 text-right tabular-nums">{hm(shownTotal)}</td>
+              <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">{hm(shownTotal / 1.5)}</td>
+              <td className="hidden md:table-cell" colSpan={3} />
+            </tr>
+          </tfoot>
+        </table>
       </Card>
+      <p className="mt-2 text-xs text-ink-faint">
+        The folder icon copies the video&rsquo;s location on your G: drive. Logging a &ldquo;Video&rdquo; session on the
+        Overview tab also counts toward the video you pick.
+      </p>
+
+      {handAdded.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-lg font-semibold">Added by you</h2>
+          <Card className="p-0">
+            <ul>
+              {handAdded.map((r) => (
+                <li key={r.key} className="flex items-center gap-3 border-b border-border px-3 py-2.5 text-sm last:border-0">
+                  <WatchCheckbox key={`${r.key}-${isDone(r)}`} id={r.id} watched={isDone(r)} label={r.title} />
+                  <span className="min-w-0 flex-1">
+                    {r.title} <span className="text-xs text-ink-faint">· {subjectName(r.subject)}</span>
+                  </span>
+                  <span className="tabular-nums text-ink-muted">{hm(r.minutes)}</span>
+                  <form action={deleteVideoAction}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <button type="submit" aria-label={`Delete ${r.title}`} className="rounded-md p-1.5 text-ink-faint hover:bg-danger-soft hover:text-danger">
+                      <Trash2 size={14} />
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </section>
+      )}
+
+      <details className="mt-8 rounded-xl border border-border bg-bg-elevated">
+        <summary className="cursor-pointer px-4 py-3 text-sm text-ink-muted">Add a video that isn&rsquo;t on the list</summary>
+        <div className="border-t border-border p-4">
+          <AddVideoForm subjects={TRACKER_SUBJECTS} />
+        </div>
+      </details>
     </>
   );
 }
-
-function VideoRow({
-  v,
-}: {
-  v: {
-    id: string;
-    title: string;
-    url: string | null;
-    localPath: string | null;
-    section: string | null;
-    subject: string;
-    durationMinutes: number;
-    watchedMinutes: number;
-  };
-}) {
-  const done = v.watchedMinutes >= v.durationMinutes;
-  return (
-    <li className="flex flex-col gap-2 border-b border-border px-4 py-3 last:border-0 sm:flex-row sm:items-center">
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          {v.url ? (
-            <a href={v.url} target="_blank" rel="noopener noreferrer" className="flex min-w-0 items-center gap-1.5 text-sm font-medium hover:text-accent">
-              <span className="truncate">{v.title}</span>
-              <ExternalLink size={12} className="shrink-0 text-ink-faint" />
-            </a>
-          ) : (
-            <span className={"truncate text-sm font-medium " + (done ? "text-ink-muted" : "")}>{v.title}</span>
-          )}
-          {done && <Badge tone="success">Watched</Badge>}
-        </div>
-        <div className="mt-1.5 flex items-center gap-3">
-          <ProgressBar value={v.watchedMinutes} max={v.durationMinutes} tone={done ? "success" : "accent"} className="max-w-56" />
-          <span className="shrink-0 text-xs tabular-nums text-ink-muted">
-            {hm(v.watchedMinutes)} / {hm(v.durationMinutes)}
-          </span>
-        </div>
-      </div>
-      <div className="flex shrink-0 flex-wrap items-center gap-1">
-        {v.localPath && <CopyPath path={v.localPath} label="Path" />}
-        <form action={updateVideoProgressAction} className="flex items-center gap-1">
-          <input type="hidden" name="id" value={v.id} />
-          <input
-            key={v.watchedMinutes}
-            name="watched"
-            aria-label={`Watched up to, ${v.title}`}
-            defaultValue={v.watchedMinutes && !done ? hm(v.watchedMinutes) : ""}
-            placeholder="0:45"
-            className="field w-16 px-2 py-1 text-xs"
-          />
-          <Button type="submit" name="intent" value="set" variant="ghost" size="sm" className="px-2">
-            Save
-          </Button>
-          <Button type="submit" name="intent" value={done ? "reset" : "done"} variant="ghost" size="sm" className="px-2">
-            {done ? "Reset" : "Done"}
-          </Button>
-        </form>
-        <form action={deleteVideoAction}>
-          <input type="hidden" name="id" value={v.id} />
-          <button type="submit" title={`Remove from ${sectionLabel(v.section)}`} aria-label={`Remove ${v.title}`} className="rounded-md p-1.5 text-ink-faint opacity-60 hover:bg-danger-soft hover:text-danger hover:opacity-100">
-            <Trash2 size={14} />
-          </button>
-        </form>
-      </div>
-    </li>
-  );
-}
-

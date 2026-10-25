@@ -269,6 +269,48 @@ export async function syncWatchPlanAction() {
   refresh();
 }
 
+/**
+ * Checklist tick for one video. Plan videos are identified by `localPath`
+ * and created on first tick, so the checklist works before the plan is
+ * imported. Hand-added videos are identified by `id`.
+ */
+export async function setWatchedAction(input: { localPath?: string; id?: string; watched: boolean }) {
+  const userId = await requireUserId();
+  if (!userId) return;
+
+  let video = input.id
+    ? await prisma.studyVideo.findFirst({ where: { id: input.id, userId } })
+    : input.localPath
+      ? await prisma.studyVideo.findFirst({ where: { userId, localPath: input.localPath } })
+      : null;
+
+  if (!video && input.localPath) {
+    const order = WATCH_PLAN.findIndex((v) => v.localPath === input.localPath);
+    if (order < 0) return;
+    const p = WATCH_PLAN[order];
+    video = await prisma.studyVideo.create({
+      data: {
+        userId,
+        subject: p.subject,
+        title: p.title,
+        section: p.section,
+        localPath: p.localPath,
+        durationMinutes: p.minutes,
+        order,
+      },
+    });
+  }
+  if (!video) return;
+
+  await prisma.studyVideo.update({
+    where: { id: video.id },
+    data: input.watched
+      ? { watchedMinutes: video.durationMinutes, completedAt: video.completedAt ?? new Date() }
+      : { watchedMinutes: 0, completedAt: null },
+  });
+  refresh();
+}
+
 export async function deleteVideoAction(formData: FormData) {
   const userId = await requireUserId();
   if (!userId) return;

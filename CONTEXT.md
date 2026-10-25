@@ -664,6 +664,21 @@ section null, are never touched). `/tracker/library` shows the
 topic-by-batch table with copyable folder paths. Browsers can't open local
 files, so the app only offers "copy path".
 
+The Videos tab (`/tracker/videos`) is a checklist like the Watch Plan sheet:
+section cards (watched/left), subject filter, one row per plan video with a
+one-tap watched box (`setWatchedAction`, creates the StudyVideo row on first
+tick, so no import step is needed), length, 1.5x, running total and watched
+date.
+
+**Opening videos:** browsers can't open `G:\...` from a website, so ▶ links
+use a custom `ecevideo:open?path=<drive-relative path>` scheme
+(`lib/video-opener.ts`). The user installs the handler once from
+`G:\ECE Video Opener` (`tools/video-opener/` in this repo):
+`Install video opener.bat` registers the scheme under HKCU (no admin) to run
+`open-video.ps1`, which only opens existing .mp4 files under
+`Excel Review Center` / `REVIEW TUTORIAL` on its own drive. Works only on
+that Windows laptop; elsewhere the copy-path button is the fallback.
+
 To re-measure after the drive changes, regenerate the JSON from a fresh
 duration scan rather than editing it by hand.
 
