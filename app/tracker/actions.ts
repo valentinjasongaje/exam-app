@@ -217,36 +217,55 @@ export async function updateVideoProgressAction(formData: FormData) {
 }
 
 /**
- * Adds the measured watch plan (lib/video-library.ts) to the user's videos.
- * `sections` is a comma list of plan sections; videos already imported
- * (same localPath) are skipped, so this is safe to press twice.
+ * Brings the user's videos in line with the measured watch plan
+ * (lib/video-library.ts): adds missing plan videos, updates the section of
+ * ones already imported, and removes imported plan videos that are no longer
+ * in the plan (e.g. the pre-season basics dropped on 2026-10-25). Videos the
+ * user added by hand (section null) are never touched. Keyed by localPath,
+ * so pressing it twice is harmless and watched progress is kept.
  */
-export async function importWatchPlanAction(formData: FormData) {
+export async function syncWatchPlanAction() {
   const userId = await requireUserId();
   if (!userId) return;
-  const wanted = str(formData, "sections").split(",").filter(Boolean);
-  const items = WATCH_PLAN.map((v, i) => ({ ...v, order: i })).filter((v) => wanted.includes(v.section));
-  if (items.length === 0) return;
+  const byPath = new Map(WATCH_PLAN.map((v, i) => [v.localPath, { ...v, order: i }]));
 
   const existing = await prisma.studyVideo.findMany({
-    where: { userId, localPath: { in: items.map((v) => v.localPath) } },
-    select: { localPath: true },
+    where: { userId, OR: [{ section: { not: null } }, { localPath: { not: null } }] },
+    select: { id: true, localPath: true, section: true, order: true },
   });
   const have = new Set(existing.map((e) => e.localPath));
 
-  await prisma.studyVideo.createMany({
-    data: items
-      .filter((v) => !have.has(v.localPath))
-      .map((v) => ({
+  await prisma.$transaction([
+    prisma.studyVideo.deleteMany({
+      where: {
         userId,
-        subject: v.subject,
-        title: v.title,
-        section: v.section,
-        localPath: v.localPath,
-        durationMinutes: v.minutes,
-        order: v.order,
-      })),
-  });
+        id: { in: existing.filter((e) => e.section && (!e.localPath || !byPath.has(e.localPath))).map((e) => e.id) },
+      },
+    }),
+    ...existing
+      .filter((e) => e.localPath && byPath.has(e.localPath))
+      .filter((e) => {
+        const p = byPath.get(e.localPath!)!;
+        return e.section !== p.section || e.order !== p.order;
+      })
+      .map((e) => {
+        const p = byPath.get(e.localPath!)!;
+        return prisma.studyVideo.update({ where: { id: e.id }, data: { section: p.section, order: p.order, title: p.title } });
+      }),
+    prisma.studyVideo.createMany({
+      data: [...byPath.values()]
+        .filter((v) => !have.has(v.localPath))
+        .map((v) => ({
+          userId,
+          subject: v.subject,
+          title: v.title,
+          section: v.section,
+          localPath: v.localPath,
+          durationMinutes: v.minutes,
+          order: v.order,
+        })),
+    }),
+  ]);
   refresh();
 }
 

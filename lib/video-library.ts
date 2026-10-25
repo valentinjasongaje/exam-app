@@ -7,13 +7,16 @@ import type { TrackerSubjectSlug } from "./study-plan";
  * see CONTEXT.md "Video library". Nothing here is read from the drive at
  * runtime; the app only knows file paths and lengths.
  *
+ * Scope is only the Review lectures, Refreshers and Calculator techniques —
+ * pre-season basics, short clips and consultations are deliberately left out.
+ *
  * - `plan`: one recording per topic (Oct 2024 batch, Version 1), the videos
  *   that get imported into the Videos tab.
- * - `library`: every batch/version of every topic, grouped by folder, for
+ * - `library`: every batch/version of those videos, grouped by folder, for
  *   the Library page ("where else is this topic explained").
  */
 
-export type PlanSection = "core" | "math-basics" | "refresher" | "optional-basics";
+export type PlanSection = "core" | "calculator" | "refresher";
 
 export type PlanVideo = {
   section: PlanSection;
@@ -37,22 +40,21 @@ export type LibraryGroup = {
   videos: number;
 };
 
+/** Review lectures, refreshers and calculator techniques only (exact copies removed). */
 export const LIBRARY_STATS = data.stats as {
   files: number;
   totalMinutes: number;
-  copyFiles: number;
-  copyMinutes: number;
+  byCategory: Record<"Main lecture" | "Refresher" | "Calculator technique", number>;
   measuredOn: string;
 };
 
 export const WATCH_PLAN = data.plan as PlanVideo[];
 export const LIBRARY = data.library as LibraryGroup[];
 
-export const SECTIONS: { key: PlanSection; label: string; hint: string; required: boolean }[] = [
-  { key: "core", label: "Core lectures", hint: "Content pass, Oct 26 – early January. Oct 2024 batch, Version 1.", required: true },
-  { key: "math-basics", label: "Math basics", hint: "The Oct 2024 Math lectures start at calculus; these cover the algebra and geometry side.", required: true },
-  { key: "refresher", label: "Phase 2 refreshers", hint: "January–February: problem-solving refreshers and calculator techniques.", required: true },
-  { key: "optional-basics", label: "Basics if weak", hint: "Pre-season Elex, EST and GEAS. Watch only the topics that feel rusty.", required: false },
+export const SECTIONS: { key: PlanSection; label: string; hint: string }[] = [
+  { key: "core", label: "Review lectures", hint: "Content pass, Oct 26 – early January. Oct 2024 review season, Version 1." },
+  { key: "calculator", label: "Calculator techniques", hint: "Canon F-789SGA lecture, then the three calculator-technique refreshers." },
+  { key: "refresher", label: "Refreshers", hint: "Phase 2 (January–February): Oct 2024 refresher season, Version 1." },
 ];
 
 export const BATCH_ORDER = [
@@ -60,7 +62,6 @@ export const BATCH_ORDER = [
   "Excel Review Center set",
   "2023 batch",
   "Video Tutorial batch",
-  "Short clips & consultations",
 ];
 
 export function sectionLabel(key: string | null) {

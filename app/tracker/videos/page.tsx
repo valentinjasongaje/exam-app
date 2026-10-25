@@ -7,10 +7,8 @@ import { SECTIONS, WATCH_PLAN, sectionLabel } from "@/lib/video-library";
 import { PageHeader, Card, Badge, Button } from "@/components/ui";
 import ProgressBar from "../progress-bar";
 import { AddVideoForm } from "../add-item-form";
-import { deleteVideoAction, importWatchPlanAction, updateVideoProgressAction } from "../actions";
+import { deleteVideoAction, syncWatchPlanAction, updateVideoProgressAction } from "../actions";
 import CopyPath from "./copy-path";
-
-const REQUIRED = SECTIONS.filter((s) => s.required).map((s) => s.key);
 
 function hm(min: number) {
   return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`;
@@ -25,23 +23,25 @@ export default async function VideosPage() {
     orderBy: [{ order: "asc" }, { createdAt: "asc" }],
   });
 
-  const imported = new Set(videos.map((v) => v.section).filter(Boolean));
-  const missingRequired = REQUIRED.filter((s) => !imported.has(s));
-  const planMinutes = (keys: string[]) =>
-    WATCH_PLAN.filter((v) => keys.includes(v.section)).reduce((sum, v) => sum + v.minutes, 0);
+  // Compare what's imported with the plan: anything missing, re-sectioned,
+  // or dropped from the plan (e.g. the old basics) means "out of sync".
+  const planByPath = new Map(WATCH_PLAN.map((v) => [v.localPath, v]));
+  const importedPaths = new Set(videos.map((v) => v.localPath).filter(Boolean));
+  const missing = WATCH_PLAN.filter((v) => !importedPaths.has(v.localPath));
+  const stale = videos.filter(
+    (v) => v.section && (!v.localPath || !planByPath.has(v.localPath) || planByPath.get(v.localPath)!.section !== v.section)
+  );
+  const firstImport = !videos.some((v) => v.section);
+  const planTotal = WATCH_PLAN.reduce((sum, v) => sum + v.minutes, 0);
 
-  // Headline = the content pass (core + Math basics + anything added by hand).
-  // Phase 2 refreshers and optional basics have their own section totals.
-  const counted = videos.filter((v) => v.section !== "optional-basics" && v.section !== "refresher");
-  const queue = videos.filter((v) => v.section !== "optional-basics");
-  const total = counted.reduce((sum, v) => sum + v.durationMinutes, 0);
-  const watched = counted.reduce((sum, v) => sum + v.watchedMinutes, 0);
+  const total = videos.reduce((sum, v) => sum + v.durationMinutes, 0);
+  const watched = videos.reduce((sum, v) => sum + v.watchedMinutes, 0);
   const left = total - watched;
 
   // Next unwatched video per subject, following the plan order.
   const upNext = TRACKER_SUBJECTS.map((s) => ({
     subject: s,
-    video: queue.find((v) => v.subject === s.slug && v.watchedMinutes < v.durationMinutes),
+    video: videos.find((v) => v.subject === s.slug && v.watchedMinutes < v.durationMinutes),
   })).filter((x) => x.video);
 
   const groups = [
@@ -57,9 +57,9 @@ export default async function VideosPage() {
         eyebrow="Study tracker"
         title="Review videos"
         subtitle={
-          counted.length
-            ? `Content pass: ${formatMinutes(watched)} of ${formatMinutes(total)} watched · ${formatMinutes(left)} left (${formatMinutes(Math.round(left / 1.5))} at 1.5x).`
-            : "Your review videos, measured from your drive: one recording per topic."
+          videos.length
+            ? `${formatMinutes(watched)} of ${formatMinutes(total)} watched · ${formatMinutes(left)} left (${formatMinutes(Math.round(left / 1.5))} at 1.5x).`
+            : "Review lectures, refreshers and calculator techniques from your drive: one recording per topic."
         }
         action={
           <Link href="/tracker/library" className="text-sm text-accent hover:underline">
@@ -68,18 +68,21 @@ export default async function VideosPage() {
         }
       />
 
-      {missingRequired.length > 0 && (
+      {(missing.length > 0 || stale.length > 0) && (
         <Card className="mb-8 border-accent/40 bg-accent-soft/40">
-          <h2 className="font-semibold">Add your watch plan</h2>
+          <h2 className="font-semibold">{firstImport ? "Add your watch plan" : "Update your watch plan"}</h2>
           <p className="mt-1 text-sm text-ink-muted">
-            {WATCH_PLAN.filter((v) => missingRequired.includes(v.section)).length} videos,{" "}
-            {formatMinutes(planMinutes(missingRequired))} ({formatMinutes(Math.round(planMinutes(missingRequired) / 1.5))} at 1.5x):
-            the Oct 2024 core lectures, Math basics and Phase 2 refreshers. Picked from 2,006 files on your G: drive so
-            each topic appears once.
+            {firstImport
+              ? `${WATCH_PLAN.length} videos, ${formatMinutes(planTotal)} (${formatMinutes(Math.round(planTotal / 1.5))} at 1.5x): review lectures, calculator techniques and refreshers from the Oct 2024 batch, one recording per topic.`
+              : `The plan now has only review lectures, refreshers and calculator techniques. This ${[
+                  missing.length ? `adds ${missing.length} video${missing.length > 1 ? "s" : ""}` : "",
+                  stale.length ? `removes or re-sorts ${stale.length}` : "",
+                ]
+                  .filter(Boolean)
+                  .join(" and ")}. Progress on videos that stay is kept; videos you added yourself aren't touched.`}
           </p>
-          <form action={importWatchPlanAction} className="mt-4">
-            <input type="hidden" name="sections" value={missingRequired.join(",")} />
-            <Button type="submit">Add watch plan</Button>
+          <form action={syncWatchPlanAction} className="mt-4">
+            <Button type="submit">{firstImport ? "Add watch plan" : "Update plan"}</Button>
           </form>
         </Card>
       )}
@@ -150,21 +153,6 @@ export default async function VideosPage() {
           );
         })}
       </div>
-
-      {imported.size > 0 && !imported.has("optional-basics") && (
-        <Card className="mt-8 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm">
-            <p className="font-medium">Basics if weak (optional)</p>
-            <p className="text-ink-muted">
-              30 pre-season Elex, EST and GEAS videos, {formatMinutes(planMinutes(["optional-basics"]))}. Not counted in your totals.
-            </p>
-          </div>
-          <form action={importWatchPlanAction}>
-            <input type="hidden" name="sections" value="optional-basics" />
-            <Button type="submit" variant="secondary" size="sm">Add them</Button>
-          </form>
-        </Card>
-      )}
 
       <Card className="mt-8">
         <h2 className="mb-4 text-sm font-medium text-ink-muted">Add another video</h2>

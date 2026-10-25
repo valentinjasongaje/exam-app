@@ -4,39 +4,31 @@ import { PageHeader, Card, Badge } from "@/components/ui";
 import CopyPath from "../videos/copy-path";
 
 /**
- * Read-only view of the whole G:\ video library: how long it really is,
- * and every recording of each topic across batches, so another
- * instructor's version is easy to find when one explanation doesn't click.
+ * Read-only view of the review lectures, refreshers and calculator
+ * techniques on the G:\ drive: how long they really are, and every
+ * recording of each topic across batches, so another instructor's version
+ * is easy to find when one explanation doesn't click.
  */
 
-const OTHER_CATEGORIES = [
-  "Refresher",
-  "Calculator technique",
-  "Basics (pre-season)",
-  "Basic Math review",
-  "Short tutorial clip",
-  "Consultation",
-];
+const OTHER_CATEGORIES = ["Refresher", "Calculator technique"];
 
 function hm(min: number) {
   return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, "0")}`;
 }
 
 export default function LibraryPage() {
-  const unique = LIBRARY.reduce((s, g) => s + g.minutes, 0);
-  const plan = WATCH_PLAN.filter((v) => v.section === "core" || v.section === "math-basics");
-  const planMinutes = plan.reduce((s, v) => s + v.minutes, 0);
-  const refresherMinutes = WATCH_PLAN.filter((v) => v.section === "refresher").reduce((s, v) => s + v.minutes, 0);
   const planPaths = new Set(WATCH_PLAN.map((v) => v.localPath.slice(0, v.localPath.lastIndexOf("\\"))));
+  const planMinutes = WATCH_PLAN.reduce((s, v) => s + v.minutes, 0);
+  const cat = LIBRARY_STATS.byCategory;
 
   const stats = [
-    { label: "On your G: drive", value: formatMinutes(LIBRARY_STATS.totalMinutes), sub: `${LIBRARY_STATS.files.toLocaleString()} videos` },
-    { label: "Exact copies", value: formatMinutes(LIBRARY_STATS.copyMinutes), sub: `${LIBRARY_STATS.copyFiles} clips saved twice` },
-    { label: "All batches, no copies", value: formatMinutes(unique), sub: "same topics, several recordings" },
+    { label: "Review lectures", value: formatMinutes(cat["Main lecture"]), sub: "all batches and versions" },
+    { label: "Refreshers", value: formatMinutes(cat["Refresher"]), sub: "all batches and versions" },
+    { label: "Calculator techniques", value: formatMinutes(cat["Calculator technique"]), sub: "all batches" },
     {
       label: "Your watch plan",
       value: formatMinutes(planMinutes),
-      sub: `${plan.length} videos · ${formatMinutes(Math.round(planMinutes / 1.5))} at 1.5x · +${formatMinutes(refresherMinutes)} refreshers in Phase 2`,
+      sub: `${WATCH_PLAN.length} videos · ${formatMinutes(Math.round(planMinutes / 1.5))} at 1.5x · one recording per topic`,
     },
   ];
 
@@ -45,7 +37,7 @@ export default function LibraryPage() {
       <PageHeader
         eyebrow="Study tracker"
         title="Video library"
-        subtitle={`Every review video on your drive, measured ${LIBRARY_STATS.measuredOn}. The plan uses one recording per topic; the rest are here when you want another instructor's take.`}
+        subtitle={`Review lectures, refreshers and calculator techniques on your drive (${LIBRARY_STATS.files.toLocaleString()} videos, ${formatMinutes(LIBRARY_STATS.totalMinutes)}), measured ${LIBRARY_STATS.measuredOn}. The plan uses one recording per topic; the rest are here when you want another instructor's take.`}
       />
 
       <div className="mb-10 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -61,9 +53,9 @@ export default function LibraryPage() {
       {TRACKER_SUBJECTS.map((subj) => {
         const lectures = LIBRARY.filter((g) => g.subject === subj.slug && g.category === "Main lecture");
         const topics = [...new Map(lectures.map((g) => [g.topicNo, g.topic])).entries()].sort((a, b) => a[0] - b[0]);
-        const others = OTHER_CATEGORIES.map((cat) => ({
-          cat,
-          groups: LIBRARY.filter((g) => g.subject === subj.slug && g.category === cat).sort(
+        const others = OTHER_CATEGORIES.map((category) => ({
+          cat: category,
+          groups: LIBRARY.filter((g) => g.subject === subj.slug && g.category === category).sort(
             (a, b) => BATCH_ORDER.indexOf(a.batch) - BATCH_ORDER.indexOf(b.batch) || a.topicNo - b.topicNo || a.version.localeCompare(b.version)
           ),
         })).filter((o) => o.groups.length > 0);
@@ -123,7 +115,7 @@ export default function LibraryPage() {
 
             <details className="mt-3 rounded-xl border border-border bg-bg-elevated">
               <summary className="cursor-pointer px-4 py-3 text-sm text-ink-muted">
-                Refreshers, calculator techniques, basics and short clips ·{" "}
+                Refreshers and calculator techniques ·{" "}
                 {formatMinutes(others.reduce((s, o) => s + o.groups.reduce((x, g) => x + g.minutes, 0), 0))}
               </summary>
               <div className="flex flex-col gap-4 border-t border-border px-4 py-4">

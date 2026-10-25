@@ -102,7 +102,7 @@ export default async function TrackerPage() {
     return { ...s, total: mine.length, done: mine.filter((t) => t.status === "DONE").length };
   });
   const videoRows = TRACKER_SUBJECTS.map((s) => {
-    const mine = videos.filter((v) => v.subject === s.slug && v.section !== "optional-basics");
+    const mine = videos.filter((v) => v.subject === s.slug);
     return {
       ...s,
       count: mine.length,

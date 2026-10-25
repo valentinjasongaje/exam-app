@@ -643,24 +643,26 @@ Claude API (`@anthropic-ai/sdk`).
 
 The user's review videos live on their G: drive (`Excel Review Center` and
 `REVIEW TUTORIAL`, 2,006 .mp4 files, ~1,098 h). They were measured once
-(lengths read from every file) and classified into
-`lib/video-library.json`, typed by `lib/video-library.ts`:
+(lengths read from every file). **By the user's choice, the app only covers
+Review lectures, Refreshers and Calculator techniques** (1,408 files,
+~911 h across all batches); pre-season basics, Basic Math, short clips and
+consultations are deliberately excluded. Data: `lib/video-library.json`,
+typed by `lib/video-library.ts`:
 
-- `plan`: one recording per topic — Oct 2024 batch, Version 1 — in four
-  sections: `core` (42 main lectures incl. the Canon F-789SGA calculator
-  video, ~95 h), `math-basics` (8 pre-season Math, ~12 h), `refresher`
-  (Phase 2, 22 videos, ~48 h), `optional-basics` (30 pre-season
-  Elex/EST/GEAS, not counted in totals).
-- `library`: every batch/version of every topic grouped by folder, plus
-  stats (total, exact copies).
+- `plan`: one recording per topic from the Oct 2024 batch (Version 1), in
+  three sections: `core` (41 review lectures, ~93 h), `calculator` (Canon
+  F-789SGA lecture + 3 calculator-technique refreshers, ~10 h), `refresher`
+  (19 Phase 2 refreshers, ~41 h).
+- `library`: every batch/version of those three types, grouped by folder.
 
 `StudyVideo.section` / `StudyVideo.localPath` (migration
-`20261025030000_video_plan_fields`) mark imported plan videos. The Videos
-tab's "Add watch plan" button imports missing sections idempotently (keyed
-by localPath). The headline total there is the content pass (core + Math
-basics + hand-added). `/tracker/library` shows the topic-by-batch table with
-copyable folder paths. The browser can't open local files, so the app only
-offers "copy path".
+`20261025030000_video_plan_fields`) mark plan videos. The Videos tab shows an
+"Add / Update watch plan" card whenever the user's videos differ from the
+plan; `syncWatchPlanAction` adds missing plan videos, re-sorts existing ones
+and deletes imported plan videos no longer in the plan (hand-added videos,
+section null, are never touched). `/tracker/library` shows the
+topic-by-batch table with copyable folder paths. Browsers can't open local
+files, so the app only offers "copy path".
 
 To re-measure after the drive changes, regenerate the JSON from a fresh
 duration scan rather than editing it by hand.
