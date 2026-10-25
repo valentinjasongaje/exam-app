@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, CloudUpload, FolderOpen, Loader2, XCircle } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
+import { uploadToDrive } from "@/lib/drive-upload-client";
 
 export type UploadCandidate = {
   localPath: string;
@@ -24,73 +25,11 @@ type Item = {
   error?: string;
 };
 
-const CHUNK = 32 * 1024 * 1024; // multiple of 256 KiB, as Drive requires
 const GB = 1024 ** 3;
 const SAFETY = 0.5 * GB; // leave a little room on Drive
 
 function gb(n: number) {
   return `${(n / GB).toFixed(n < 10 * GB ? 1 : 0)} GB`;
-}
-
-async function openSession(c: UploadCandidate, size: number) {
-  const res = await fetch("/api/drive/session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ localPath: c.localPath, size }),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error ?? "Couldn't reach Google Drive.");
-  return data.sessionUrl as string;
-}
-
-/**
- * Sends the file bytes straight from the browser to Google Drive over a
- * resumable session the server opened, in 32 MB chunks with retries, so big
- * lecture files survive flaky Wi-Fi without going through the website.
- */
-async function uploadOne(item: Item, onProgress: (sent: number) => void, signal: AbortSignal) {
-  const session = await openSession(item.c, item.f.size);
-
-  const total = item.f.size;
-  let offset = 0;
-  let tries = 0;
-  for (;;) {
-    const end = Math.min(offset + CHUNK, total);
-    try {
-      const res = await fetch(session, {
-        method: "PUT",
-        signal,
-        headers: { "Content-Range": `bytes ${offset}-${end - 1}/${total}` },
-        body: item.f.slice(offset, end),
-      });
-      if (res.status === 200 || res.status === 201) {
-        onProgress(total);
-        return (await res.json()) as { id: string; size: string };
-      }
-      if (res.status === 308) {
-        const range = res.headers.get("Range"); // "bytes=0-12345" when readable
-        offset = range ? Number(range.split("-")[1]) + 1 : end;
-        onProgress(offset);
-        tries = 0;
-        continue;
-      }
-      if (res.status === 404 || res.status === 410) throw new Error("The upload expired. Start this video again.");
-      throw new Error(`Upload failed (${res.status}).`);
-    } catch (e) {
-      if (signal.aborted) throw e;
-      if (++tries > 6) throw e;
-      await new Promise((r) => setTimeout(r, 1000 * 2 ** tries));
-      // Ask Drive how much it actually received, then continue from there.
-      try {
-        const q = await fetch(session, { method: "PUT", signal, headers: { "Content-Range": `bytes */${total}` } });
-        if (q.status === 200 || q.status === 201) return (await q.json()) as { id: string; size: string };
-        const range = q.headers.get("Range");
-        offset = range ? Number(range.split("-")[1]) + 1 : offset;
-      } catch {
-        /* retry the same chunk */
-      }
-    }
-  }
 }
 
 export default function DriveUploader({ candidates, freeBytes }: { candidates: UploadCandidate[]; freeBytes: number | null }) {
@@ -164,17 +103,12 @@ export default function DriveUploader({ candidates, freeBytes }: { candidates: U
       if (ctrl.signal.aborted) break;
       setItems((xs) => xs.map((x) => (x.c.localPath === it.c.localPath ? { ...x, status: "uploading", sent: 0, error: undefined } : x)));
       try {
-        const file = await uploadOne(
-          it,
+        await uploadToDrive(
+          it.c,
+          it.f,
           (sent) => setItems((xs) => xs.map((x) => (x.c.localPath === it.c.localPath ? { ...x, sent } : x))),
           ctrl.signal
         );
-        const res = await fetch("/api/drive/complete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ localPath: it.c.localPath, fileId: file.id }),
-        });
-        if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Couldn't save the upload.");
         setItems((xs) => xs.map((x) => (x.c.localPath === it.c.localPath ? { ...x, status: "done", sent: x.f.size } : x)));
         router.refresh();
       } catch (e) {

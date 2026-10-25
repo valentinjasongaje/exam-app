@@ -720,6 +720,17 @@ So plan videos can be watched away from the laptop. `lib/google-drive.ts`.
   size on Drive and sets `StudyVideo.driveFileId`. Each upload carries
   `appProperties.planPath`, so "Check Drive" (`syncDriveAction`) can relink
   uploads or clear links to deleted files.
+- **One-click row upload** (`app/tracker/videos/upload-queue.tsx`): each
+  checklist row not yet on Drive has a ☁↑ button. In Chrome/Edge the user
+  picks the video folder once (File System Access API, `lib/video-folder.ts`;
+  the directory handle is kept in IndexedDB and read permission is asked per
+  visit unless "Allow on every visit"); `resolveVideo` finds the file by lining
+  the picked folder's name up with the plan's G:\ path, so any level from the
+  drive to `Excel Review Center` works. Clicks join a sequential queue with
+  per-row progress; "Upload all N shown" queues the filtered list (checked
+  against free Drive space). Other browsers fall back to a single-file picker
+  per row (name + size must match). The upload engine is shared with the bulk
+  uploader in `lib/drive-upload-client.ts`.
 - **Watch** (`/tracker/videos/watch/[id]`): Drive's own player in an iframe
   (`/file/d/<id>/preview`); private files play for whoever is signed in to
   that Google account in the browser. Mark watched, next video on Drive,

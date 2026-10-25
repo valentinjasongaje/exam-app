@@ -13,6 +13,7 @@ import CopyPath from "./copy-path";
 import WatchCheckbox from "./watch-checkbox";
 import OpenVideo from "./open-video";
 import DrivePanel from "./drive-panel";
+import { UploadErrors, UploadQueueProvider, UploadRowButton, VideoFolderBar } from "./upload-queue";
 import { DriveError, accessTokenFor, storageQuota } from "@/lib/google-drive";
 
 /**
@@ -37,6 +38,8 @@ type Row = {
   id?: string;
   videoId?: string;
   driveFileId?: string | null;
+  file?: string;
+  bytes?: number;
   subject: string;
   title: string;
   minutes: number;
@@ -86,6 +89,8 @@ export default async function VideosPage({
         localPath: p.localPath,
         videoId: v?.id,
         driveFileId: v?.driveFileId ?? null,
+        file: p.file,
+        bytes: p.bytes,
         subject: p.subject,
         title: p.title,
         minutes: p.minutes,
@@ -130,6 +135,93 @@ export default async function VideosPage({
   const upNext = TRACKER_SUBJECTS.filter((s) => subject === "all" || s.slug === subject)
     .map((s) => ({ s, r: allRows.find((r) => r.subject === s.slug && !isDone(r)) }))
     .filter((x) => x.r);
+
+  const checklistTable = (canUpload: boolean) => (
+        <Card className="overflow-hidden p-0">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-bg-muted/50 text-left text-xs text-ink-muted">
+                <th className="w-11 px-3 py-2.5 font-medium">✓</th>
+                <th className="hidden w-8 py-2.5 font-medium sm:table-cell">#</th>
+                <th className="px-2 py-2.5 font-medium">Video</th>
+                <th className="px-2 py-2.5 text-right font-medium">Length</th>
+                <th className="hidden px-2 py-2.5 text-right font-medium sm:table-cell">At 1.5x</th>
+                <th className="hidden px-2 py-2.5 text-right font-medium md:table-cell">Running (1.5x)</th>
+                <th className="hidden px-2 py-2.5 font-medium md:table-cell">Watched</th>
+                <th className="w-20 px-2 py-2.5" />
+              </tr>
+            </thead>
+            <tbody>
+              {withRunning.map((r, i) => {
+                const done = isDone(r);
+                return (
+                  <tr key={r.key} className={clsx("border-b border-border last:border-0", done && "bg-success-soft/40")}>
+                    <td className="px-3 py-2.5 align-middle">
+                      <WatchCheckbox key={`${r.key}-${done}`} localPath={r.localPath} watched={done} label={r.title} />
+                    </td>
+                    <td className="hidden py-2.5 text-xs text-ink-faint tabular-nums sm:table-cell">{i + 1}</td>
+                    <td className="px-2 py-2.5">
+                      {r.driveFileId && r.videoId ? (
+                        <span className="flex items-center gap-2">
+                          <Link
+                            href={`/tracker/videos/watch/${r.videoId}`}
+                            className={clsx("inline-flex items-center gap-1.5 hover:underline", done ? "text-ink-muted" : "text-ink")}
+                          >
+                            <Cloud size={14} className="shrink-0 text-accent" />
+                            {r.title}
+                          </Link>
+                          <OpenVideo localPath={r.localPath!} className="text-ink-faint hover:text-accent" />
+                        </span>
+                      ) : (
+                        <OpenVideo localPath={r.localPath!} className={clsx("text-left", done ? "text-ink-muted" : "text-ink")}>
+                          <span className="hover:underline">{r.title}</span>
+                        </OpenVideo>
+                      )}
+                      {subject === "all" && section !== "calculator" && (
+                        <span className="block pl-5 text-xs text-ink-faint">{subjectName(r.subject)}</span>
+                      )}
+                      {!done && r.watchedMinutes > 0 && (
+                        <span className="block pl-5 text-xs text-accent">
+                          {hm(r.watchedMinutes)} of {hm(r.minutes)} so far
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-2 py-2.5 text-right tabular-nums">{hm(r.minutes)}</td>
+                    <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums sm:table-cell">{hm(r.minutes / 1.5)}</td>
+                    <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums md:table-cell">{hm(r.running)}</td>
+                    <td className="hidden px-2 py-2.5 text-xs text-ink-muted md:table-cell">
+                      {done && r.completedAt ? dateFmt.format(r.completedAt) : ""}
+                    </td>
+                    <td className="px-2 py-2.5 text-right">
+                      <span className="inline-flex items-center justify-end gap-0.5">
+                        {canUpload && !r.driveFileId && r.localPath && r.file && r.bytes ? (
+                          <UploadRowButton target={{ localPath: r.localPath, file: r.file, bytes: r.bytes }} title={r.title} />
+                        ) : null}
+                        {r.localPath && <CopyPath path={r.localPath} label="" />}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border-strong bg-bg-muted/50 text-sm font-medium">
+                <td className="px-3 py-2.5" />
+                <td className="hidden sm:table-cell" />
+                <td className="px-2 py-2.5">
+                  {rows.filter(isDone).length} of {rows.length} watched
+                  <span className="block text-xs font-normal text-ink-muted">
+                    {hm(shownTotal - shownWatched)} left · {hm((shownTotal - shownWatched) / 1.5)} at 1.5x
+                  </span>
+                </td>
+                <td className="px-2 py-2.5 text-right tabular-nums">{hm(shownTotal)}</td>
+                <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">{hm(shownTotal / 1.5)}</td>
+                <td className="hidden md:table-cell" colSpan={3} />
+              </tr>
+            </tfoot>
+          </table>
+        </Card>
+  );
 
   const href = (sec: string, subj: string) => `/tracker/videos?section=${sec}${subj !== "all" ? `&subject=${subj}` : ""}`;
   const current = summary.find((s) => s.key === section)!;
@@ -275,83 +367,19 @@ export default async function VideosPage({
         </div>
       )}
 
-      <Card className="overflow-hidden p-0">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-bg-muted/50 text-left text-xs text-ink-muted">
-              <th className="w-11 px-3 py-2.5 font-medium">✓</th>
-              <th className="hidden w-8 py-2.5 font-medium sm:table-cell">#</th>
-              <th className="px-2 py-2.5 font-medium">Video</th>
-              <th className="px-2 py-2.5 text-right font-medium">Length</th>
-              <th className="hidden px-2 py-2.5 text-right font-medium sm:table-cell">At 1.5x</th>
-              <th className="hidden px-2 py-2.5 text-right font-medium md:table-cell">Running (1.5x)</th>
-              <th className="hidden px-2 py-2.5 font-medium md:table-cell">Watched</th>
-              <th className="w-10 px-2 py-2.5" />
-            </tr>
-          </thead>
-          <tbody>
-            {withRunning.map((r, i) => {
-              const done = isDone(r);
-              return (
-                <tr key={r.key} className={clsx("border-b border-border last:border-0", done && "bg-success-soft/40")}>
-                  <td className="px-3 py-2.5 align-middle">
-                    <WatchCheckbox key={`${r.key}-${done}`} localPath={r.localPath} watched={done} label={r.title} />
-                  </td>
-                  <td className="hidden py-2.5 text-xs text-ink-faint tabular-nums sm:table-cell">{i + 1}</td>
-                  <td className="px-2 py-2.5">
-                    {r.driveFileId && r.videoId ? (
-                      <span className="flex items-center gap-2">
-                        <Link
-                          href={`/tracker/videos/watch/${r.videoId}`}
-                          className={clsx("inline-flex items-center gap-1.5 hover:underline", done ? "text-ink-muted" : "text-ink")}
-                        >
-                          <Cloud size={14} className="shrink-0 text-accent" />
-                          {r.title}
-                        </Link>
-                        <OpenVideo localPath={r.localPath!} className="text-ink-faint hover:text-accent" />
-                      </span>
-                    ) : (
-                      <OpenVideo localPath={r.localPath!} className={clsx("text-left", done ? "text-ink-muted" : "text-ink")}>
-                        <span className="hover:underline">{r.title}</span>
-                      </OpenVideo>
-                    )}
-                    {subject === "all" && section !== "calculator" && (
-                      <span className="block pl-5 text-xs text-ink-faint">{subjectName(r.subject)}</span>
-                    )}
-                    {!done && r.watchedMinutes > 0 && (
-                      <span className="block pl-5 text-xs text-accent">
-                        {hm(r.watchedMinutes)} of {hm(r.minutes)} so far
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-2 py-2.5 text-right tabular-nums">{hm(r.minutes)}</td>
-                  <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums sm:table-cell">{hm(r.minutes / 1.5)}</td>
-                  <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums md:table-cell">{hm(r.running)}</td>
-                  <td className="hidden px-2 py-2.5 text-xs text-ink-muted md:table-cell">
-                    {done && r.completedAt ? dateFmt.format(r.completedAt) : ""}
-                  </td>
-                  <td className="px-2 py-2.5 text-right">{r.localPath && <CopyPath path={r.localPath} label="" />}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-border-strong bg-bg-muted/50 text-sm font-medium">
-              <td className="px-3 py-2.5" />
-              <td className="hidden sm:table-cell" />
-              <td className="px-2 py-2.5">
-                {rows.filter(isDone).length} of {rows.length} watched
-                <span className="block text-xs font-normal text-ink-muted">
-                  {hm(shownTotal - shownWatched)} left · {hm((shownTotal - shownWatched) / 1.5)} at 1.5x
-                </span>
-              </td>
-              <td className="px-2 py-2.5 text-right tabular-nums">{hm(shownTotal)}</td>
-              <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">{hm(shownTotal / 1.5)}</td>
-              <td className="hidden md:table-cell" colSpan={3} />
-            </tr>
-          </tfoot>
-        </table>
-      </Card>
+      {driveConnected ? (
+        <UploadQueueProvider freeBytes={quota?.free ?? null}>
+          <VideoFolderBar
+            pending={rows
+              .filter((r) => !r.driveFileId && r.localPath && r.file && r.bytes)
+              .map((r) => ({ localPath: r.localPath!, file: r.file!, bytes: r.bytes! }))}
+          />
+          {checklistTable(true)}
+          <UploadErrors />
+        </UploadQueueProvider>
+      ) : (
+        checklistTable(false)
+      )}
       <p className="mt-2 text-xs text-ink-faint">
         The folder icon copies the video&rsquo;s location on your G: drive. Logging a &ldquo;Video&rdquo; session on the
         Overview tab also counts toward the video you pick.
