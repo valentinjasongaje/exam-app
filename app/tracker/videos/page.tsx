@@ -164,7 +164,7 @@ export default async function VideosPage({
                       {r.driveFileId && r.videoId ? (
                         <span className="flex items-center gap-2">
                           <Link
-                            href={`/tracker/videos/watch/${r.videoId}`}
+                            href={`/watch/${r.videoId}`}
                             className={clsx("inline-flex items-center gap-1.5 hover:underline", done ? "text-ink-muted" : "text-ink")}
                           >
                             <Cloud size={14} className="shrink-0 text-accent" />
@@ -348,7 +348,7 @@ export default async function VideosPage({
             x.r!.driveFileId && x.r!.videoId ? (
               <Link
                 key={x.s.slug}
-                href={`/tracker/videos/watch/${x.r!.videoId}`}
+                href={`/watch/${x.r!.videoId}`}
                 className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft/40 px-3 py-1.5 text-sm text-ink hover:border-accent"
               >
                 <Play size={14} className="shrink-0 fill-current text-accent" />

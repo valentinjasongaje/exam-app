@@ -731,10 +731,17 @@ So plan videos can be watched away from the laptop. `lib/google-drive.ts`.
   against free Drive space). Other browsers fall back to a single-file picker
   per row (name + size must match). The upload engine is shared with the bulk
   uploader in `lib/drive-upload-client.ts`.
-- **Watch** (`/tracker/videos/watch/[id]`): Drive's own player in an iframe
-  (`/file/d/<id>/preview`); private files play for whoever is signed in to
-  that Google account in the browser. Mark watched, next video on Drive,
-  "take notes on this topic", remove from Drive.
+- **Watch** (`/watch/[id]`, wider layout; the old `/tracker/videos/watch/[id]`
+  redirects): Drive's own player in an iframe (`/file/d/<id>/preview`); private
+  files play for whoever is signed in to that Google account in the browser.
+  The topic's note opens beside the player (`app/watch/[id]/watch-notes.tsx`,
+  matched by subject + topic, case-insensitive) and autosaves ~1 s after
+  typing via `autosaveNoteAction` (draft mode in `lib/note-store.ts`: half-
+  filled formula rows are skipped, not rejected). On phones the player is
+  sticky at the top of a single grid so it stays in view over the notes.
+  Mark watched, next video on Drive, remove from Drive.
+- **Watched box confirmation**: `WatchCheckbox` asks in a small `<dialog>`
+  before ticking or unticking, so stray taps don't change progress.
 - **Free space**: remove one video or all watched ones — permanent delete
   (`DELETE files/<id>`), so space frees immediately; G: files and progress
   are untouched.

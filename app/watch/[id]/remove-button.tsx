@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
-import { removeFromDriveAction } from "../../../drive-actions";
+import { removeFromDriveAction } from "../../tracker/drive-actions";
 
 /** Deletes this video's copy from Google Drive to free space (G: file and progress stay). */
 export default function RemoveFromDrive({ videoId, title }: { videoId: string; title: string }) {
