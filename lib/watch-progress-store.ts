@@ -1,7 +1,7 @@
 /** Latest auto-tracked progress of the video on the watch page (player → status line). */
-export type WatchProgress = { share: number; completed: boolean; justCompleted: boolean; tracking: boolean };
+export type WatchProgress = { share: number; completed: boolean; justCompleted: boolean; tracking: boolean; mode: "loading" | "native" | "drive" };
 
-let state: WatchProgress = { share: 0, completed: false, justCompleted: false, tracking: false };
+let state: WatchProgress = { share: 0, completed: false, justCompleted: false, tracking: false, mode: "loading" };
 const listeners = new Set<() => void>();
 
 export const watchProgress = {

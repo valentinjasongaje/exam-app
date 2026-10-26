@@ -11,11 +11,15 @@ type Mode = "loading" | "native" | "drive";
 
 /** Registers the Drive streaming worker and waits until it controls this page. */
 async function ensureWorker() {
-  if (!("serviceWorker" in navigator)) throw new Error("no service worker");
-  await navigator.serviceWorker.register("/drive-sw.js");
+  if (!("serviceWorker" in navigator)) throw new Error("This browser can't run the built-in player (no service workers). Try Chrome, Edge or Safari, outside private mode.");
+  const reg = await navigator.serviceWorker.register("/drive-sw.js");
+  reg.update().catch(() => {});
   if (navigator.serviceWorker.controller) return;
   await new Promise<void>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error("worker not ready")), 5000);
+    const t = setTimeout(
+      () => reject(new Error("The player helper didn't start in time. Reload the page (a normal reload, not Ctrl+Shift+R).")),
+      10000
+    );
     navigator.serviceWorker.addEventListener(
       "controllerchange",
       () => {
@@ -52,6 +56,8 @@ export default function WatchPlayer({
   initialCompleted: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("loading");
+  const [reason, setReason] = useState<string | null>(null);
+  const retried = useRef(false);
   const video = useRef<HTMLVideoElement>(null);
   const lastSaved = useRef(0);
   const router = useRouter();
@@ -81,8 +87,12 @@ export default function WatchPlayer({
   }
 
   useEffect(() => {
-    watchProgress.set({ share: initialShare, completed: initialCompleted, justCompleted: false, tracking: false });
+    watchProgress.set({ share: initialShare, completed: initialCompleted, justCompleted: false, tracking: false, mode: "loading" });
   }, [initialShare, initialCompleted]);
+
+  useEffect(() => {
+    watchProgress.set({ mode });
+  }, [mode]);
 
   useEffect(() => {
     if (mode !== "native") return;
@@ -125,7 +135,11 @@ export default function WatchPlayer({
     let alive = true;
     ensureWorker()
       .then(() => alive && setMode("native"))
-      .catch(() => alive && setMode("drive"));
+      .catch((e: Error) => {
+        if (!alive) return;
+        setReason(e.message);
+        setMode("drive");
+      });
     return () => {
       alive = false;
     };
@@ -198,6 +212,36 @@ export default function WatchPlayer({
     }
   };
 
+  // Find out why the video didn't load (the worker passes Google's error through), retry once, then fall back.
+  async function onVideoError() {
+    const code = video.current?.error?.code;
+    let why = code === 4 ? "This video's format can't play in this browser." : "The video didn't load.";
+    try {
+      const r = await fetch(`/drive-media/${fileId}`, { headers: { Range: "bytes=0-1" }, cache: "no-store" });
+      if (!r.ok) {
+        const d = await r.json().catch(() => null);
+        const msg: string = d?.error?.message ?? d?.error ?? "";
+        why =
+          r.status === 401
+            ? "Google Drive access expired. Reconnect Drive on the Video checklist."
+            : r.status === 403
+              ? `Google Drive refused the file (403)${msg ? `: ${msg}` : ""}.`
+              : r.status === 404
+                ? "The file isn't on your Drive any more (404). Re-upload it from the Video checklist."
+                : `Google Drive error ${r.status}${msg ? `: ${msg}` : ""}`;
+      } else if (code !== 4 && !retried.current) {
+        // The file is reachable: likely a hiccup. Try once more before giving up.
+        retried.current = true;
+        video.current?.load();
+        return;
+      }
+    } catch {
+      why = "Couldn't reach Google Drive. Check your connection.";
+    }
+    setReason(why);
+    setMode("drive");
+  }
+
   if (mode === "drive") {
     return (
       <div>
@@ -211,7 +255,10 @@ export default function WatchPlayer({
           />
         </div>
         <p className="flex flex-wrap items-center gap-x-2 bg-bg-muted px-3 py-1.5 text-xs text-ink-muted">
-          Drive&rsquo;s player: timestamps can&rsquo;t be read here.
+          <span>
+            Using Drive&rsquo;s player, so no auto-tracking or timestamps.
+            {reason && <span className="block text-danger">Why: {reason}</span>}
+          </span>
           <button type="button" onClick={() => location.reload()} className="text-accent hover:underline">
             Try the built-in player
           </button>
@@ -243,7 +290,7 @@ export default function WatchPlayer({
             flush();
           }}
           onEnded={() => flush()}
-          onError={() => setMode("drive")}
+          onError={() => void onVideoError()}
           className="absolute inset-0 h-full w-full bg-black"
         />
       )}

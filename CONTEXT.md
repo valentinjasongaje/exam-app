@@ -940,3 +940,8 @@ time accumulates in `seconds`; `minutes` follows it (`lib/auto-log.ts` → `addA
   `lib/local-watch.ts`), and after 5 minutes the tracker layout shows "You opened X N min ago — log it?" with
   editable minutes, **Log time**, **Log + finished it** and **Didn't watch** (`logLocalWatchAction`).
 - Non-tracker subjects (ECT) aren't auto-logged.
+- Fallback diagnostics: when the built-in player can't start, the note under Drive's player says why. Causes:
+  no service worker, the worker not taking control within 10 s (often a hard refresh), or a video error. For a
+  video error the player probes `/drive-media/<id>` (Range 0-1) and maps 401 → reconnect Drive, 403 → Google's
+  message, 404 → re-upload, and code 4 → format. If the file is reachable it retries the load once. The SW passes
+  token-route errors on as JSON. WatchStatus shows "Starting player…" while loading.

@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { watchProgress, type WatchProgress } from "@/lib/watch-progress-store";
 
-const initial: WatchProgress = { share: 0, completed: false, justCompleted: false, tracking: false };
+const initial: WatchProgress = { share: 0, completed: false, justCompleted: false, tracking: false, mode: "loading" };
 
 /** "Auto-tracking · 34% watched" next to the player controls. */
 export default function WatchStatus() {
@@ -16,8 +16,9 @@ export default function WatchStatus() {
       </span>
     );
   }
+  if (p.mode === "loading") return <span className="text-xs text-ink-faint">Starting player…</span>;
   if (!p.tracking) {
-    return <span className="text-xs text-ink-faint">Not auto-tracked in Drive&rsquo;s player</span>;
+    return <span className="text-xs text-ink-faint">Not auto-tracked in Drive&rsquo;s player (see the note under the video)</span>;
   }
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-ink-muted" title="Time watched is logged to the tracker on its own. Done at 90% played.">

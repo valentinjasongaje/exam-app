@@ -5,6 +5,7 @@
  * Authorization header the <video> tag can't add itself. Only /drive-media/
  * is touched; every other request goes to the network as usual.
  */
+// v2: readable errors
 const PREFIX = "/drive-media/";
 let token = null;
 let expires = 0;
@@ -17,7 +18,13 @@ function getToken(force) {
   if (!force && token && Date.now() < expires) return Promise.resolve(token);
   if (!pending) {
     pending = fetch("/api/drive/token", { credentials: "same-origin", cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error("token " + r.status))))
+      .then(async (r) => {
+        if (r.ok) return r.json();
+        const d = await r.json().catch(() => ({}));
+        const err = new Error(d.error || "Couldn't get Drive access (" + r.status + ").");
+        err.status = r.status;
+        throw err;
+      })
       .then((d) => {
         token = d.token;
         expires = Date.now() + Math.max(60, (d.expiresIn || 3600) - 300) * 1000;
@@ -40,8 +47,12 @@ async function stream(id, request) {
     let res = await go(false);
     if (res.status === 401) res = await go(true);
     return res;
-  } catch {
-    return new Response("", { status: 502 });
+  } catch (err) {
+    // Readable reason for the page's "couldn't start" message.
+    return new Response(JSON.stringify({ error: { message: (err && err.message) || "Network error reaching Google Drive." } }), {
+      status: (err && err.status) || 502,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
