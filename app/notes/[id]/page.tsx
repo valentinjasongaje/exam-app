@@ -59,7 +59,7 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
               <li key={c.id} className="flex flex-col gap-1 border-b border-border px-4 py-3 last:border-0 sm:flex-row sm:items-baseline sm:gap-4">
                 <span className="text-sm text-ink-muted sm:w-56 sm:shrink-0">{c.name}</span>
                 <span className="min-w-0 flex-1">
-                  <FormulaMath formula={c.formula} className="text-lg" />
+                  <FormulaMath formula={c.formula} className="text-lg" fit />
                   {c.hint && <span className="block text-xs text-ink-faint">{c.hint}</span>}
                 </span>
                 <Badge tone={c.box >= 5 ? "success" : c.box === 0 ? "muted" : "accent"} className="self-start">

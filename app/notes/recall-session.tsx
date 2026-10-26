@@ -66,7 +66,7 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
                 <li key={c.id} className="rounded-lg border border-danger/30 bg-danger-soft/40 px-3 py-2 text-sm">
                   <span className="text-ink-muted">{c.name}</span>
                   <span className="mt-1 block text-base text-ink">
-                    <FormulaMath formula={c.formula} />
+                    <FormulaMath formula={c.formula} fit />
                   </span>
                 </li>
               ))}
@@ -94,7 +94,7 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
   }
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto max-w-3xl">
       <div className="mb-3 flex items-center justify-between text-xs text-ink-muted tabular-nums">
         <span>
           {i + 1} of {order.length}
@@ -107,15 +107,15 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
         <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${(i / order.length) * 100}%` }} />
       </div>
 
-      <div className="flex min-h-64 flex-col rounded-2xl border border-border bg-bg-elevated p-6 text-center shadow-sm">
+      <div className="flex min-h-80 flex-col rounded-2xl border border-border bg-bg-elevated px-3 py-6 text-center shadow-sm sm:min-h-96 sm:px-6 sm:py-8">
         <p className="text-xs text-ink-faint">{card.topic}</p>
         <p className="mt-6 text-xl font-semibold">{card.name}</p>
         {!revealed ? (
           <p className="mt-4 text-sm text-ink-muted">Write it down or say it, then reveal.</p>
         ) : (
           <>
-            <div className="mt-6 text-2xl text-accent sm:text-3xl">
-              <FormulaMath formula={card.formula} display />
+            <div className="my-auto py-6 text-xl text-accent sm:text-3xl">
+              <FormulaMath formula={card.formula} display fit />
             </div>
             {card.hint && <p className="mt-3 text-sm text-ink-muted">{card.hint}</p>}
           </>

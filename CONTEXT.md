@@ -828,3 +828,10 @@ video errors (codec), it falls back to Drive's iframe, and timestamps are disabl
   title suffix "· Topic", with the uploaded one first. The player honours `?t=`, otherwise it resumes the last position
   (localStorage `watch-pos:<videoId>`). Speed buttons 1–2× are remembered in `watch-rate`.
 - Helpers are in `lib/timestamps.ts` (formatTime, parseTimeline, splitTimestamps).
+
+## Formula auto-fit
+
+`components/fit-width.tsx` shrinks a formula's font size until it fits its container. It goes down to 40%, refines
+a few passes, and re-fits on resize and after the KaTeX fonts load. It only scrolls sideways if the formula still
+doesn't fit. Used via `<FormulaMath fit />` in recall (card and missed list), on the note page and in "Shows as"
+previews. The recall card is wider (max-w-3xl), taller (min-h-80, or 96 on sm+), and has the formula vertically centred.
