@@ -53,6 +53,7 @@ model Question {
   choices        Choice[]
   attemptAnswers AttemptAnswer[]
   aiExplanations QuestionExplanation[]
+  videoQuestion  VideoQuestion?
 
   @@unique([examId, sourceItemId])
   @@index([examId, order])
@@ -110,6 +111,7 @@ model User {
   notes          StudyNote[]
   formulaCards   FormulaCard[]
   drive          DriveConnection?
+  videoQuestions VideoQuestion[]
 }
 
 model Attempt {
@@ -218,6 +220,8 @@ model StudyVideo {
   order           Int       @default(0)
   completedAt     DateTime?
   createdAt       DateTime  @default(now())
+
+  questions VideoQuestion[]
 
   @@index([userId, subject])
 }
@@ -359,4 +363,36 @@ model DriveConnection {
   folderId        String? // "ECE Review Videos" folder the app created
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+// ---------- Questions captured while watching ----------
+// A question the instructor asks in a review video, written down from the
+// notes panel. It stays a draft here (answer often comes minutes later)
+// until it has text, four choices and the correct one; then it is copied
+// into the subject's "Video questions" exam (questionId) and kept in sync.
+
+model VideoQuestion {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId     String
+  video       StudyVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  subject     String // tracker subject slug, from the video
+  topic       String // video topic, e.g. "Diodes"
+  seconds     Int? // where in the video it was asked
+  text        String
+  choiceA     String     @default("")
+  choiceB     String     @default("")
+  choiceC     String     @default("")
+  choiceD     String     @default("")
+  correct     String? // "A".."D"; null = answer pending
+  explanation String?
+  imageUrl    String?
+  questionId  String?    @unique
+  question    Question?  @relation(fields: [questionId], references: [id], onDelete: SetNull)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([userId, videoId])
+  @@index([userId, subject])
 }

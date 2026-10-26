@@ -10,6 +10,8 @@ import RemoveFromDrive from "./remove-button";
 import WatchNotes from "./watch-notes";
 import WatchPlayer from "./watch-player";
 import SpeedControl from "./speed-control";
+import VideoQuestions from "./video-questions";
+import { toClient } from "./question-types";
 
 /**
  * Plays a plan video from the user's Google Drive (Drive's own player, so it
@@ -32,7 +34,7 @@ export default async function WatchPage({
   if (!video) notFound();
 
   const topic = video.title.replace(/^\S+ \d+ · /, "");
-  const [next, note] = await Promise.all([
+  const [next, note, questions] = await Promise.all([
     prisma.studyVideo.findFirst({
       where: { userId, section: video.section, driveFileId: { not: null }, order: { gt: video.order }, id: { not: video.id } },
       orderBy: { order: "asc" },
@@ -42,6 +44,7 @@ export default async function WatchPage({
       orderBy: { updatedAt: "desc" },
       include: { cards: { orderBy: { order: "asc" } } },
     }),
+    prisma.videoQuestion.findMany({ where: { userId, videoId: video.id }, orderBy: [{ seconds: "asc" }, { createdAt: "asc" }] }),
   ]);
   const done = video.watchedMinutes >= video.durationMinutes;
 
@@ -107,6 +110,9 @@ export default async function WatchPage({
           topic={topic}
           note={note ? { id: note.id, body: note.body, cards: note.cards } : null}
         />
+        <div className="mt-4">
+          <VideoQuestions key={`q-${video.id}`} videoId={video.id} initial={questions.map(toClient)} />
+        </div>
       </aside>
     </div>
   );

@@ -8,6 +8,7 @@ import { Card, Badge } from "@/components/ui";
 import { clsx } from "clsx";
 import { aiConfigured } from "@/lib/ai-explain";
 import ExplainButton from "./explain-button";
+import { formatTime } from "@/lib/timestamps";
 
 const PASS_PCT = 70;
 
@@ -67,6 +68,12 @@ export default async function AttemptReviewPage({
   }
 
   const answersByQuestion = new Map(attempt.answers.map((a) => [a.questionId, a.choiceId]));
+  // Questions written down from a review video link back to where it's solved.
+  const sourceRows = await prisma.videoQuestion.findMany({
+    where: { userId: session.user.id, questionId: { in: questions.map((q) => q.id) } },
+    select: { questionId: true, videoId: true, seconds: true },
+  });
+  const sources = new Map(sourceRows.map((r) => [r.questionId!, r]));
   const pct = Math.round(((attempt.score ?? 0) / attempt.totalQuestions) * 100);
   const canExplain = aiConfigured();
   const passed = pct >= PASS_PCT;
@@ -146,6 +153,15 @@ export default async function AttemptReviewPage({
                 <p className="mt-3 ml-9 whitespace-pre-line rounded-lg bg-bg-muted p-3 text-sm text-ink-muted">
                   {q.explanation}
                 </p>
+              )}
+              {sources.get(q.id) && (
+                <Link
+                  href={`/watch/${sources.get(q.id)!.videoId}${sources.get(q.id)!.seconds ? `?t=${sources.get(q.id)!.seconds}` : ""}`}
+                  className="mt-2 ml-9 inline-flex items-center gap-1 text-sm text-accent hover:underline"
+                >
+                  ▶ Watch the solution in the video
+                  {sources.get(q.id)!.seconds ? ` (${formatTime(sources.get(q.id)!.seconds!)})` : ""}
+                </Link>
               )}
               {q.explanationImageUrl && (
                 // eslint-disable-next-line @next/next/no-img-element

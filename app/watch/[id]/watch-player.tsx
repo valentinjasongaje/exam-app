@@ -68,6 +68,17 @@ export default function WatchPlayer({
         v.currentTime = s;
         v.play().catch(() => {});
       },
+      // The video is same-origin (served through the worker), so the canvas isn't tainted.
+      captureFrame: async () => {
+        const v = video.current;
+        if (!v || !v.videoWidth) return null;
+        const scale = Math.min(1, 1600 / v.videoWidth);
+        const c = document.createElement("canvas");
+        c.width = Math.round(v.videoWidth * scale);
+        c.height = Math.round(v.videoHeight * scale);
+        c.getContext("2d")?.drawImage(v, 0, 0, c.width, c.height);
+        return new Promise<Blob | null>((res) => c.toBlob(res, "image/jpeg", 0.85));
+      },
       getRate: () => video.current?.playbackRate ?? 1,
       setRate: (r) => {
         if (video.current) video.current.playbackRate = r;

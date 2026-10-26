@@ -5,6 +5,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // Video-question pictures go through a server action (already shrunk in the browser).
+  experimental: {
+    serverActions: { bodySizeLimit: "5mb" },
+  },
   // Private study app: tell crawlers not to index anything, including
   // non-HTML responses (API routes, the calendar feed) that can't carry a meta tag.
   async headers() {

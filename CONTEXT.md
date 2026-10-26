@@ -835,3 +835,20 @@ video errors (codec), it falls back to Drive's iframe, and timestamps are disabl
 a few passes, and re-fits on resize and after the KaTeX fonts load. It only scrolls sideways if the formula still
 doesn't fit. Used via `<FormulaMath fit />` in recall (card and missed list), on the note page and in "Shows as"
 previews. The recall card is wider (max-w-3xl), taller (min-h-80, or 96 on sm+), and has the formula vertically centred.
+
+## Questions from videos
+
+The watch page's notes panel has **Questions from this video** (`app/watch/[id]/video-questions.tsx`).
+- A `VideoQuestion` row (per user and video) stores the text, choices A–D, `correct` (null = pending), solution notes,
+  an optional picture, and `seconds` (the video time when it was added). Subject and topic come from the video.
+- Pictures can be a **captured video frame** (canvas from the built-in player via `playerBridge.captureFrame`, which works
+  because the video is same-origin through the SW) or a photo. Both are shrunk to ≤1600 px JPEG in the browser
+  (`lib/shrink-image.ts`), then uploaded to Vercel Blob. The server-action body limit is 5 MB (next.config).
+- When a question has text, four choices and an answer, `syncToBank` (`lib/video-questions.ts`) copies it into the
+  subject's **"<Subject> · Video questions"** exam (slug `video-questions-<subject>`, created on first use), and later
+  edits update that copy. Pending questions never reach the bank, so exam and mock queries need no changes. Once a
+  question is in the bank it can't go back to pending. Deleting it also deletes the bank copy and its answers.
+- Pending questions have quick A–D buttons to set the answer once it's solved on screen.
+- Attempt review shows "▶ Watch the solution in the video (m:ss)" for questions that came from a video.
+- Integration-tested against real Postgres via Prisma's wasm engine + `@prisma/adapter-pg` in a scratch dir
+  (the sandbox can't download native engines).
