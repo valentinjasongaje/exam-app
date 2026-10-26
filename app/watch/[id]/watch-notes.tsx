@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRightLeft, Check, Clock, Loader2, Pencil, Play, Plus, Sigma, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { autosaveNoteAction } from "../../notes/actions";
-import { FORMULA_SYMBOLS } from "@/lib/recall";
+import SymbolBar from "@/components/symbol-bar";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime, parseTime, parseTimeline } from "@/lib/timestamps";
@@ -20,38 +20,6 @@ import {
 type Card = { key: string; id?: string; name: string; formula: string; hint: string };
 type Status = "idle" | "dirty" | "saving" | "saved" | "error";
 type Field = HTMLInputElement | HTMLTextAreaElement;
-
-/** Types a symbol into a field at the caret, going through React's onChange. */
-function typeInto(el: Field, sym: string) {
-  const start = el.selectionStart ?? el.value.length;
-  const end = el.selectionEnd ?? el.value.length;
-  const value = el.value.slice(0, start) + sym + el.value.slice(end);
-  const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), "value")?.set;
-  setter?.call(el, value);
-  el.dispatchEvent(new Event("input", { bubbles: true }));
-  requestAnimationFrame(() => {
-    el.focus();
-    el.setSelectionRange(start + sym.length, start + sym.length);
-  });
-}
-
-function SymbolBar({ target }: { target: React.RefObject<Field | null> }) {
-  return (
-    <div className="flex flex-wrap gap-0.5 rounded-lg border border-border bg-bg-elevated p-1">
-      {FORMULA_SYMBOLS.map((s) => (
-        <button
-          key={s}
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => target.current && typeInto(target.current, s)}
-          className="min-w-7 rounded px-1 py-0.5 font-mono text-xs text-ink-muted hover:bg-bg-muted hover:text-ink"
-        >
-          {s}
-        </button>
-      ))}
-    </div>
-  );
-}
 
 const Section = ({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) => (
   <section className="flex flex-col gap-2">

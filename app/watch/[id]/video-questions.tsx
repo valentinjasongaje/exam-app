@@ -6,6 +6,7 @@ import { Camera, Check, Clock, ImagePlus, ListChecks, Loader2, Pencil, Plus, Spa
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
+import SymbolBar from "@/components/symbol-bar";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime } from "@/lib/timestamps";
 import { shrinkImage } from "@/lib/shrink-image";
@@ -173,6 +174,8 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const playerReady = useSyncExternalStore(playerBridge.subscribe, () => playerBridge.get() !== null, () => false);
   const formTop = useRef<HTMLDivElement>(null);
+  // The symbol bar types into whichever field of the form was focused last.
+  const lastField = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
 
   const now = () => {
     const p = playerBridge.get();
@@ -392,7 +395,14 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
       )}
 
       {draft && (
-        <div ref={formTop} className="flex flex-col gap-2.5 rounded-lg border border-accent/40 bg-bg p-2.5">
+        <div
+          ref={formTop}
+          onFocusCapture={(e) => {
+            const t = e.target;
+            if ((t instanceof HTMLInputElement && t.type === "text") || t instanceof HTMLTextAreaElement) lastField.current = t;
+          }}
+          className="flex flex-col gap-2.5 rounded-lg border border-accent/40 bg-bg p-2.5"
+        >
           <div className="flex items-center justify-between gap-2 text-xs text-ink-muted">
             <span className="flex items-center gap-1">
               <Clock size={12} />
@@ -427,6 +437,8 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
               </button>
             ))}
           </div>
+
+          <SymbolBar target={lastField} hint="Goes into the box you were typing in." />
 
           <textarea
             value={draft.text}

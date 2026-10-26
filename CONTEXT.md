@@ -884,3 +884,9 @@ The form remembers the last type used (localStorage).
 - **Key points**: the note's free text (StudyNote.body, autosaved) for terms and ideas, with a Symbols toggle. The
   symbol bar types through the native value setter + an input event, so React's onChange fires.
 The note page (/notes/[id]) shows a Timeline card (markers of the topic's videos, linking to `?t=`) and "Key points".
+
+## Shared symbol bar
+
+`components/symbol-bar.tsx` (`SymbolBar` + `typeInto`) is used by the formula form, the key points toggle and the
+video question form. In the question form it types into whichever field was focused last (question, choices,
+answer or solution notes), tracked with `onFocusCapture` on the form.
