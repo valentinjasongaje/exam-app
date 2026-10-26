@@ -16,7 +16,7 @@ export async function startWeakDrillAction() {
   const userId = session.user.id;
 
   const existing = await prisma.attempt.findFirst({
-    where: { userId, examId: null, mode: "PRACTICE", finishedAt: null },
+    where: { userId, examId: null, mode: "PRACTICE", finishedAt: null, label: null },
     orderBy: { startedAt: "desc" },
   });
   if (existing) redirect(`/attempt/${existing.id}`);

@@ -5,6 +5,8 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
+import { mistakeCounts } from "@/lib/mistakes";
+import { startOfToday } from "@/lib/daily";
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -22,6 +24,11 @@ export default async function DashboardPage() {
       },
     },
   });
+
+  const [mistakes, doneToday] = await Promise.all([
+    mistakeCounts(session.user.id),
+    prisma.attempt.count({ where: { userId: session.user.id, label: "daily", finishedAt: { not: null }, startedAt: { gte: startOfToday() } } }),
+  ]);
 
   const groupOrder = [...new Set(CANONICAL_SUBJECTS.map((s): string => s.group))];
   const slugOrder = CANONICAL_SUBJECTS.map((s): string => s.slug);
@@ -44,6 +51,20 @@ export default async function DashboardPage() {
         title={`Welcome${session.user.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
         subtitle="Pick a subject to keep studying."
       />
+
+      <Link
+        href="/daily"
+        className="mb-10 flex items-center justify-between gap-4 rounded-xl border border-accent/40 bg-accent-soft/40 px-5 py-4 transition-colors hover:bg-accent-soft/70"
+      >
+        <div>
+          <p className="font-semibold">{doneToday ? "Today's session: done ✓" : "Today's 15-minute session"}</p>
+          <p className="text-sm text-ink-muted">
+            Formulas, questions and solved problems that are due
+            {mistakes.due > 0 && ` · ${mistakes.due} mistake${mistakes.due === 1 ? "" : "s"} to retry`}
+          </p>
+        </div>
+        <ArrowRight size={18} className="shrink-0 text-accent" />
+      </Link>
 
       {subjects.length === 0 ? (
         <EmptyState>No exams available yet.</EmptyState>

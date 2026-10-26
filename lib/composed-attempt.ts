@@ -17,8 +17,11 @@ export function attemptTitle(attempt: {
   exam: { title: string } | null;
   subject: { name: string } | null;
   mode: string;
+  label?: string | null;
 }): string {
   if (attempt.exam) return attempt.exam.title;
+  if (attempt.label === "daily") return "Daily session";
+  if (attempt.label === "mistakes") return "Mistake review";
   if (attempt.mode === "BOARD_EXAM") {
     return `Mock Board Exam${attempt.subject ? ` — ${attempt.subject.name}` : ""}`;
   }

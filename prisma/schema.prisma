@@ -54,6 +54,7 @@ model Question {
   attemptAnswers AttemptAnswer[]
   aiExplanations QuestionExplanation[]
   videoQuestion  VideoQuestion?
+  mistakes       MistakeCard[]
 
   @@unique([examId, sourceItemId])
   @@index([examId, order])
@@ -113,6 +114,7 @@ model User {
   drive          DriveConnection?
   videoQuestions VideoQuestion[]
   videoMarkers   VideoMarker[]
+  mistakes       MistakeCard[]
 }
 
 model Attempt {
@@ -133,6 +135,7 @@ model Attempt {
   mode           AttemptMode   @default(PRACTICE)
   timeLimitMinutes Int? // set for BOARD_EXAM attempts (e.g. 240); null = untimed
   showFeedback   Boolean       @default(false) // frozen from User.instantFeedback at creation
+  label          String? // composed attempts: "daily" (daily session) or "mistakes" (mistake review); null = older kinds
 
   answers AttemptAnswer[]
 
@@ -421,4 +424,26 @@ model VideoMarker {
   createdAt DateTime   @default(now())
 
   @@index([userId, videoId])
+}
+
+// ---------- Mistake bank ----------
+// Every question answered wrong comes back on a schedule until it's answered
+// right twice in a row (lib/mistakes.ts). Updated whenever an attempt finishes.
+
+model MistakeCard {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  streak         Int       @default(0) // right answers in a row since the last miss
+  dueDate        DateTime? @db.Date
+  timesWrong     Int       @default(1)
+  timesRight     Int       @default(0)
+  lastReviewedAt DateTime?
+  masteredAt     DateTime? // set after 2 right in a row; a new miss clears it
+  createdAt      DateTime  @default(now())
+
+  @@unique([userId, questionId])
+  @@index([userId, masteredAt, dueDate])
 }

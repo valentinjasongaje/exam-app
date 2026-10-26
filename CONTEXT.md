@@ -890,3 +890,31 @@ The note page (/notes/[id]) shows a Timeline card (markers of the topic's videos
 `components/symbol-bar.tsx` (`SymbolBar` + `typeInto`) is used by the formula form, the key points toggle and the
 video question form. In the question form it types into whichever field was focused last (question, choices,
 answer or solution notes), tracked with `onFocusCapture` on the form.
+
+## Mistake bank
+
+`MistakeCard` (one per user and question). Rules are in `lib/mistakes.ts`:
+- A wrong answer means in the bank (or back in, with the streak reset and mastered cleared), due tomorrow.
+- A right answer while the card is due adds one to the streak: the first time it's due again in 3 days, the
+  second time in a row it's mastered (`masteredAt`) and leaves the queue.
+- Right answers before the due date and skipped questions don't count.
+`applyAttemptToMistakes` runs inside `finishAttempt` (`lib/attempt-finish.ts`), which is now the single place an
+attempt is scored and closed (submit, finish and the daily session). The migration backfills the bank from history:
+every question whose latest finished answer was wrong (timesWrong = past wrong count, due now).
+- **Review due mistakes** (`startMistakeReviewAction`): a composed attempt with `label: "mistakes"`, up to 20
+  questions, one at a time with instant feedback. The weak drill now ignores labelled attempts when resuming.
+
+## Daily session ("Today", /daily)
+
+`/daily` shows today's counts, a time estimate, Start/Continue, "Done for today" with a review link and "Another
+round", plus the mistake bank (due / to master / mastered) with a review button. The dashboard links to it, and the
+nav has a "Today" item. `startDailyAction` closes stale unfinished daily attempts from earlier days (Manila day
+boundary) and resumes today's.
+- The mix (`lib/daily.ts`, `DAILY`): up to 6 due formula cards, 8 multiple-choice questions (due mistakes first,
+  then fresh questions from the two weakest subjects by accuracy, skipping active mistakes and questions answered
+  right in the last 14 days) and 2 due solved problems.
+- The MCQ part is a composed attempt `label: "daily"` (PRACTICE, instant feedback), so it counts in Progress and
+  feeds the mistake bank. Formulas and problems use their existing record actions.
+- `/daily/session?attempt=` (`daily-session.tsx`) runs one flow: formula warm-up → questions → solved problems.
+  Already-answered questions are skipped when resuming. At the end, `finishInPlaceAction` scores the attempt and
+  the summary links to the attempt review.

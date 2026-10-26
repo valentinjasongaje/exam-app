@@ -54,6 +54,9 @@ export default function NavLinks({ isAdmin }: { isAdmin: boolean }) {
       <NavLink href="/dashboard" onNavigate={close}>
         Dashboard
       </NavLink>
+      <NavLink href="/daily" onNavigate={close}>
+        Today
+      </NavLink>
       <NavLink href="/stats" onNavigate={close}>
         Progress
       </NavLink>

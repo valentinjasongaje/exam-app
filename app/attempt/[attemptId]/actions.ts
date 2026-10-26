@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { questionIdsOf } from "@/lib/composed-attempt";
+import { finishAttempt } from "@/lib/attempt-finish";
 
 async function requireOwnAttempt(attemptId: string) {
   const session = await auth();
@@ -19,14 +20,14 @@ function isTimeExpired(attempt: { mode: string; timeLimitMinutes: number | null;
   return Date.now() > attempt.startedAt.getTime() + attempt.timeLimitMinutes * 60_000;
 }
 
-async function scoreAttempt(attemptId: string) {
-  const correctCount = await prisma.attemptAnswer.count({
-    where: { attemptId, isCorrect: true },
-  });
-  await prisma.attempt.update({
-    where: { id: attemptId },
-    data: { score: correctCount, finishedAt: new Date() },
-  });
+const scoreAttempt = finishAttempt;
+
+/** Finishes an attempt without leaving the page (daily session). */
+export async function finishInPlaceAction(attemptId: string) {
+  const attempt = await requireOwnAttempt(attemptId);
+  if (!attempt.finishedAt) await scoreAttempt(attemptId);
+  revalidatePath("/daily");
+  revalidatePath("/stats");
 }
 
 export async function submitAllAction(attemptId: string, formData: FormData) {
