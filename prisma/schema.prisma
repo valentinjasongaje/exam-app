@@ -112,6 +112,7 @@ model User {
   formulaCards   FormulaCard[]
   drive          DriveConnection?
   videoQuestions VideoQuestion[]
+  videoMarkers   VideoMarker[]
 }
 
 model Attempt {
@@ -222,6 +223,7 @@ model StudyVideo {
   createdAt       DateTime  @default(now())
 
   questions VideoQuestion[]
+  markers   VideoMarker[]
 
   @@index([userId, subject])
 }
@@ -404,4 +406,19 @@ model VideoQuestion {
 
   @@index([userId, videoId])
   @@index([userId, subject])
+}
+
+// A point in a video's timeline: "4:30 Distance between two points".
+// Per video (not per topic note), so the notes' key points stay separate.
+model VideoMarker {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  videoId   String
+  video     StudyVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  seconds   Int
+  label     String
+  createdAt DateTime   @default(now())
+
+  @@index([userId, videoId])
 }

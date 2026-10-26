@@ -8,7 +8,7 @@ import { BOX_LABEL, isDue } from "@/lib/recall";
 import { Badge, Card, LinkButton } from "@/components/ui";
 import FormulaMath from "@/components/formula-math";
 import { deleteNoteAction } from "../actions";
-import { splitTimestamps } from "@/lib/timestamps";
+import { formatTime, splitTimestamps } from "@/lib/timestamps";
 
 export default async function NotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,6 +25,10 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
     select: { id: true, driveFileId: true },
   });
   const video = videos.find((v) => v.driveFileId) ?? videos[0] ?? null;
+  const markers = await prisma.videoMarker.findMany({
+    where: { userId: session!.user.id, videoId: { in: videos.map((v) => v.id) } },
+    orderBy: [{ videoId: "asc" }, { seconds: "asc" }],
+  });
   const today = todayLocal();
   const due = note.cards.filter((c) => isDue(c.dueDate ? fromDbDate(c.dueDate) : null, today)).length;
 
@@ -71,9 +75,28 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
         </Card>
       )}
 
+      {markers.length > 0 && (
+        <Card className="mb-6">
+          <h2 className="mb-2 text-sm font-medium text-ink-muted">Timeline</h2>
+          <ol className="flex flex-col">
+            {markers.map((m) => (
+              <li key={m.id}>
+                <Link
+                  href={`/watch/${m.videoId}?t=${m.seconds}`}
+                  className="flex items-baseline gap-3 rounded-md px-1.5 py-1 hover:bg-bg-muted"
+                >
+                  <span className="w-14 shrink-0 font-mono text-xs text-accent tabular-nums">{formatTime(m.seconds)}</span>
+                  <span className="text-sm">{m.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </Card>
+      )}
+
       {note.body.trim() && (
         <Card>
-          <h2 className="mb-2 text-sm font-medium text-ink-muted">Notes</h2>
+          <h2 className="mb-2 text-sm font-medium text-ink-muted">Key points</h2>
           <p className="leading-relaxed whitespace-pre-wrap">
             {splitTimestamps(note.body).map((part, i) =>
               part.kind === "text" ? (

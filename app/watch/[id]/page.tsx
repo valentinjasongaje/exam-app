@@ -35,7 +35,7 @@ export default async function WatchPage({
   if (!video) notFound();
 
   const topic = video.title.replace(/^\S+ \d+ · /, "");
-  const [next, note, questions] = await Promise.all([
+  const [next, note, questions, markers] = await Promise.all([
     prisma.studyVideo.findFirst({
       where: { userId, section: video.section, driveFileId: { not: null }, order: { gt: video.order }, id: { not: video.id } },
       orderBy: { order: "asc" },
@@ -46,6 +46,7 @@ export default async function WatchPage({
       include: { cards: { orderBy: { order: "asc" } } },
     }),
     prisma.videoQuestion.findMany({ where: { userId, videoId: video.id }, orderBy: [{ seconds: "asc" }, { createdAt: "asc" }] }),
+    prisma.videoMarker.findMany({ where: { userId, videoId: video.id }, orderBy: { seconds: "asc" }, select: { id: true, seconds: true, label: true } }),
   ]);
   const done = video.watchedMinutes >= video.durationMinutes;
 
@@ -107,6 +108,8 @@ export default async function WatchPage({
       <aside className="rounded-xl border border-border bg-bg-elevated p-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
         <WatchNotes
           key={video.id}
+          videoId={video.id}
+          initialMarkers={markers}
           subject={video.subject}
           topic={topic}
           note={note ? { id: note.id, body: note.body, cards: note.cards } : null}

@@ -868,3 +868,19 @@ The form remembers the last type used (localStorage).
 - In the bank, the solution picture becomes `Question.explanationImageUrl`, for both kinds.
 - FormulaMath keeps units after numbers upright: `12.73 V`, `25 mA`, `4.7 kΩ`, `10 μF`, `20 dB`. Without a space,
   only V/A/W/Ω/% count as units (so `3m` stays a variable).
+
+## Watch-page notes panel (formulas / timeline / key points)
+
+`app/watch/[id]/watch-notes.tsx` has three sections:
+- **Formulas to memorize**: a read-only list with math rendered (FormulaMath fit) and a pencil per row. Edit and
+  **Add formula** open one inline form with the symbol bar, a "Shows as" preview, Save, Cancel and Delete. Saving
+  goes through the same `autosaveNoteAction` as before, called straight away. The **Recall** button sits right
+  under the list.
+- **Timeline**: `VideoMarker` rows (per video: seconds + label). **Mark this moment** (or Alt+T anywhere) takes the
+  player time and you name it; the time and label are editable. The part being played is highlighted (polls the
+  player every 1 s), and tapping one seeks. Actions are in `marker-actions.ts`. Notes written earlier with
+  "[m:ss]" lines in the text get a **Move to timeline** button (`moveTimestampsToTimelineAction`): those lines
+  become markers and are removed from the text.
+- **Key points**: the note's free text (StudyNote.body, autosaved) for terms and ideas, with a Symbols toggle. The
+  symbol bar types through the native value setter + an input event, so React's onChange fires.
+The note page (/notes/[id]) shows a Timeline card (markers of the topic's videos, linking to `?t=`) and "Key points".
