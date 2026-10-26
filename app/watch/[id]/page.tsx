@@ -12,6 +12,7 @@ import WatchPlayer from "./watch-player";
 import SpeedControl from "./speed-control";
 import VideoQuestions from "./video-questions";
 import { toClient } from "./question-types";
+import { aiConfigured } from "@/lib/ai-explain";
 
 /**
  * Plays a plan video from the user's Google Drive (Drive's own player, so it
@@ -111,7 +112,7 @@ export default async function WatchPage({
           note={note ? { id: note.id, body: note.body, cards: note.cards } : null}
         />
         <div className="mt-4">
-          <VideoQuestions key={`q-${video.id}`} videoId={video.id} initial={questions.map(toClient)} />
+          <VideoQuestions key={`q-${video.id}`} videoId={video.id} initial={questions.map(toClient)} aiEnabled={aiConfigured()} />
         </div>
       </aside>
     </div>

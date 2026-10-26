@@ -380,6 +380,7 @@ model VideoQuestion {
   subject     String // tracker subject slug, from the video
   topic       String // video topic, e.g. "Diodes"
   seconds     Int? // where in the video it was asked
+  kind        String     @default("mcq") // "mcq" = has choices A–D; "solve" = worked on screen, answer only
   text        String
   choiceA     String     @default("")
   choiceB     String     @default("")
@@ -388,6 +389,14 @@ model VideoQuestion {
   correct     String? // "A".."D"; null = answer pending
   explanation String?
   imageUrl    String?
+  answer           String? // "solve": the final answer shown in the video; null = not shown yet
+  solutionImageUrl String? // "solve": picture of the worked solution
+  // "solve" problems are practised like formula cards (Leitner boxes, lib/recall.ts).
+  box            Int       @default(0)
+  dueDate        DateTime? @db.Date
+  lastReviewedAt DateTime?
+  timesRight     Int       @default(0)
+  timesWrong     Int       @default(0)
   questionId  String?    @unique
   question    Question?  @relation(fields: [questionId], references: [id], onDelete: SetNull)
   createdAt   DateTime   @default(now())

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Play, Plus } from "lucide-react";
+import { ListChecks, Play, Plus } from "lucide-react";
 import { clsx } from "clsx";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { TRACKER_SUBJECTS, fromDbDate, isTrackerSubject, todayLocal } from "@/lib/study-plan";
+import { TRACKER_SUBJECTS, fromDbDate, isTrackerSubject, toDbDate, todayLocal } from "@/lib/study-plan";
 import { MAX_BOX, isDue } from "@/lib/recall";
 import { PageHeader, Card, EmptyState, LinkButton } from "@/components/ui";
 import ProgressBar from "../tracker/progress-bar";
@@ -33,6 +33,15 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
   const dueAll = shown.reduce((s, r) => s + r.due, 0);
   const totalAll = shown.reduce((s, r) => s + r.total, 0);
   const recallHref = `/notes/recall${subject !== "all" ? `?subject=${subject}` : ""}`;
+
+  // Problems worked in the videos (Add question → Solved problem).
+  const problems = await prisma.videoQuestion.findMany({
+    where: { userId, kind: "solve", answer: { not: null }, ...(subject !== "all" ? { subject } : {}) },
+    select: { dueDate: true },
+  });
+  const todayDb = toDbDate(today);
+  const problemsDue = problems.filter((q) => !q.dueDate || q.dueDate <= todayDb).length;
+  const problemsHref = `/notes/problems${subject !== "all" ? `?subject=${subject}` : ""}`;
 
   return (
     <>
@@ -83,6 +92,29 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
             )}
             <LinkButton href={`${recallHref}${recallHref.includes("?") ? "&" : "?"}all=1`} variant="secondary">
               Drill all {totalAll}
+            </LinkButton>
+          </div>
+        </Card>
+      )}
+
+      {problems.length > 0 && (
+        <Card className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-2xl font-semibold tabular-nums">
+              {problemsDue} <span className="text-base font-normal text-ink-muted">of {problems.length} solved problems due</span>
+            </p>
+            <p className="text-sm text-ink-muted">Problems worked in the videos. Solve, reveal, check.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {problemsDue > 0 ? (
+              <LinkButton href={problemsHref}>
+                <ListChecks size={14} /> Solve {problemsDue} due
+              </LinkButton>
+            ) : (
+              <span className="self-center text-sm text-success">All caught up</span>
+            )}
+            <LinkButton href={`${problemsHref}${problemsHref.includes("?") ? "&" : "?"}all=1`} variant="secondary">
+              Practise all {problems.length}
             </LinkButton>
           </div>
         </Card>

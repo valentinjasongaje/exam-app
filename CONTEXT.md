@@ -852,3 +852,19 @@ The watch page's notes panel has **Questions from this video** (`app/watch/[id]/
 - Attempt review shows "▶ Watch the solution in the video (m:ss)" for questions that came from a video.
 - Integration-tested against real Postgres via Prisma's wasm engine + `@prisma/adapter-pg` in a scratch dir
   (the sandbox can't download native engines).
+
+## Solved problems from videos
+
+`VideoQuestion.kind` is either `"mcq"` (choices A–D, as above) or `"solve"`: a problem worked on screen with just a
+final `answer` (rendered with FormulaMath) and an optional `solutionImageUrl` (e.g. "Capture the solved board").
+The form remembers the last type used (localStorage).
+- Solved problems never enter the MCQ bank directly. They're practised at **/notes/problems**
+  (`?video=`, `?subject=`, `&all=1`): read, solve on paper, reveal the answer, solution picture and a "watch the
+  solution" link, then grade. Scheduling uses the formula Leitner boxes (`box`/`dueDate`/`timesRight`/`timesWrong`).
+  /notes shows a due card.
+- **Make it multiple choice** (only when ANTHROPIC_API_KEY is set): `lib/ai-distractors.ts` asks Claude for three
+  plausible wrong answers (common ECE mistakes, same format and units). The real answer lands on a random letter,
+  the kind becomes `mcq`, and it syncs to the bank.
+- In the bank, the solution picture becomes `Question.explanationImageUrl`, for both kinds.
+- FormulaMath keeps units after numbers upright: `12.73 V`, `25 mA`, `4.7 kΩ`, `10 μF`, `20 dB`. Without a space,
+  only V/A/W/Ω/% count as units (so `3m` stays a variable).

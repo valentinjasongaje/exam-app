@@ -15,9 +15,9 @@ export function choicesOf(q: Pick<VideoQuestion, "choiceA" | "choiceB" | "choice
   return { A: q.choiceA, B: q.choiceB, C: q.choiceC, D: q.choiceD } as Record<Label, string>;
 }
 
-/** Ready for the exam bank: question, all four choices and the answer. */
-export function isComplete(q: Pick<VideoQuestion, "text" | "choiceA" | "choiceB" | "choiceC" | "choiceD" | "correct">) {
-  return !!q.text.trim() && LABELS.every((l) => choicesOf(q)[l].trim()) && LABELS.includes(q.correct as Label);
+/** Ready for the exam bank: a multiple-choice question with all four choices and the answer. */
+export function isComplete(q: Pick<VideoQuestion, "kind" | "text" | "choiceA" | "choiceB" | "choiceC" | "choiceD" | "correct">) {
+  return q.kind === "mcq" && !!q.text.trim() && LABELS.every((l) => choicesOf(q)[l].trim()) && LABELS.includes(q.correct as Label);
 }
 
 /** The subject's "Video questions" exam, created on first use. */
@@ -51,7 +51,7 @@ export async function syncToBank(q: VideoQuestion) {
     await prisma.$transaction([
       prisma.question.update({
         where: { id: q.questionId },
-        data: { text: q.text.trim(), imageUrl: q.imageUrl, explanation: q.explanation },
+        data: { text: q.text.trim(), imageUrl: q.imageUrl, explanation: q.explanation, explanationImageUrl: q.solutionImageUrl },
       }),
       ...LABELS.map((label) =>
         prisma.choice.upsert({
@@ -72,6 +72,7 @@ export async function syncToBank(q: VideoQuestion) {
       text: q.text.trim(),
       imageUrl: q.imageUrl,
       explanation: q.explanation,
+      explanationImageUrl: q.solutionImageUrl,
       sourceItemId: `video-${q.id || crypto.randomUUID()}`,
       choices: { create: LABELS.map((label) => ({ label, text: choices[label].trim(), isCorrect: q.correct === label })) },
     },

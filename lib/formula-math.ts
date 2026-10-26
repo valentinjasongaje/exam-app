@@ -50,6 +50,20 @@ const SYMBOLS: [RegExp, string][] = [
 
 const LETTER = "A-Za-zα-ωΑ-Ω";
 
+/** Common engineering units, with optional SI prefix. */
+const UNIT = "(?:[pnuμmkMG]?(?:V|A|Ω|W|Hz|F|H|S|s|m|J|C|T|Wb|VA|VAR|var|bps|b|B)|dBm|dBW|dB|rad|rpm|°C|°F|K|%|ohms?)";
+/** "kΩ" → "k" Omega, "μF" → mu "F": Greek letters can't sit inside text in KaTeX. */
+function unitToAscii(unit: string) {
+  return unit
+    .replace(/^[μu](?=[A-ZΩs])/, "\u0002mu\u0002")
+    .split(/(\u0002mu\u0002|Ω)/)
+    .filter(Boolean)
+    .map((part) => (part === "\u0002mu\u0002" ? "mu" : part === "Ω" ? "Omega" : part === "%" ? "%" : `"${part.replace("%", "")}"${part.includes("%") ? " %" : ""}`))
+    .join(" ");
+}
+
+const UNIT_AFTER_NUMBER = new RegExp(`(\\d(?:\\.\\d+)?)(\\s?)(${UNIT})(?![${LETTER}0-9_])`, "gu");
+
 /** X2 → X_2, R12 → R_12; leaves sin2x, log10, 2πf alone (letter must not follow another letter). */
 function autoSubscripts(s: string) {
   return s.replace(new RegExp(`(?<![${LETTER}_\\\\])([${LETTER}])(\\d+)(?![\\d.])`, "gu"), "$1_$2");
@@ -200,12 +214,21 @@ export function formulaToTex(input: string): string {
   const raw = text.match(/^\$([\s\S]+)\$$/);
   if (raw) return raw[1];
 
-  let s = autoSubscripts(text);
+  // Units after a number stay upright text (12.73 V, 25 mA, 4.7 kΩ), protected from the steps below.
+  const units: string[] = [];
+  let s = text.replace(UNIT_AFTER_NUMBER, (m, num: string, space: string, unit: string) => {
+    // Without a space, a lone letter is more likely a variable (3m, 2s, 4C) than a unit.
+    if (!space && unit.length === 1 && !"VAWΩ%".includes(unit)) return m;
+    units.push(unit);
+    return `${num}${space}\u0001${units.length - 1}\u0001`;
+  });
+  s = autoSubscripts(s);
   s = expandRoots(s);
   s = groupFractions(s);
   s = letterRuns(s);
   for (const [re, rep] of SYMBOLS) s = s.replace(re, rep);
   s = s.replace(/[α-ωΑ-Ω]/gu, (g) => (GREEK[g] ? ` ${GREEK[g]} ` : g));
+  s = s.replace(/\u0001(\d+)\u0001/g, (_m, i: string) => ` ${unitToAscii(units[Number(i)])} `);
   return tidy(parser.parse(s));
 }
 
