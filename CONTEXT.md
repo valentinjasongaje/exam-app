@@ -811,3 +811,20 @@ Formula cards are typed calculator-style and drawn as real math with KaTeX
 
 Shown in recall mode (revealed answer + missed list), on the note page, and as a "Shows as" live preview
 under each formula input in the note editor and the watch-page notes panel. Stored text is unchanged.
+
+## Built-in player and note timestamps
+
+`/watch/[id]` plays Drive videos in the site's own `<video>` (`app/watch/[id]/watch-player.tsx`) instead of Drive's iframe,
+so the notes can read and set the playback time. A `<video>` can't send the Authorization header Drive requires
+(query-string tokens are rejected for downloads), so `public/drive-sw.js` (service worker) maps `/drive-media/<fileId>`
+to `files/<id>?alt=media` with `Bearer` + the Range header. It gets a short-lived drive.file token from
+`/api/drive/token` and refreshes on 401. If the worker can't take control (no SW support, hard refresh) or the
+video errors (codec), it falls back to Drive's iframe, and timestamps are disabled there.
+
+- `lib/player-bridge.ts`: a small store connecting the player to the notes panel and speed buttons (getTime/seek/setRate).
+- Notes panel: **Add timestamp** (or Alt+T) inserts `[m:ss] ` at the start of a line. Lines starting with a timestamp
+  are listed under "Timeline · tap to jump", and tapping one seeks.
+- The note page renders `[m:ss]` as links to `/watch/<topic video>?t=<seconds>`. The topic video is matched by
+  title suffix "· Topic", with the uploaded one first. The player honours `?t=`, otherwise it resumes the last position
+  (localStorage `watch-pos:<videoId>`). Speed buttons 1–2× are remembered in `watch-rate`.
+- Helpers are in `lib/timestamps.ts` (formatTime, parseTimeline, splitTimestamps).

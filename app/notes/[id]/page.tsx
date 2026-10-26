@@ -8,6 +8,7 @@ import { BOX_LABEL, isDue } from "@/lib/recall";
 import { Badge, Card, LinkButton } from "@/components/ui";
 import FormulaMath from "@/components/formula-math";
 import { deleteNoteAction } from "../actions";
+import { splitTimestamps } from "@/lib/timestamps";
 
 export default async function NotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -17,6 +18,13 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
     include: { cards: { orderBy: { order: "asc" } } },
   });
   if (!note) notFound();
+  // Timestamps in the notes jump to this topic's video (the uploaded one first).
+  const videos = await prisma.studyVideo.findMany({
+    where: { userId: session!.user.id, subject: note.subject, title: { endsWith: ` · ${note.topic}`, mode: "insensitive" } },
+    orderBy: { order: "asc" },
+    select: { id: true, driveFileId: true },
+  });
+  const video = videos.find((v) => v.driveFileId) ?? videos[0] ?? null;
   const today = todayLocal();
   const due = note.cards.filter((c) => isDue(c.dueDate ? fromDbDate(c.dueDate) : null, today)).length;
 
@@ -66,7 +74,26 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
       {note.body.trim() && (
         <Card>
           <h2 className="mb-2 text-sm font-medium text-ink-muted">Notes</h2>
-          <p className="leading-relaxed whitespace-pre-wrap">{note.body}</p>
+          <p className="leading-relaxed whitespace-pre-wrap">
+            {splitTimestamps(note.body).map((part, i) =>
+              part.kind === "text" ? (
+                part.value
+              ) : video ? (
+                <Link
+                  key={i}
+                  href={`/watch/${video.id}?t=${part.seconds}`}
+                  title="Play the video from here"
+                  className="rounded bg-accent-soft px-1 font-mono text-sm text-accent hover:underline"
+                >
+                  {part.label}
+                </Link>
+              ) : (
+                <span key={i} className="rounded bg-bg-muted px-1 font-mono text-sm">
+                  {part.label}
+                </span>
+              )
+            )}
+          </p>
         </Card>
       )}
 

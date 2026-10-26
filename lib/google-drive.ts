@@ -107,7 +107,7 @@ export async function accessTokenFor(userId: string) {
     }
     throw new DriveError(`Couldn't refresh Drive access: ${data.error ?? res.status}`);
   }
-  return { token: data.access_token as string, conn };
+  return { token: data.access_token as string, expiresIn: Number(data.expires_in) || 3600, conn };
 }
 
 async function api<T>(token: string, path: string, init: RequestInit = {}): Promise<T> {

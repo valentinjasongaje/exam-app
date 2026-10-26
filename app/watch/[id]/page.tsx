@@ -8,14 +8,24 @@ import { sectionLabel } from "@/lib/video-library";
 import WatchCheckbox from "../../tracker/videos/watch-checkbox";
 import RemoveFromDrive from "./remove-button";
 import WatchNotes from "./watch-notes";
+import WatchPlayer from "./watch-player";
+import SpeedControl from "./speed-control";
 
 /**
  * Plays a plan video from the user's Google Drive (Drive's own player, so it
  * works on any device signed in to that Google account) with the topic's
  * note open beside it. Phone: player sticks to the top, notes scroll below.
  */
-export default async function WatchPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function WatchPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ t?: string }>;
+}) {
   const { id } = await params;
+  const t = Number((await searchParams).t);
+  const startAt = Number.isFinite(t) && t > 0 ? t : null;
   const session = await auth();
   const userId = session!.user.id;
   const video = await prisma.studyVideo.findFirst({ where: { id, userId } });
@@ -52,15 +62,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
 
       <div className="sticky top-16 z-20 -mx-4 min-w-0 bg-black sm:mx-0 sm:rounded-xl lg:static lg:col-start-1 lg:row-start-2 lg:self-start lg:overflow-hidden">
         {video.driveFileId ? (
-          <div className="relative aspect-video w-full">
-            <iframe
-              src={`https://drive.google.com/file/d/${video.driveFileId}/preview`}
-              title={video.title}
-              allow="autoplay; fullscreen; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 h-full w-full border-0"
-            />
-          </div>
+          <WatchPlayer videoId={video.id} fileId={video.driveFileId} title={video.title} startAt={startAt} />
         ) : (
           <div className="bg-bg-muted p-8 text-center text-sm text-ink-muted">
             This video isn&rsquo;t on Google Drive. Upload it from the video checklist.
@@ -70,7 +72,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
 
       <div className="mb-6 min-w-0 lg:col-start-1 lg:row-start-3">
         <p className="mt-2 text-xs text-ink-faint">
-          Speed is in the player&rsquo;s ⚙ menu. Just uploaded? Drive may need a few minutes to process it. Not playing? Sign this
+          Just uploaded? Drive may need a few minutes to process it. Not playing? Sign this
           browser in to the Google account the video was uploaded to.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
@@ -78,6 +80,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
             <WatchCheckbox key={`${video.id}-${done}`} id={video.id} watched={done} label={video.title} />
             {done ? "Watched" : "Mark as watched"}
           </div>
+          <SpeedControl />
           {next && (
             <Link href={`/watch/${next.id}`} className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline">
               <SkipForward size={14} /> Next: {next.title}

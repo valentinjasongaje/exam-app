@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { Check, Loader2, Play, Plus, X } from "lucide-react";
+import { Check, Clock, Loader2, Play, Plus, X } from "lucide-react";
 import { clsx } from "clsx";
 import { autosaveNoteAction } from "../../notes/actions";
 import { FORMULA_SYMBOLS } from "@/lib/recall";
 import { FormulaPreview } from "@/components/formula-math";
+import { playerBridge } from "@/lib/player-bridge";
+import { formatTime, parseTimeline } from "@/lib/timestamps";
 
 type Card = { key: string; id?: string; name: string; formula: string; hint: string };
 type Status = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -139,6 +141,30 @@ export default function WatchNotes({
     });
   }
 
+  // Timestamps: "[12:34] " typed at the start of a line from the player's time.
+  const playerReady = useSyncExternalStore(playerBridge.subscribe, () => playerBridge.get() !== null, () => false);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const timeline = parseTimeline(body);
+
+  function addTimestamp() {
+    const player = playerBridge.get();
+    const el = bodyRef.current;
+    if (!player || !el) return;
+    const stamp = `[${formatTime(player.getTime())}] `;
+    const focused = document.activeElement === el;
+    const start = focused ? el.selectionStart : body.length;
+    const end = focused ? el.selectionEnd : body.length;
+    const atLineStart = start === 0 || body[start - 1] === "\n";
+    const insert = (atLineStart ? "" : "\n") + stamp;
+    const next = body.slice(0, start) + insert + body.slice(end);
+    setBody(next);
+    changed();
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + insert.length, start + insert.length);
+    });
+  }
+
   const track = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     lastField.current = e.currentTarget;
   };
@@ -249,9 +275,31 @@ export default function WatchNotes({
         )}
       </div>
 
-      <label className="flex min-h-0 flex-1 flex-col gap-1.5">
-        <span className="text-xs font-medium text-ink-muted">Notes</span>
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+        <div className="flex items-center justify-between gap-2">
+          <label htmlFor="watch-notes-body" className="text-xs font-medium text-ink-muted">
+            Notes
+          </label>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={addTimestamp}
+            disabled={!playerReady}
+            title={playerReady ? "Add the video's current time (Alt+T)" : "Timestamps need the built-in player"}
+            className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-accent hover:bg-accent-soft disabled:cursor-not-allowed disabled:text-ink-faint disabled:hover:bg-transparent"
+          >
+            <Clock size={12} /> Add timestamp
+          </button>
+        </div>
         <textarea
+          id="watch-notes-body"
+          ref={bodyRef}
+          onKeyDown={(e) => {
+            if (e.altKey && e.code === "KeyT") {
+              e.preventDefault();
+              addTimestamp();
+            }
+          }}
           value={body}
           onChange={(e) => {
             setBody(e.target.value);
@@ -259,10 +307,31 @@ export default function WatchNotes({
           }}
           onFocus={track}
           rows={6}
-          placeholder="Key ideas, steps, what the instructor stressed… (e.g. 47:10 — trick for series-parallel)"
+          placeholder="Key ideas, steps, what the instructor stressed… Tap ⏱ Add timestamp to mark the video time."
           className="field min-h-32 flex-1 text-sm leading-relaxed"
         />
-      </label>
+      </div>
+
+      {timeline.length > 0 && (
+        <div>
+          <p className="mb-1 text-xs font-medium text-ink-muted">Timeline · tap to jump</p>
+          <ul className="flex flex-col">
+            {timeline.map((t, i) => (
+              <li key={`${t.label}-${i}`}>
+                <button
+                  type="button"
+                  onClick={() => playerBridge.get()?.seek(t.seconds)}
+                  disabled={!playerReady}
+                  className="flex w-full items-baseline gap-2 rounded-md px-1.5 py-1 text-left text-sm hover:bg-bg-muted disabled:hover:bg-transparent"
+                >
+                  <span className="shrink-0 font-mono text-xs text-accent tabular-nums">{t.label}</span>
+                  <span className="min-w-0 truncate text-ink-muted">{t.text || "—"}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {error && <p className="text-xs text-danger">{error}</p>}
       {noteId && savedCount > 0 && (
