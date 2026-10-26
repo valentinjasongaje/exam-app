@@ -187,8 +187,14 @@ model StudySession {
   score     Int? // quiz only: number correct
   total     Int? // quiz only: number of items
   note      String?
+  // Logged by the app itself (video player, exams, recall), not typed in.
+  // One row per key, e.g. "2026-10-26:video:<videoId>", "attempt:<id>",
+  // "2026-10-26:review:math"; repeat updates add to `seconds`.
+  autoKey   String?
+  seconds   Int           @default(0)
   createdAt DateTime      @default(now())
 
+  @@unique([userId, autoKey])
   @@index([userId, date])
 }
 
@@ -221,6 +227,7 @@ model StudyVideo {
   driveUploadedAt DateTime?
   durationMinutes Int
   watchedMinutes  Int       @default(0)
+  watchedBuckets  String? // built-in player: base64 bitmap of the 10-second stretches actually played
   order           Int       @default(0)
   completedAt     DateTime?
   createdAt       DateTime  @default(now())

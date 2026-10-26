@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, Eye, PlayCircle, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -70,8 +70,13 @@ export default function DailySession({
   });
   const [finished, setFinished] = useState(false);
   const [, startTransition] = useTransition();
+  const shownAt = useRef(0);
 
   const step = steps[i];
+  // Time on each card, for the automatic study log.
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, [i]);
 
   function tally(type: Step["type"], ok: boolean) {
     setScore((s) => ({ ...s, [type]: [s[type][0] + (ok ? 1 : 0), s[type][1] + 1] }));
@@ -94,7 +99,8 @@ export default function DailySession({
     if (!step || step.type === "question") return;
     tally(step.type, ok);
     const id = step.item.id;
-    startTransition(() => (step.type === "formula" ? recordRecallAction(id, ok) : recordProblemAction(id, ok)));
+    const secs = (Date.now() - shownAt.current) / 1000;
+    startTransition(() => (step.type === "formula" ? recordRecallAction(id, ok, secs) : recordProblemAction(id, ok, secs)));
     next();
   }
 

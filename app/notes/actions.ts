@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { toDbDate, todayLocal } from "@/lib/study-plan";
 import { nextRecall } from "@/lib/recall";
 import { persistNote, type CardInput, type NoteInput } from "@/lib/note-store";
+import { addAutoTime, clampCardSeconds } from "@/lib/auto-log";
 
 export type NoteFormState = { error: string | null };
 
@@ -64,11 +65,20 @@ export async function deleteNoteAction(formData: FormData) {
 }
 
 /** Records one recall attempt and reschedules the card. */
-export async function recordRecallAction(cardId: string, correct: boolean) {
+export async function recordRecallAction(cardId: string, correct: boolean, seconds?: number) {
   const userId = await requireUserId();
   if (!userId) return;
-  const card = await prisma.formulaCard.findFirst({ where: { id: cardId, userId } });
+  const card = await prisma.formulaCard.findFirst({ where: { id: cardId, userId }, include: { note: { select: { subject: true } } } });
   if (!card) return;
+  // Recall time goes into today's study log on its own.
+  await addAutoTime({
+    userId,
+    key: `${todayLocal()}:review:${card.note.subject}`,
+    subject: card.note.subject,
+    activity: "REVIEW",
+    seconds: clampCardSeconds(seconds),
+    note: "Formula recall & solved problems",
+  });
   const next = nextRecall(card.box, correct, todayLocal());
   await prisma.formulaCard.update({
     where: { id: card.id },

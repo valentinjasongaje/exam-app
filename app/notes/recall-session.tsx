@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, Eye, RotateCcw, X } from "lucide-react";
 import { clsx } from "clsx";
@@ -32,6 +32,11 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
   const [revealed, setRevealed] = useState(false);
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [, startTransition] = useTransition();
+  // Time on each card, for the automatic study log.
+  const shownAt = useRef(0);
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, []);
 
   const card = order[i];
   const finished = i >= order.length;
@@ -41,7 +46,9 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
   function grade(ok: boolean) {
     const c = card;
     setResults((r) => ({ ...r, [c.id]: ok }));
-    startTransition(() => recordRecallAction(c.id, ok));
+    const secs = (Date.now() - shownAt.current) / 1000;
+    shownAt.current = Date.now();
+    startTransition(() => recordRecallAction(c.id, ok, secs));
     setRevealed(false);
     setI((n) => n + 1);
   }

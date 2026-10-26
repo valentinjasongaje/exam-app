@@ -50,9 +50,9 @@ export default async function TrackerPage() {
       select: { date: true, subject: true, minutes: true, activity: true, score: true, total: true },
     }),
     prisma.studySession.findMany({
-      where: { userId },
+      where: { userId, minutes: { gt: 0 } },
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-      take: 10,
+      take: 12,
     }),
     prisma.studyTopic.findMany({ where: { userId }, select: { subject: true, status: true } }),
     prisma.studyVideo.findMany({
@@ -158,7 +158,11 @@ export default async function TrackerPage() {
         </Card>
 
         <Card className="md:col-span-3">
-          <h2 className="mb-4 text-sm font-medium text-ink-muted">Log a study session</h2>
+          <h2 className="text-sm font-medium text-ink-muted">Log a study session</h2>
+          <p className="mt-1 mb-4 text-xs text-ink-faint">
+            Videos in the site&rsquo;s player, exams, the daily session and recall are logged on their own. Use this for
+            everything else: problem sets on paper, books, PTK class.
+          </p>
           <LogSessionForm
             today={today}
             subjects={TRACKER_SUBJECTS}
@@ -268,7 +272,7 @@ export default async function TrackerPage() {
         Recent sessions
       </h2>
       {recent.length === 0 ? (
-        <EmptyState>Nothing logged yet. Log your first session above.</EmptyState>
+        <EmptyState>Nothing logged yet. Watch a video in the site&rsquo;s player or take an exam and it shows up here.</EmptyState>
       ) : (
         <Card className="p-0">
           <ul>
@@ -280,6 +284,11 @@ export default async function TrackerPage() {
                 <span className="w-14 shrink-0 text-ink-muted">{formatDay(fromDbDate(s.date))}</span>
                 <span className="min-w-0 flex-1">
                   <span className="font-medium">{subjectName(s.subject)}</span>
+                  {s.autoKey && (
+                    <span className="ml-1.5 rounded bg-bg-muted px-1 py-0.5 align-middle text-[10px] font-medium tracking-wide text-ink-faint uppercase">
+                      auto
+                    </span>
+                  )}
                   <span className="text-ink-muted"> · {ACTIVITY_LABEL[s.activity]}</span>
                   {s.score !== null && s.total ? (
                     <span className="text-ink-muted">

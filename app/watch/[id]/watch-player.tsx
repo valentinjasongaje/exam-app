@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { playerBridge } from "@/lib/player-bridge";
+import { watchProgress } from "@/lib/watch-progress-store";
+import { BUCKET_SECONDS } from "@/lib/watch-coverage-shared";
 
 type Mode = "loading" | "native" | "drive";
 
@@ -38,15 +41,85 @@ export default function WatchPlayer({
   fileId,
   title,
   startAt,
+  initialShare,
+  initialCompleted,
 }: {
   videoId: string;
   fileId: string;
   title: string;
   startAt: number | null;
+  initialShare: number;
+  initialCompleted: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("loading");
   const video = useRef<HTMLVideoElement>(null);
   const lastSaved = useRef(0);
+  const router = useRouter();
+
+  // ---- automatic watch tracking ----
+  // Which 10-second stretches were really played, and how much real time
+  // was spent playing; sent to the server every 30 s and when pausing or
+  // leaving, so the tracker fills in on its own.
+  const pending = useRef(new Set<number>());
+  const played = useRef(0);
+  const lastT = useRef(0);
+  const lastWall = useRef(0);
+
+  function flush(leaving = false) {
+    if (pending.current.size === 0 && played.current < 1) return;
+    const body = JSON.stringify({ videoId, buckets: [...pending.current], played: Math.round(played.current) });
+    pending.current.clear();
+    played.current = 0;
+    fetch("/api/watch/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { share: number; completed: boolean; justCompleted: boolean } | null) => {
+        if (!d || leaving) return;
+        watchProgress.set({ share: d.share, completed: d.completed, justCompleted: d.justCompleted || watchProgress.get().justCompleted });
+        if (d.justCompleted) router.refresh(); // updates the Watched checkbox
+      })
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    watchProgress.set({ share: initialShare, completed: initialCompleted, justCompleted: false, tracking: false });
+  }, [initialShare, initialCompleted]);
+
+  useEffect(() => {
+    if (mode !== "native") return;
+    watchProgress.set({ tracking: true });
+    const beat = setInterval(() => flush(), 30_000);
+    const leave = () => flush(true);
+    const hidden = () => document.visibilityState === "hidden" && flush(true);
+    window.addEventListener("pagehide", leave);
+    document.addEventListener("visibilitychange", hidden);
+    return () => {
+      clearInterval(beat);
+      window.removeEventListener("pagehide", leave);
+      document.removeEventListener("visibilitychange", hidden);
+      flush(true);
+      watchProgress.set({ tracking: false });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
+
+  const track = () => {
+    const v = video.current;
+    if (!v || v.paused || v.seeking) return;
+    const now = performance.now();
+    const t = v.currentTime;
+    const dt = (now - lastWall.current) / 1000;
+    const dv = t - lastT.current;
+    // Normal playback only: skips and jumps don't count as watched.
+    if (lastWall.current && dt > 0 && dt < 3 && dv > 0 && dv < 6) {
+      played.current += dt;
+      for (let b = Math.floor(lastT.current / BUCKET_SECONDS); b <= Math.floor(t / BUCKET_SECONDS); b++) pending.current.add(b);
+    }
+    lastWall.current = now;
+    lastT.current = t;
+  };
+  const resetTrack = () => {
+    lastWall.current = 0;
+  };
 
   useEffect(() => {
     let alive = true;
@@ -114,6 +187,7 @@ export default function WatchPlayer({
   };
 
   const onTime = () => {
+    track();
     const v = video.current;
     if (!v || Math.abs(v.currentTime - lastSaved.current) < 5) return;
     lastSaved.current = v.currentTime;
@@ -162,6 +236,13 @@ export default function WatchPlayer({
           preload="metadata"
           onLoadedMetadata={onLoaded}
           onTimeUpdate={onTime}
+          onSeeking={resetTrack}
+          onPlay={resetTrack}
+          onPause={() => {
+            resetTrack();
+            flush();
+          }}
+          onEnded={() => flush()}
           onError={() => setMode("drive")}
           className="absolute inset-0 h-full w-full bg-black"
         />

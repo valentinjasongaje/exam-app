@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, Eye, PlayCircle, RotateCcw, X } from "lucide-react";
 import { Button } from "@/components/ui";
@@ -38,6 +38,10 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
   const [revealed, setRevealed] = useState(false);
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [, startTransition] = useTransition();
+  const shownAt = useRef(0);
+  useEffect(() => {
+    shownAt.current = Date.now();
+  }, []);
 
   const p = order[i];
   const missed = order.filter((x) => results[x.id] === false);
@@ -46,7 +50,9 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
   function grade(ok: boolean) {
     const cur = p;
     setResults((r) => ({ ...r, [cur.id]: ok }));
-    startTransition(() => recordProblemAction(cur.id, ok));
+    const secs = (Date.now() - shownAt.current) / 1000;
+    shownAt.current = Date.now();
+    startTransition(() => recordProblemAction(cur.id, ok, secs));
     setRevealed(false);
     setI((n) => n + 1);
     window.scrollTo({ top: 0 });

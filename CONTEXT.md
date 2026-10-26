@@ -918,3 +918,25 @@ boundary) and resumes today's.
 - `/daily/session?attempt=` (`daily-session.tsx`) runs one flow: formula warm-up → questions → solved problems.
   Already-answered questions are skipped when resuming. At the end, `finishInPlaceAction` scores the attempt and
   the summary links to the attempt review.
+
+## Automatic study tracking
+
+The tracker fills in without typing. Auto entries are `StudySession` rows with a unique `autoKey` (per user), and
+time accumulates in `seconds`; `minutes` follows it (`lib/auto-log.ts` → `addAutoTime`). Recent sessions show an
+"auto" badge and hide rows under a minute.
+- **Built-in player** (`watch-player.tsx`): counts real playing time and which 10-second stretches were played
+  normally. Skips and seeks don't count, and rewatching doesn't count twice. It POSTs to `/api/watch/progress`
+  every 30 s, on pause, on end and when hidden or leaving (keepalive). The server ORs the stretches into
+  `StudyVideo.watchedBuckets` (base64 bitmap, `lib/watch-coverage.ts`), raises `watchedMinutes` (never lowers it)
+  and **auto-marks the video watched at 90% played**. Playing time goes to today's VIDEO session,
+  key `<date>:video:<videoId>` (≤120 s per beat). `WatchStatus` shows "Auto-tracking · N% played" and "Marked as
+  watched automatically". Drive's iframe fallback can't be tracked.
+- **Exams and drills**: `finishAttempt` → `logAttempt` logs a QUIZ session (key `attempt:<id>`) with the score and
+  answered count. Time is from the first to the last answer, plus reading time. Mixed sets use their most common
+  subject.
+- **Formula recall and solved problems**: the client sends the seconds spent on each card (clamped 5–300 s), added
+  to today's REVIEW session per subject (`<date>:review:<subject>`).
+- **Laptop player (ecevideo:)** can't report back. `OpenVideo` remembers what was opened (localStorage,
+  `lib/local-watch.ts`), and after 5 minutes the tracker layout shows "You opened X N min ago — log it?" with
+  editable minutes, **Log time**, **Log + finished it** and **Didn't watch** (`logLocalWatchAction`).
+- Non-tracker subjects (ECT) aren't auto-logged.

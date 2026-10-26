@@ -10,6 +10,8 @@ import RemoveFromDrive from "./remove-button";
 import WatchNotes from "./watch-notes";
 import WatchPlayer from "./watch-player";
 import SpeedControl from "./speed-control";
+import WatchStatus from "./watch-status";
+import { bucketCount, countSet, decode } from "@/lib/watch-coverage";
 import VideoQuestions from "./video-questions";
 import { toClient } from "./question-types";
 import { aiConfigured } from "@/lib/ai-explain";
@@ -49,6 +51,10 @@ export default async function WatchPage({
     prisma.videoMarker.findMany({ where: { userId, videoId: video.id }, orderBy: { seconds: "asc" }, select: { id: true, seconds: true, label: true } }),
   ]);
   const done = video.watchedMinutes >= video.durationMinutes;
+  const n = bucketCount(video.durationMinutes);
+  const playedShare = video.watchedBuckets
+    ? (countSet(decode(video.watchedBuckets, n), n) / n) * 100
+    : (video.watchedMinutes / Math.max(1, video.durationMinutes)) * 100;
 
   // One grid holds title, player, controls and notes so the player can stay
   // pinned at the top on phones while you scroll down to type notes (a sticky
@@ -67,7 +73,14 @@ export default async function WatchPage({
 
       <div className="sticky top-16 z-20 -mx-4 min-w-0 bg-black sm:mx-0 sm:rounded-xl lg:static lg:col-start-1 lg:row-start-2 lg:self-start lg:overflow-hidden">
         {video.driveFileId ? (
-          <WatchPlayer videoId={video.id} fileId={video.driveFileId} title={video.title} startAt={startAt} />
+          <WatchPlayer
+            videoId={video.id}
+            fileId={video.driveFileId}
+            title={video.title}
+            startAt={startAt}
+            initialShare={Math.min(100, playedShare)}
+            initialCompleted={done}
+          />
         ) : (
           <div className="bg-bg-muted p-8 text-center text-sm text-ink-muted">
             This video isn&rsquo;t on Google Drive. Upload it from the video checklist.
@@ -85,6 +98,7 @@ export default async function WatchPage({
             <WatchCheckbox key={`${video.id}-${done}`} id={video.id} watched={done} label={video.title} />
             {done ? "Watched" : "Mark as watched"}
           </div>
+          <WatchStatus />
           <SpeedControl />
           {next && (
             <Link href={`/watch/${next.id}`} className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline">

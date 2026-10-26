@@ -8,6 +8,7 @@ import { uploadImage } from "@/lib/blob";
 import { aiConfigured } from "@/lib/ai-explain";
 import { makeDistractors } from "@/lib/ai-distractors";
 import { nextRecall } from "@/lib/recall";
+import { addAutoTime, clampCardSeconds } from "@/lib/auto-log";
 import { toDbDate, todayLocal, subjectName } from "@/lib/study-plan";
 import { LABELS, isComplete, removeFromBank, syncToBank, videoTopic } from "@/lib/video-questions";
 import { toClient, type VQ } from "./question-types";
@@ -164,12 +165,20 @@ export async function makeMultipleChoiceAction(id: string): Promise<Result> {
 }
 
 /** Records one practice attempt of a solved problem and reschedules it. */
-export async function recordProblemAction(id: string, correct: boolean) {
+export async function recordProblemAction(id: string, correct: boolean, seconds?: number) {
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return;
   const q = await prisma.videoQuestion.findFirst({ where: { id, userId, kind: "solve" } });
   if (!q) return;
+  await addAutoTime({
+    userId,
+    key: `${todayLocal()}:review:${q.subject}`,
+    subject: q.subject,
+    activity: "REVIEW",
+    seconds: clampCardSeconds(seconds),
+    note: "Formula recall & solved problems",
+  });
   const next = nextRecall(q.box, correct, todayLocal());
   await prisma.videoQuestion.update({
     where: { id },
