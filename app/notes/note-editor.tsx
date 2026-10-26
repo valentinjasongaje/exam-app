@@ -5,6 +5,7 @@ import { Plus, X } from "lucide-react";
 import { saveNoteAction, type NoteFormState } from "./actions";
 import { Button } from "@/components/ui";
 import { FORMULA_SYMBOLS } from "@/lib/recall";
+import { FormulaPreview } from "@/components/formula-math";
 
 type Card = { key: string; id?: string; name: string; formula: string; hint: string };
 
@@ -140,6 +141,11 @@ export default function NoteEditor({
                     aria-label={`Formula ${i + 1}`}
                     className="field min-w-0 font-mono"
                   />
+                  {c.formula.trim() && (
+                    <div className="min-w-0 sm:col-span-2">
+                      <FormulaPreview formula={c.formula} />
+                    </div>
+                  )}
                   <input
                     value={c.hint}
                     onChange={(e) => update(c.key, "hint", e.target.value)}

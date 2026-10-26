@@ -6,6 +6,7 @@ import { Check, Eye, RotateCcw, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import { recordRecallAction } from "./actions";
+import FormulaMath from "@/components/formula-math";
 
 type Card = { id: string; name: string; formula: string; hint: string | null; topic: string; subject: string };
 
@@ -64,7 +65,9 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
               {missed.map((c) => (
                 <li key={c.id} className="rounded-lg border border-danger/30 bg-danger-soft/40 px-3 py-2 text-sm">
                   <span className="text-ink-muted">{c.name}</span>
-                  <span className="mt-0.5 block font-mono text-ink">{c.formula}</span>
+                  <span className="mt-1 block text-base text-ink">
+                    <FormulaMath formula={c.formula} />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -111,7 +114,9 @@ export default function RecallSession({ cards, backHref }: { cards: Card[]; back
           <p className="mt-4 text-sm text-ink-muted">Write it down or say it, then reveal.</p>
         ) : (
           <>
-            <p className="mt-6 font-mono text-2xl break-words text-accent">{card.formula}</p>
+            <div className="mt-6 text-2xl text-accent sm:text-3xl">
+              <FormulaMath formula={card.formula} display />
+            </div>
             {card.hint && <p className="mt-3 text-sm text-ink-muted">{card.hint}</p>}
           </>
         )}

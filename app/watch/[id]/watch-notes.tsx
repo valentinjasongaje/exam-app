@@ -6,6 +6,7 @@ import { Check, Loader2, Play, Plus, X } from "lucide-react";
 import { clsx } from "clsx";
 import { autosaveNoteAction } from "../../notes/actions";
 import { FORMULA_SYMBOLS } from "@/lib/recall";
+import { FormulaPreview } from "@/components/formula-math";
 
 type Card = { key: string; id?: string; name: string; formula: string; hint: string };
 type Status = "idle" | "dirty" | "saving" | "saved" | "error";
@@ -206,6 +207,7 @@ export default function WatchNotes({
                       aria-label={`Formula ${i + 1}`}
                       className="field min-w-0 py-1.5 font-mono text-sm"
                     />
+                    <FormulaPreview formula={c.formula} />
                     {(c.name || c.formula) && (
                       <input
                         value={c.hint}

@@ -797,3 +797,17 @@ components/question-form.tsx  Shared create/edit question form
 README.md                     Shorter, pipeline-focused setup instructions
 CONTEXT.md                    This file
 ```
+
+## Math-friendly formulas
+
+Formula cards are typed calculator-style and drawn as real math with KaTeX
+(`components/formula-math.tsx`, converter in `lib/formula-math.ts`, which goes via AsciiMath → LaTeX).
+
+- `x/y`, `1/(2πfC)`, `R1R2/(R1+R2)` → stacked fractions (everything written together on each side of `/` belongs to it)
+- `X2`, `R1`, `x_2` → subscripts; `Vrms`, `Xc`, `Rth` → V_rms etc. (capital + lowercase); `X_L` for a capital subscript
+- `²`, `³`, `⁻¹`, `^` → powers; `√(…)²+(…)²` covers the whole side, `√(LC)` just the bracket, `√2` just the term
+- Greek letters from the symbol bar; `sinx`, `cosθ` → sin x, cos θ
+- `$…$` → raw LaTeX escape hatch. Anything KaTeX can't draw falls back to the typed text.
+
+Shown in recall mode (revealed answer + missed list), on the note page, and as a "Shows as" live preview
+under each formula input in the note editor and the watch-page notes panel. Stored text is unchanged.
