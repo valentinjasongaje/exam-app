@@ -8,7 +8,7 @@ import { sectionLabel } from "@/lib/video-library";
 import WatchCheckbox from "../../lessons/watch-checkbox";
 import WatchNotes from "./watch-notes";
 import WatchPlayer from "./watch-player";
-import SpeedControl from "./speed-control";
+import SpeedControl, { SkipButtons } from "./speed-control";
 import WatchStatus from "./watch-status";
 import { bucketCount, countSet, decode } from "@/lib/watch-coverage";
 import VideoQuestions from "./video-questions";
@@ -93,8 +93,9 @@ export default async function WatchPage({
             <WatchCheckbox key={`${video.id}-${done}`} id={video.id} watched={done} label={video.title} />
             {done ? "Watched" : "Mark as watched"}
           </div>
-          <WatchStatus />
+          <SkipButtons />
           <SpeedControl />
+          <WatchStatus />
           {next && (
             <Link href={`/watch/${next.id}`} className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline">
               <SkipForward size={14} /> Next: {next.title}

@@ -994,3 +994,14 @@ Drive and Remove from Drive are gone. Removing videos from Drive moved to **Sett
 (`app/settings/drive-videos.tsx`): the list of uploaded videos (watched ✓), a remove button per video with an
 inline confirm, and **Remove all watched**. It uses the same actions as before (`app/tracker/drive-actions.ts`, which
 now also revalidates /settings).
+
+## Precise skipping in the built-in player
+
+Dragging the native scrub bar on a 2-hour video moves about a minute per pixel, so the player has its own skips
+(`watch-player.tsx`, `playerBridge.skip`):
+- **⟲ 10s / 10s ⟳** buttons under the player (`SkipButtons` in speed-control.tsx).
+- Keys, outside text fields: ← / J = back 10 s, → / L = forward 10 s, with Shift = 30 s; K or Space (when nothing is
+  focused) = play/pause. They're listened for in the capture phase, so the video element's own arrow seek doesn't
+  also run.
+- **Double-tap** the left or right third of the video (above the control bar) to skip 10 s; a single tap there
+  plays/pauses. A "−10s / +20s" bubble shows the skip, and quick repeats add up.

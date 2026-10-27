@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, RotateCcw, RotateCw } from "lucide-react";
+import { clsx } from "clsx";
 import { playerBridge } from "@/lib/player-bridge";
 import { watchProgress } from "@/lib/watch-progress-store";
 import { BUCKET_SECONDS } from "@/lib/watch-coverage-shared";
@@ -167,6 +168,7 @@ export default function WatchPlayer({
         c.getContext("2d")?.drawImage(v, 0, 0, c.width, c.height);
         return new Promise<Blob | null>((res) => c.toBlob(res, "image/jpeg", 0.85));
       },
+      skip: (d) => skipBy(d),
       getRate: () => video.current?.playbackRate ?? 1,
       setRate: (r) => {
         if (video.current) video.current.playbackRate = r;
@@ -243,6 +245,68 @@ export default function WatchPlayer({
     setMode("drive");
   }
 
+  // ---- skipping: buttons, keyboard (← → / J L, Shift = 30 s, K or space = play/pause), double-tap ----
+  const [flash, setFlash] = useState<{ side: "back" | "fwd"; n: number; key: number } | null>(null);
+  const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function skipBy(delta: number) {
+    const v = video.current;
+    if (!v) return;
+    const end = Number.isFinite(v.duration) ? v.duration : Infinity;
+    v.currentTime = Math.min(end, Math.max(0, v.currentTime + delta));
+    // Stack quick repeats: "−20s", "−30s"…
+    setFlash((f) => {
+      const side = delta < 0 ? "back" : "fwd";
+      const n = f && f.side === side ? f.n + Math.abs(delta) : Math.abs(delta);
+      return { side, n, key: Date.now() };
+    });
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    flashTimer.current = setTimeout(() => setFlash(null), 650);
+  }
+
+  function togglePlay() {
+    const v = video.current;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => {});
+    else v.pause();
+  }
+
+  useEffect(() => {
+    if (mode !== "native") return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const step = e.shiftKey ? 30 : 10;
+      const k = e.key.toLowerCase();
+      if (k === "arrowleft" || k === "j") skipBy(-step);
+      else if (k === "arrowright" || k === "l") skipBy(step);
+      else if (k === "k" || (k === " " && (t === document.body || t?.tagName === "VIDEO"))) togglePlay();
+      else return;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    // Capture phase, so the video element's own 5-second arrow handling doesn't also run.
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+     
+  }, [mode]);
+
+  // Double-tap the left or right side to go back or forward 10 s; a single tap plays/pauses.
+  function onZoneTap(side: "back" | "fwd") {
+    if (tapTimer.current) {
+      clearTimeout(tapTimer.current);
+      tapTimer.current = null;
+      skipBy(side === "back" ? -10 : 10);
+      return;
+    }
+    tapTimer.current = setTimeout(() => {
+      tapTimer.current = null;
+      togglePlay();
+    }, 260);
+  }
+
   // Publishes the pinned player's height as --player-h, so things pinned under it
   // on phones (the notes tabs) sit just below it whatever is showing.
   useEffect(() => {
@@ -309,6 +373,34 @@ export default function WatchPlayer({
           onError={() => void onVideoError()}
           className="absolute inset-0 h-full w-full bg-black"
         />
+      )}
+      {mode === "native" && (
+        <>
+          {/* Double-tap zones; they stop above the control bar and leave the middle for the play button. */}
+          {(["back", "fwd"] as const).map((side) => (
+            <button
+              key={side}
+              type="button"
+              tabIndex={-1}
+              aria-hidden
+              onClick={() => onZoneTap(side)}
+              className={clsx("absolute top-0 bottom-14 w-[35%] cursor-default", side === "back" ? "left-0" : "right-0")}
+            />
+          ))}
+          {flash && (
+            <div
+              key={flash.key}
+              className={clsx(
+                "animate-fade pointer-events-none absolute top-1/2 flex -translate-y-1/2 flex-col items-center gap-1 rounded-full bg-black/55 px-4 py-3 text-xs font-medium text-white",
+                flash.side === "back" ? "left-[12%]" : "right-[12%]"
+              )}
+            >
+              {flash.side === "back" ? <RotateCcw size={22} /> : <RotateCw size={22} />}
+              {flash.side === "back" ? "−" : "+"}
+              {flash.n}s
+            </div>
+          )}
+        </>
       )}
     </div>
   );
