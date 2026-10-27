@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Clock } from "lucide-react";
+import { ClipboardCheck, Clock } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { startAttemptAction } from "./actions";
@@ -28,12 +29,20 @@ export default async function ExamStartPage({
 
   return (
     <main className="flex w-full flex-1 flex-col items-center justify-center px-4">
-      <Card className="w-full max-w-md text-center">
+      <Link href={`/subject/${exam.subjectId}`} className="mb-4 w-full max-w-md text-sm text-ink-muted hover:text-ink">
+        ← {exam.subject.name}
+      </Link>
+      <Card className="w-full max-w-md p-6 text-center sm:p-8">
+        <span className="animate-pop mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+          <ClipboardCheck size={28} />
+        </span>
         <p className="mb-1.5 text-xs font-medium tracking-wide text-accent uppercase">
           {exam.subject.name}
         </p>
         <h1 className="mb-2 text-2xl font-semibold">{exam.title}</h1>
-        <p className="mb-6 text-sm text-ink-muted">{exam._count.questions} questions</p>
+        <p className="mb-6 text-sm text-ink-muted">
+          {exam._count.questions} questions · about {Math.max(1, Math.round(exam._count.questions * 1.2))} min · wrong answers go to your mistake bank
+        </p>
         {exam.isBoardExam ? (
           <div className="flex flex-col gap-2.5">
             <form action={startAttemptAction.bind(null, examId, "PRACTICE")}>

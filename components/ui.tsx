@@ -85,22 +85,32 @@ export function PageHeader({
   title,
   subtitle,
   action,
+  icon: Icon,
 }: {
   eyebrow?: string;
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
+  /** A lucide icon shown in a tile beside the title. */
+  icon?: React.ComponentType<{ size?: number; className?: string }>;
 }) {
   return (
     <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        {eyebrow && (
-          <p className="mb-1.5 text-xs font-medium tracking-wide text-accent uppercase">
-            {eyebrow}
-          </p>
+      <div className="flex min-w-0 items-start gap-3.5">
+        {Icon && (
+          <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <Icon size={22} />
+          </span>
         )}
-        <h1 className="text-2xl font-semibold text-ink">{title}</h1>
-        {subtitle && <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p>}
+        <div className="min-w-0">
+          {eyebrow && (
+            <p className="mb-1 text-xs font-medium tracking-wide text-accent uppercase">
+              {eyebrow}
+            </p>
+          )}
+          <h1 className="text-2xl font-semibold text-ink">{title}</h1>
+          {subtitle && <p className="mt-1.5 text-sm text-ink-muted">{subtitle}</p>}
+        </div>
       </div>
       {action}
     </div>

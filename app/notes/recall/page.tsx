@@ -1,3 +1,4 @@
+import { Brain } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -42,7 +43,7 @@ export default async function RecallPage({
   return (
     <>
       <Link href={backHref} className="text-sm text-ink-muted hover:text-ink">← Notes</Link>
-      <PageHeader eyebrow="Formula recall" title={scope} subtitle="Look at the name, recall the formula, then reveal and be honest." />
+      <PageHeader icon={Brain} eyebrow="Formula recall" title={scope} subtitle="Look at the name, recall the formula, then reveal and be honest." />
       {cards.length === 0 ? (
         <EmptyState>
           {dueOnly ? (

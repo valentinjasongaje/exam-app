@@ -21,7 +21,7 @@ export default function ProgressBar({
       className={clsx("h-2 w-full overflow-hidden rounded-full bg-bg-muted", className)}
     >
       <div
-        className={clsx("h-full rounded-full", tone === "success" ? "bg-success" : "bg-accent")}
+        className={clsx("bar-fill h-full rounded-full", tone === "success" ? "bg-success" : "bg-accent")}
         style={{ width: `${pct}%` }}
       />
     </div>

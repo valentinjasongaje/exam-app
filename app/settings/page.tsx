@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -13,6 +14,7 @@ export default async function SettingsPage() {
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-10">
       <PageHeader
+        icon={Settings}
         eyebrow="Preferences"
         title="Settings"
         subtitle="Applies to exams you start from now on."

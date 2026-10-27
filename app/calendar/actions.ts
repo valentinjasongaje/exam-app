@@ -37,6 +37,7 @@ function str(formData: FormData, key: string) {
 function refresh() {
   revalidatePath("/calendar");
   revalidatePath("/tracker", "layout");
+  revalidatePath("/lessons", "layout");
 }
 
 function blockExists(date: string, blockKey: string) {

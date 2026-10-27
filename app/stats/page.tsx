@@ -1,3 +1,4 @@
+import { ClipboardCheck, ListChecks, Target, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
@@ -5,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { attemptTitle } from "@/lib/composed-attempt";
 import { PageHeader, Card, EmptyState, LinkButton, Button } from "@/components/ui";
 import { startWeakDrillAction } from "./actions";
+import ProgressTabs from "@/components/progress-tabs";
 
 const PASS_PCT = 70;
 
@@ -70,8 +72,9 @@ export default async function StatsPage() {
   const weakest = [...missCounts.values()].sort((a, b) => b.count - a.count).slice(0, 10);
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
-      <PageHeader eyebrow="Track your growth" title="Your progress" />
+    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:py-10">
+      <ProgressTabs />
+      <PageHeader icon={TrendingUp} eyebrow="Progress" title="Scores" subtitle="How your exams and drills are going, and what to drill next." />
 
       {attempts.length === 0 ? (
         <EmptyState>
@@ -82,20 +85,23 @@ export default async function StatsPage() {
         </EmptyState>
       ) : (
         <div className="flex flex-col gap-10">
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Card>
+          <section className="stagger grid grid-cols-3 gap-2 sm:gap-4">
+            <Card className="p-4 sm:p-5">
+              <ClipboardCheck size={18} className="mb-2 text-accent" />
               <p className="text-2xl font-semibold">{attempts.length}</p>
-              <p className="text-sm text-ink-muted">Exams completed ({uniqueExams} unique)</p>
+              <p className="text-xs text-ink-muted sm:text-sm">Exams completed ({uniqueExams} unique)</p>
             </Card>
-            <Card>
+            <Card className="p-4 sm:p-5">
+              <Target size={18} className={"mb-2 " + (overallAccuracy !== null && overallAccuracy >= PASS_PCT ? "text-success" : "text-accent")} />
               <p className="text-2xl font-semibold">
                 {overallAccuracy !== null ? `${overallAccuracy}%` : "—"}
               </p>
-              <p className="text-sm text-ink-muted">
-                Overall accuracy · pass line is {PASS_PCT}%
+              <p className="text-xs text-ink-muted sm:text-sm">
+                Accuracy · pass line {PASS_PCT}%
               </p>
             </Card>
-            <Card>
+            <Card className="p-4 sm:p-5">
+              <ListChecks size={18} className="mb-2 text-accent" />
               <p className="text-2xl font-semibold">{totalQuestions}</p>
               <p className="text-sm text-ink-muted">Questions answered</p>
             </Card>
@@ -241,14 +247,32 @@ export default async function StatsPage() {
               <EmptyState>No incorrect answers yet.</EmptyState>
             ) : (
               <div className="flex flex-col gap-3">
-                {weakest.map((q, i) => (
-                  <Card key={i}>
+                {weakest.slice(0, 5).map((q, i) => (
+                  <Card key={i} className="p-4">
                     <p className="mb-1 text-xs text-ink-muted">
                       {q.examTitle} · missed {q.count}×
                     </p>
                     <p className="text-sm">{q.text}</p>
                   </Card>
                 ))}
+                {weakest.length > 5 && (
+                  <details className="group">
+                    <summary className="cursor-pointer list-none text-sm text-accent hover:underline">
+                      <span className="group-open:hidden">Show {weakest.length - 5} more</span>
+                      <span className="hidden group-open:inline">Show fewer</span>
+                    </summary>
+                    <div className="mt-3 flex flex-col gap-3">
+                      {weakest.slice(5).map((q, i) => (
+                        <Card key={i} className="p-4">
+                          <p className="mb-1 text-xs text-ink-muted">
+                            {q.examTitle} · missed {q.count}×
+                          </p>
+                          <p className="text-sm">{q.text}</p>
+                        </Card>
+                      ))}
+                    </div>
+                  </details>
+                )}
               </div>
             )}
           </section>

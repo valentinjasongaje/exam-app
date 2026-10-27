@@ -945,3 +945,32 @@ time accumulates in `seconds`; `minutes` follows it (`lib/auto-log.ts` → `addA
   video error the player probes `/drive-media/<id>` (Range 0-1) and maps 401 → reconnect Drive, 403 → Google's
   message, 404 → re-upload, and code 4 → format. If the file is reachable it retries the load once. The SW passes
   token-route errors on as JSON. WatchStatus shows "Starting player…" while loading.
+
+## Navigation & layout (2026-10-27 redesign)
+
+- The main sections are defined in `lib/nav-items.ts`: **Today** (/daily) · **Lessons** (/lessons, /watch) ·
+  **Practice** (/dashboard, /subject, /exam, /attempt) · **Notes** · **Progress** (/stats, /tracker) · **Calendar**.
+  `match()` decides which item is highlighted for a path.
+  - Desktop: icon links (labels from md up) plus an account menu (initial ▾: Settings, Admin, Log out).
+  - Phone: ☰ sheet with everything, plus a **bottom tab bar** (Today, Lessons, Practice, Notes, Progress). It is hidden
+    on `FOCUS_ROUTES` (exam attempts, daily session, recall, problems). The body has bottom padding on phones.
+- **Lessons** (`app/lessons/`) now holds the video checklist (moved from /tracker/videos), Topics and Library, with
+  `LessonsTabs` and the laptop-player log prompt in its layout. **Progress** = `ProgressTabs` on /stats (Scores) and
+  the /tracker layout (Study log). Old /tracker/videos|topics|library URLs redirect (next.config `redirects`).
+  Revalidation calls hit both "/tracker" and "/lessons".
+- **Today is the home page** (`/` redirects there after login; the logo links there). It shows the 15-minute
+  session, Continue watching (an in-progress video, else the next unwatched one), the mistake bank, and today's
+  plan from `blocksForDay` with studied vs planned minutes.
+- Practice (/dashboard) is titled "Exams & drills" and has a Today card, a Mistake bank card and subject icons
+  (`components/subject-icon.tsx`: Math Σ, GEAS ⚛, Elex chip, EST radio, ECT wrench).
+- `PageHeader` takes an `icon` (lucide) shown in a tile; every main page has one.
+- Motion (`globals.css`, all disabled under prefers-reduced-motion): `app/template.tsx` fades each page up;
+  `.stagger` children appear in sequence; `.bar-fill` progress bars grow; `.lift` cards rise on hover;
+  `.animate-pop` (checkmarks, active tab marker); `.animate-sheet` / `.animate-pop-in` for menus.
+- Phone fixes: the video checklist shows the length under the title and hides desktop-only icons; the 8-week table
+  hides Type and Quiz avg; Scores tiles sit 3 across; the weakest-questions list shows 5 with "Show N more".
+- Bug fixes: duplicate React keys on the Library page; hydration mismatch in the note editor (module-level key
+  counter → per-component ref).
+- Local visual audits: there's no native Prisma engine in the sandbox, so run the app against a scratch Postgres
+  through the wasm query engine + `@prisma/adapter-pg`. This needs a temporary patch to `lib/prisma.ts` and
+  `serverExternalPackages`. Never commit it.

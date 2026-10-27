@@ -1,3 +1,4 @@
+import { NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { TRACKER_SUBJECTS, isTrackerSubject } from "@/lib/study-plan";
@@ -13,7 +14,7 @@ export default async function NewNotePage({ searchParams }: { searchParams: Prom
   return (
     <>
       <Link href="/notes" className="text-sm text-ink-muted hover:text-ink">← Notes</Link>
-      <PageHeader eyebrow="Notes" title="New topic note" subtitle="Write down the formulas as you review. You'll recall them later." />
+      <PageHeader icon={NotebookPen} eyebrow="Notes" title="New topic note" subtitle="Write down the formulas as you review. You'll recall them later." />
       <NoteEditor
         note={{ id: "", subject, topic: params.topic ?? "", body: "", cards: [] }}
         subjects={TRACKER_SUBJECTS}

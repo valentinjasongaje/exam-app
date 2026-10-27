@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { clsx } from "clsx";
-import { setTopicStatusAction } from "../actions";
+import { setTopicStatusAction } from "../../tracker/actions";
 
 const OPTIONS = [
   { value: "NOT_STARTED", label: "Not started" },

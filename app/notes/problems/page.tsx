@@ -1,3 +1,4 @@
+import { Calculator } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -50,7 +51,7 @@ export default async function ProblemsPage({
       <Link href={backHref} className="text-sm text-ink-muted hover:text-ink">
         ← {p.video ? "Back to the video" : "Notes"}
       </Link>
-      <PageHeader eyebrow="Solved problems" title={scope} subtitle="Solve it on paper first, then reveal the answer and be honest." />
+      <PageHeader icon={Calculator} eyebrow="Solved problems" title={scope} subtitle="Solve it on paper first, then reveal the answer and be honest." />
       {rows.length === 0 ? (
         <EmptyState>
           {dueOnly ? (

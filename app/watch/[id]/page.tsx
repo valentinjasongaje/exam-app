@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatMinutes, subjectName } from "@/lib/study-plan";
 import { sectionLabel } from "@/lib/video-library";
-import WatchCheckbox from "../../tracker/videos/watch-checkbox";
+import WatchCheckbox from "../../lessons/watch-checkbox";
 import RemoveFromDrive from "./remove-button";
 import WatchNotes from "./watch-notes";
 import WatchPlayer from "./watch-player";
@@ -63,7 +63,7 @@ export default async function WatchPage({
   return (
     <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
       <div className="mb-3 min-w-0 lg:col-start-1 lg:row-start-1">
-        <Link href="/tracker/videos" className="text-sm text-ink-muted hover:text-ink">← Video checklist</Link>
+        <Link href="/lessons" className="text-sm text-ink-muted hover:text-ink">← Video checklist</Link>
         <p className="mt-2 text-xs font-medium tracking-wide text-accent uppercase">
           {subjectName(video.subject)} · {sectionLabel(video.section)}
         </p>

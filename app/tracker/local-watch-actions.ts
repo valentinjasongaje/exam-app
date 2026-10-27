@@ -43,6 +43,7 @@ export async function logLocalWatchAction(localPath: string, minutes: number, ma
     note: video.title,
   });
   revalidatePath("/tracker", "layout");
+  revalidatePath("/lessons", "layout");
   revalidatePath("/calendar");
   return { ok: true };
 }

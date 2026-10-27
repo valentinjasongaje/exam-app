@@ -7,7 +7,7 @@ import { DRIVE_SCOPE, encryptToken, exchangeCode, requestOrigin } from "@/lib/go
 export async function GET(req: Request) {
   const origin = requestOrigin(req.headers);
   const back = (status: string) => {
-    const res = NextResponse.redirect(`${origin}/tracker/videos?drive=${status}`);
+    const res = NextResponse.redirect(`${origin}/lessons?drive=${status}`);
     res.cookies.delete({ name: "drive_oauth_state", path: "/api/drive" });
     return res;
   };

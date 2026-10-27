@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ListChecks, Play, Plus } from "lucide-react";
+import { ListChecks, NotebookPen, Play, Plus } from "lucide-react";
 import { clsx } from "clsx";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -46,6 +46,7 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
   return (
     <>
       <PageHeader
+        icon={NotebookPen}
         eyebrow="Notes"
         title="Topic notes & formulas"
         subtitle="Write formulas down as you review, then come back and recall them. Missed ones come back sooner."
@@ -133,10 +134,10 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
             return (
               <section key={s.slug}>
                 <h2 className="mb-3 text-sm font-medium tracking-wide text-ink-muted uppercase">{s.name}</h2>
-                <Card className="p-0">
+                <Card className="overflow-hidden p-0">
                   <ul>
                     {mine.map((n) => (
-                      <li key={n.id} className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-0">
+                      <li key={n.id} className="flex items-center gap-3 border-b border-border px-4 py-3 transition-colors last:border-0 hover:bg-bg-muted/50">
                         <Link href={`/notes/${n.id}`} className="min-w-0 flex-1 group">
                           <span className="block truncate font-medium group-hover:text-accent">{n.topic}</span>
                           <span className="mt-1 flex items-center gap-3">

@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCheck, RotateCcw, Sun } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
 import { mistakeCounts } from "@/lib/mistakes";
+import { startMistakeReviewAction } from "../daily/actions";
+import SubjectIcon from "@/components/subject-icon";
 import { startOfToday } from "@/lib/daily";
 
 export default async function DashboardPage() {
@@ -47,24 +49,49 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
       <PageHeader
-        eyebrow="Your library"
-        title={`Welcome${session.user.name ? `, ${session.user.name.split(" ")[0]}` : ""}`}
-        subtitle="Pick a subject to keep studying."
+        icon={ClipboardCheck}
+        eyebrow="Practice"
+        title="Exams & drills"
+        subtitle="Pick a subject: practice sets, timed mock board exams and your mistakes."
       />
 
-      <Link
-        href="/daily"
-        className="mb-10 flex items-center justify-between gap-4 rounded-xl border border-accent/40 bg-accent-soft/40 px-5 py-4 transition-colors hover:bg-accent-soft/70"
-      >
-        <div>
-          <p className="font-semibold">{doneToday ? "Today's session: done ✓" : "Today's 15-minute session"}</p>
-          <p className="text-sm text-ink-muted">
-            Formulas, questions and solved problems that are due
-            {mistakes.due > 0 && ` · ${mistakes.due} mistake${mistakes.due === 1 ? "" : "s"} to retry`}
-          </p>
-        </div>
-        <ArrowRight size={18} className="shrink-0 text-accent" />
-      </Link>
+      <div className="stagger mb-10 grid gap-3 sm:grid-cols-2">
+        <Link
+          href="/daily"
+          className="lift flex items-center gap-3 rounded-xl border border-accent/40 bg-accent-soft/40 px-4 py-3.5"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-ink">
+            {doneToday ? <CheckCircle2 size={20} /> : <Sun size={20} />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">{doneToday ? "Today's session: done" : "Today's 15-minute session"}</span>
+            <span className="block text-sm text-ink-muted">Formulas, questions and solved problems that are due</span>
+          </span>
+          <ArrowRight size={18} className="shrink-0 text-accent" />
+        </Link>
+        <form action={startMistakeReviewAction} className="contents">
+          <button
+            type="submit"
+            disabled={mistakes.due === 0}
+            className="lift flex items-center gap-3 rounded-xl border border-border bg-bg-elevated px-4 py-3.5 text-left disabled:pointer-events-none disabled:opacity-70"
+          >
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger-soft text-danger">
+              <RotateCcw size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold">Mistake bank</span>
+              <span className="block text-sm text-ink-muted">
+                {mistakes.due > 0
+                  ? `${mistakes.due} due to retry · ${mistakes.active} to master`
+                  : mistakes.active > 0
+                    ? `Nothing due today · ${mistakes.active} to master`
+                    : "Questions you miss come back here"}
+              </span>
+            </span>
+            {mistakes.due > 0 && <ArrowRight size={18} className="shrink-0 text-ink-faint" />}
+          </button>
+        </form>
+      </div>
 
       {subjects.length === 0 ? (
         <EmptyState>No exams available yet.</EmptyState>
@@ -75,7 +102,7 @@ export default async function DashboardPage() {
               <h2 className="mb-4 text-sm font-medium tracking-wide text-ink-muted uppercase">
                 {section.group}
               </h2>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {section.subjects.map((s) => {
                   const examCount = s.exams.length;
                   const completedCount = s.exams.filter((e) =>
@@ -100,12 +127,15 @@ export default async function DashboardPage() {
                     <Link
                       key={s.id}
                       href={`/subject/${s.id}`}
-                      className="group rounded-xl border border-border bg-bg-elevated p-6 transition-colors hover:border-accent"
+                      className="lift group rounded-xl border border-border bg-bg-elevated p-5 hover:border-accent sm:p-6"
                     >
                       <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <h3 className="font-serif text-xl font-semibold">{s.name}</h3>
-                          <p className="mt-1 text-sm text-ink-muted">{examCount} exams</p>
+                        <div className="flex items-center gap-3">
+                          <SubjectIcon slug={s.slug} />
+                          <div>
+                            <h3 className="font-serif text-xl font-semibold">{s.name}</h3>
+                            <p className="mt-0.5 text-sm text-ink-muted">{examCount} exams</p>
+                          </div>
                         </div>
                         <ArrowRight
                           size={18}
@@ -120,9 +150,9 @@ export default async function DashboardPage() {
                           </span>
                           {accuracy !== null && <span>{accuracy}% accuracy</span>}
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-bg-muted">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-muted">
                           <div
-                            className="h-full rounded-full bg-accent transition-[width]"
+                            className="bar-fill h-full rounded-full bg-accent"
                             style={{ width: `${progressPct}%` }}
                           />
                         </div>

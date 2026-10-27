@@ -1,13 +1,13 @@
-import { X } from "lucide-react";
+import { ListChecks, X } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultTopics } from "@/lib/study-topics";
 import { TRACKER_SUBJECTS } from "@/lib/study-plan";
 import { PageHeader, Card } from "@/components/ui";
-import ProgressBar from "../progress-bar";
+import ProgressBar from "../../tracker/progress-bar";
 import StatusSelect from "./status-select";
-import { AddTopicForm } from "../add-item-form";
-import { deleteTopicAction } from "../actions";
+import { AddTopicForm } from "../../tracker/add-item-form";
+import { deleteTopicAction } from "../../tracker/actions";
 
 export default async function TopicsPage() {
   const session = await auth();
@@ -24,7 +24,8 @@ export default async function TopicsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Study tracker"
+        icon={ListChecks}
+        eyebrow="Lessons"
         title="Topic checklist"
         subtitle={`${doneAll} of ${topics.length} topics done. Mark a topic "Needs review" when a quiz shows it's weak.`}
       />

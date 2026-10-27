@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { Cloud, Play, Trash2 } from "lucide-react";
+import { Cloud, Play, PlayCircle, Trash2 } from "lucide-react";
 import { clsx } from "clsx";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { TRACKER_SUBJECTS, subjectName } from "@/lib/study-plan";
 import { SECTIONS, WATCH_PLAN, type PlanSection } from "@/lib/video-library";
 import { PageHeader, Card, Button } from "@/components/ui";
-import ProgressBar from "../progress-bar";
-import { AddVideoForm } from "../add-item-form";
-import { deleteVideoAction, syncWatchPlanAction } from "../actions";
+import ProgressBar from "../tracker/progress-bar";
+import { AddVideoForm } from "../tracker/add-item-form";
+import { deleteVideoAction, syncWatchPlanAction } from "../tracker/actions";
 import CopyPath from "./copy-path";
 import WatchCheckbox from "./watch-checkbox";
 import OpenVideo from "./open-video";
@@ -144,11 +144,11 @@ export default async function VideosPage({
                 <th className="w-11 px-3 py-2.5 font-medium">✓</th>
                 <th className="hidden w-8 py-2.5 font-medium sm:table-cell">#</th>
                 <th className="px-2 py-2.5 font-medium">Video</th>
-                <th className="px-2 py-2.5 text-right font-medium">Length</th>
+                <th className="hidden px-2 py-2.5 text-right font-medium sm:table-cell">Length</th>
                 <th className="hidden px-2 py-2.5 text-right font-medium sm:table-cell">At 1.5x</th>
                 <th className="hidden px-2 py-2.5 text-right font-medium md:table-cell">Running (1.5x)</th>
                 <th className="hidden px-2 py-2.5 font-medium md:table-cell">Watched</th>
-                <th className="w-20 px-2 py-2.5" />
+                <th className="w-10 px-2 py-2.5 sm:w-20" />
               </tr>
             </thead>
             <tbody>
@@ -170,23 +170,29 @@ export default async function VideosPage({
                             <Cloud size={14} className="shrink-0 text-accent" />
                             {r.title}
                           </Link>
-                          <OpenVideo localPath={r.localPath!} className="text-ink-faint hover:text-accent" />
+                          <span className="hidden sm:inline-flex">
+                            <OpenVideo localPath={r.localPath!} className="text-ink-faint hover:text-accent" />
+                          </span>
                         </span>
                       ) : (
                         <OpenVideo localPath={r.localPath!} className={clsx("text-left", done ? "text-ink-muted" : "text-ink")}>
                           <span className="hover:underline">{r.title}</span>
                         </OpenVideo>
                       )}
-                      {subject === "all" && section !== "calculator" && (
-                        <span className="block pl-5 text-xs text-ink-faint">{subjectName(r.subject)}</span>
-                      )}
+                      <span className="block pl-5 text-xs text-ink-faint">
+                        {subject === "all" && section !== "calculator" && subjectName(r.subject)}
+                        <span className="sm:hidden">
+                          {subject === "all" && section !== "calculator" && " · "}
+                          {hm(r.minutes)}
+                        </span>
+                      </span>
                       {!done && r.watchedMinutes > 0 && (
                         <span className="block pl-5 text-xs text-accent">
                           {hm(r.watchedMinutes)} of {hm(r.minutes)} so far
                         </span>
                       )}
                     </td>
-                    <td className="px-2 py-2.5 text-right tabular-nums">{hm(r.minutes)}</td>
+                    <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">{hm(r.minutes)}</td>
                     <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums sm:table-cell">{hm(r.minutes / 1.5)}</td>
                     <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums md:table-cell">{hm(r.running)}</td>
                     <td className="hidden px-2 py-2.5 text-xs text-ink-muted md:table-cell">
@@ -197,7 +203,11 @@ export default async function VideosPage({
                         {canUpload && !r.driveFileId && r.localPath && r.file && r.bytes ? (
                           <UploadRowButton target={{ localPath: r.localPath, file: r.file, bytes: r.bytes }} title={r.title} />
                         ) : null}
-                        {r.localPath && <CopyPath path={r.localPath} label="" />}
+                        {r.localPath && (
+                          <span className="hidden sm:inline-flex">
+                            <CopyPath path={r.localPath} label="" />
+                          </span>
+                        )}
                       </span>
                     </td>
                   </tr>
@@ -214,29 +224,26 @@ export default async function VideosPage({
                     {hm(shownTotal - shownWatched)} left · {hm((shownTotal - shownWatched) / 1.5)} at 1.5x
                   </span>
                 </td>
-                <td className="px-2 py-2.5 text-right tabular-nums">{hm(shownTotal)}</td>
+                <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">{hm(shownTotal)}</td>
                 <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">{hm(shownTotal / 1.5)}</td>
-                <td className="hidden md:table-cell" colSpan={3} />
+                <td className="hidden md:table-cell" colSpan={2} />
+                <td />
               </tr>
             </tfoot>
           </table>
         </Card>
   );
 
-  const href = (sec: string, subj: string) => `/tracker/videos?section=${sec}${subj !== "all" ? `&subject=${subj}` : ""}`;
+  const href = (sec: string, subj: string) => `/lessons?section=${sec}${subj !== "all" ? `&subject=${subj}` : ""}`;
   const current = summary.find((s) => s.key === section)!;
 
   return (
     <>
       <PageHeader
-        eyebrow="Study tracker"
-        title="Video checklist"
-        subtitle="Tick a video when you finish it. Videos marked ☁ are on your Google Drive and play right here; ▶ opens the file from G: on your laptop."
-        action={
-          <Link href="/tracker/library" className="text-sm text-accent hover:underline">
-            Other batches in the Library →
-          </Link>
-        }
+        icon={PlayCircle}
+        eyebrow="Lessons"
+        title="Review videos"
+        subtitle="Tap a video to watch it here: progress is tracked automatically and it's marked watched at 90%. Videos marked ☁ are on your Google Drive."
       />
 
       {outOfDate.length > 0 && (
@@ -297,13 +304,13 @@ export default async function VideosPage({
       </Card>
 
       {/* Section summary, tap to switch */}
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="stagger mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {summary.map((s) => (
           <Link
             key={s.key}
             href={href(s.key, subject)}
             className={clsx(
-              "rounded-xl border bg-bg-elevated p-4 transition-colors",
+              "lift rounded-xl border bg-bg-elevated p-4",
               s.key === section ? "border-accent ring-1 ring-accent" : "border-border hover:border-border-strong"
             )}
           >

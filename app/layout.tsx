@@ -47,7 +47,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-bg text-ink">
         <Nav />
-        <div className="flex flex-1 flex-col">{children}</div>
+        {/* pb on phones leaves room for the bottom tab bar */}
+        <div className="flex flex-1 flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">{children}</div>
       </body>
     </html>
   );

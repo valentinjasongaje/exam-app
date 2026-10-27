@@ -1,3 +1,4 @@
+import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
@@ -19,7 +20,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
   return (
     <>
       <Link href={`/notes/${note.id}`} className="text-sm text-ink-muted hover:text-ink">← {note.topic}</Link>
-      <PageHeader eyebrow="Notes" title="Edit note" />
+      <PageHeader icon={Pencil} eyebrow="Notes" title="Edit note" />
       <NoteEditor note={note} subjects={TRACKER_SUBJECTS} topicSuggestions={await topicSuggestions(userId)} />
     </>
   );

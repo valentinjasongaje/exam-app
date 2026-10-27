@@ -2,7 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { clsx } from "clsx";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { loadEvents, loadOverrides, loadReminders, loadSessions } from "@/lib/calendar-data";
@@ -106,6 +106,7 @@ export default async function CalendarPage({
   return (
     <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
       <PageHeader
+        icon={CalendarDays}
         eyebrow="Review calendar"
         title={title}
         subtitle={

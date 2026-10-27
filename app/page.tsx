@@ -5,7 +5,7 @@ import { LinkButton } from "@/components/ui";
 export default async function HomePage() {
   const session = await auth();
   if (session?.user) {
-    redirect(session.user.role === "ADMIN" ? "/admin" : "/dashboard");
+    redirect("/daily");
   }
 
   return (

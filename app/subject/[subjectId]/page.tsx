@@ -1,9 +1,17 @@
 import Link from "next/link";
+import { subjectIconFor } from "@/components/subject-icon";
 import { notFound, redirect } from "next/navigation";
-import { Clock } from "lucide-react";
+import { CheckCircle2, FileText, Clock } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { PageHeader, EmptyState, Card, Badge, LinkButton, Button } from "@/components/ui";
+import {
+  PageHeader,
+  EmptyState,
+  Card,
+  Badge,
+  LinkButton,
+  Button,
+} from "@/components/ui";
 import { startMockBoardExamAction } from "./actions";
 
 export default async function SubjectPage({
@@ -49,17 +57,27 @@ export default async function SubjectPage({
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
-      <Link href="/dashboard" className="mb-6 inline-block text-sm text-accent hover:underline">
+      <Link
+        href="/dashboard"
+        className="mb-6 inline-block text-sm text-accent hover:underline"
+      >
         ← All subjects
       </Link>
-      <PageHeader title={subject.name} subtitle={`${subject.exams.length} exams`} />
+      <PageHeader
+        icon={subjectIconFor(subject.slug)}
+        eyebrow="Practice"
+        title={subject.name}
+        subtitle={`${subject.exams.length} exams`}
+      />
 
       {questionCount > 0 && (
         <Card className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <p className="font-medium">Mock board exam</p>
-              {!hasFullPool && <Badge tone="accent">{mockItems}/100 available</Badge>}
+              {!hasFullPool && (
+                <Badge tone="accent">{mockItems}/100 available</Badge>
+              )}
             </div>
             <p className="mt-1 text-sm text-ink-muted">
               {hasFullPool
@@ -68,7 +86,11 @@ export default async function SubjectPage({
             </p>
           </div>
           {inProgressMock ? (
-            <LinkButton href={`/attempt/${inProgressMock.id}`} variant="secondary" size="sm">
+            <LinkButton
+              href={`/attempt/${inProgressMock.id}`}
+              variant="secondary"
+              size="sm"
+            >
               Resume mock exam
             </LinkButton>
           ) : (
@@ -85,30 +107,52 @@ export default async function SubjectPage({
       {subject.exams.length === 0 ? (
         <EmptyState>No exams in this subject yet.</EmptyState>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="stagger flex flex-col gap-3">
           {subject.exams.map((e) => {
             const inProgress = e.attempts.find((a) => !a.finishedAt);
             const finished = e.attempts.filter((a) => a.finishedAt);
             const bestAttempt = finished.length
-              ? finished.reduce((best, a) => ((a.score ?? 0) > (best.score ?? 0) ? a : best))
+              ? finished.reduce((best, a) =>
+                  (a.score ?? 0) > (best.score ?? 0) ? a : best,
+                )
               : null;
 
             return (
-              <Card key={e.id} className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium">{e.title}</p>
-                  <div className="mt-1.5 flex items-center gap-2 text-sm text-ink-muted">
-                    <span>{e._count.questions} questions</span>
-                    {finished.length > 0 && (
-                      <span>
-                        · {finished.length} attempt{finished.length > 1 ? "s" : ""}
-                      </span>
+              <Card
+                key={e.id}
+                className="flex flex-wrap items-center justify-between gap-4"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <span
+                    className={
+                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg " +
+                      (bestAttempt
+                        ? "bg-success-soft text-success"
+                        : "bg-bg-muted text-ink-muted")
+                    }
+                  >
+                    {bestAttempt ? (
+                      <CheckCircle2 size={18} />
+                    ) : (
+                      <FileText size={18} />
                     )}
-                    {bestAttempt && (
-                      <Badge tone="accent">
-                        best {bestAttempt.score}/{bestAttempt.totalQuestions}
-                      </Badge>
-                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-medium">{e.title}</p>
+                    <div className="mt-1.5 flex items-center gap-2 text-sm text-ink-muted">
+                      <span>{e._count.questions} questions</span>
+                      {finished.length > 0 && (
+                        <span>
+                          · {finished.length} attempt
+                          {finished.length > 1 ? "s" : ""}
+                        </span>
+                      )}
+                      {bestAttempt && (
+                        <Badge tone="accent">
+                          best {bestAttempt.score}/{bestAttempt.totalQuestions}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <LinkButton

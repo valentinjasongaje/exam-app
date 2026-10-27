@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
   },
   // Private study app: tell crawlers not to index anything, including
   // non-HTML responses (API routes, the calendar feed) that can't carry a meta tag.
+  // Videos, topics and the library moved from the Tracker to Lessons.
+  async redirects() {
+    return [
+      { source: "/tracker/videos", destination: "/lessons", permanent: false },
+      { source: "/tracker/topics", destination: "/lessons/topics", permanent: false },
+      { source: "/tracker/library", destination: "/lessons/library", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

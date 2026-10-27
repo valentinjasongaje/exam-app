@@ -196,3 +196,116 @@
       radial-gradient(ellipse 50% 40% at 85% 25%, var(--accent-soft) 0%, transparent 55%);
   }
 }
+
+/* ---------- Motion ----------
+ * Small, quick and purposeful: pages fade up on arrival, bars fill, menus
+ * pop. Everything here is switched off for people who ask for less motion.
+ */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+@keyframes sheet-down {
+  from {
+    transform: translateY(-12px);
+    opacity: 0;
+  }
+}
+
+@layer utilities {
+  .animate-enter {
+    animation: fade-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  /* Children appear one after another (first 8 get a growing delay). */
+  .stagger > * {
+    animation: fade-up 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .stagger > *:nth-child(7) { animation-delay: 240ms; }
+  .stagger > *:nth-child(n + 8) { animation-delay: 280ms; }
+  .animate-fade {
+    animation: fade-in 0.2s ease both;
+  }
+  .animate-sheet {
+    animation: sheet-down 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .animate-pop {
+    animation: pop 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .animate-pop-in {
+    animation: pop-in 0.16s ease-out both;
+    transform-origin: top right;
+  }
+  /* Progress bars fill from the left when they appear. */
+  .bar-fill {
+    transform-origin: left;
+    animation: grow-x 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  /* Clickable cards rise a little on hover. */
+  .lift {
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.15s ease;
+  }
+  .lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -14px rgb(0 0 0 / 0.35);
+  }
+  .lift:active {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .lift:hover {
+    transform: none;
+  }
+}

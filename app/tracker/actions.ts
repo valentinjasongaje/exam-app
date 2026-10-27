@@ -38,6 +38,7 @@ function optInt(formData: FormData, key: string): number | null | "invalid" {
 
 function refresh() {
   revalidatePath("/tracker", "layout");
+  revalidatePath("/lessons", "layout");
   revalidatePath("/calendar");
 }
 

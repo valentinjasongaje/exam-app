@@ -4,7 +4,7 @@ import { useOptimistic, useRef, useTransition } from "react";
 import { Check } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
-import { setWatchedAction } from "../actions";
+import { setWatchedAction } from "../tracker/actions";
 
 /**
  * "Watched" box for a video. Ticking or unticking asks for confirmation first
@@ -48,7 +48,7 @@ export default function WatchCheckbox({
           checked ? "border-success bg-success text-bg" : "border-border-strong bg-bg-elevated hover:border-accent"
         )}
       >
-        {checked && <Check size={15} strokeWidth={3} />}
+        {checked && <Check size={15} strokeWidth={3} className="animate-pop" />}
       </button>
 
       <dialog

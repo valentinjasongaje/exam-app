@@ -1,7 +1,8 @@
+import { Library } from "lucide-react";
 import { BATCH_ORDER, LIBRARY, LIBRARY_STATS, WATCH_PLAN } from "@/lib/video-library";
 import { TRACKER_SUBJECTS, formatMinutes } from "@/lib/study-plan";
 import { PageHeader, Card, Badge } from "@/components/ui";
-import CopyPath from "../videos/copy-path";
+import CopyPath from "../copy-path";
 
 /**
  * Read-only view of the review lectures, refreshers and calculator
@@ -35,7 +36,8 @@ export default function LibraryPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Study tracker"
+        icon={Library}
+        eyebrow="Lessons"
         title="Video library"
         subtitle={`Review lectures, refreshers and calculator techniques on your drive (${LIBRARY_STATS.files.toLocaleString()} videos, ${formatMinutes(LIBRARY_STATS.totalMinutes)}), measured ${LIBRARY_STATS.measuredOn}. The plan uses one recording per topic; the rest are here when you want another instructor's take.`}
       />
@@ -87,12 +89,12 @@ export default function LibraryPage() {
                               <span className="text-ink-faint">–</span>
                             ) : (
                               <div className="flex flex-col gap-1">
-                                {cells.map((g) => {
+                                {cells.map((g, gi) => {
                                   const inPlan = planPaths.has(g.folder) && b === "Oct 2024 batch" && g.version === "V1";
                                   const clash = cells.filter((c) => c.version === g.version).length > 1;
                                   const label = cells.length > 1 ? (clash ? `${g.version}·${cells.indexOf(g) + 1}` : g.version) : "";
                                   return (
-                                    <span key={g.folder + g.version} className="flex items-center gap-1.5 whitespace-nowrap" title={g.folder}>
+                                    <span key={`${g.folder}|${g.version}|${gi}`} className="flex items-center gap-1.5 whitespace-nowrap" title={g.folder}>
                                       <span className={"tabular-nums " + (inPlan ? "font-medium text-accent" : "")}>
                                         {label ? `${label} ` : ""}
                                         {hm(g.minutes)}
@@ -125,8 +127,8 @@ export default function LibraryPage() {
                       {o.cat} · {formatMinutes(o.groups.reduce((x, g) => x + g.minutes, 0))}
                     </p>
                     <ul className="flex flex-col gap-1 text-sm">
-                      {o.groups.map((g) => (
-                        <li key={g.folder + g.version + g.topicNo} className="flex items-center gap-2">
+                      {o.groups.map((g, gi) => (
+                        <li key={`${g.folder}|${g.version}|${g.topicNo}|${gi}`} className="flex items-center gap-2">
                           <span className="w-44 shrink-0 truncate text-ink-muted">{g.batch}</span>
                           <span className="min-w-0 flex-1 truncate">
                             {g.topic || g.folder.split("\\").pop()}

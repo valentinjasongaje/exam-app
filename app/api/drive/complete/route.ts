@@ -40,6 +40,7 @@ export async function POST(req: Request) {
       });
     }
     revalidatePath("/tracker", "layout");
+    revalidatePath("/lessons", "layout");
     return NextResponse.json({ ok: true });
   } catch (e) {
     const status = e instanceof DriveError ? e.status : 500;

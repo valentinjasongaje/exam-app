@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { Timer, Trash2 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ensureDefaultTopics } from "@/lib/study-topics";
@@ -117,7 +117,8 @@ export default async function TrackerPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Study tracker"
+        icon={Timer}
+        eyebrow="Study log"
         title={phase ? (phase.upcoming ? `${phase.name} starts ${formatDay(phase.start)}` : phase.name) : "Exam done"}
         subtitle={
           daysLeft >= 0
@@ -180,7 +181,7 @@ export default async function TrackerPage() {
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-medium text-ink-muted">Topics done</h2>
-            <Link href="/tracker/topics" className="text-sm text-accent hover:underline">
+            <Link href="/lessons/topics" className="text-sm text-accent hover:underline">
               Open checklist
             </Link>
           </div>
@@ -200,14 +201,14 @@ export default async function TrackerPage() {
         <Card>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-medium text-ink-muted">Videos watched</h2>
-            <Link href="/tracker/videos" className="text-sm text-accent hover:underline">
+            <Link href="/lessons" className="text-sm text-accent hover:underline">
               Manage videos
             </Link>
           </div>
           {videos.length === 0 ? (
             <p className="text-sm text-ink-muted">
               No videos yet.{" "}
-              <Link href="/tracker/videos" className="text-accent hover:underline">
+              <Link href="/lessons" className="text-accent hover:underline">
                 Add your review videos
               </Link>{" "}
               to track how much is left.
@@ -232,15 +233,15 @@ export default async function TrackerPage() {
         Last {HISTORY_WEEKS} weeks
       </h2>
       <Card className="overflow-x-auto p-0">
-        <table className="w-full min-w-[520px] text-sm">
+        <table className="w-full text-sm sm:min-w-[520px]">
           <thead>
             <tr className="border-b border-border text-left text-xs text-ink-muted">
               <th className="px-4 py-2.5 font-medium">Week of</th>
-              <th className="px-4 py-2.5 font-medium">Type</th>
+              <th className="hidden px-4 py-2.5 font-medium sm:table-cell">Type</th>
               <th className="px-4 py-2.5 text-right font-medium">Hours</th>
               <th className="px-4 py-2.5 text-right font-medium">Plan</th>
               <th className="px-4 py-2.5 text-right font-medium">% of plan</th>
-              <th className="px-4 py-2.5 text-right font-medium">Quiz avg</th>
+              <th className="hidden px-4 py-2.5 text-right font-medium sm:table-cell">Quiz avg</th>
             </tr>
           </thead>
           <tbody>
@@ -249,7 +250,7 @@ export default async function TrackerPage() {
               return (
                 <tr key={w.start} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">{formatDay(w.start)}</td>
-                  <td className="px-4 py-2.5 text-ink-muted">{WEEK_TYPE_LABEL[w.type]}</td>
+                  <td className="hidden px-4 py-2.5 text-ink-muted sm:table-cell">{WEEK_TYPE_LABEL[w.type]}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums">{w.minutes ? formatMinutes(w.minutes) : "–"}</td>
                   <td className="px-4 py-2.5 text-right tabular-nums text-ink-muted">{formatMinutes(w.target)}</td>
                   <td
@@ -260,7 +261,7 @@ export default async function TrackerPage() {
                   >
                     {w.minutes ? `${pct}%` : "–"}
                   </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums">{w.quizPct !== null ? `${w.quizPct}%` : "–"}</td>
+                  <td className="hidden px-4 py-2.5 text-right tabular-nums sm:table-cell">{w.quizPct !== null ? `${w.quizPct}%` : "–"}</td>
                 </tr>
               );
             })}

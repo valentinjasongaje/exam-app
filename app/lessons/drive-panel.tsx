@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Cloud, RefreshCw, Trash2, Unplug } from "lucide-react";
 import { Button } from "@/components/ui";
-import { disconnectDriveAction, removeWatchedFromDriveAction, syncDriveAction, type DriveActionResult } from "../drive-actions";
+import { disconnectDriveAction, removeWatchedFromDriveAction, syncDriveAction, type DriveActionResult } from "../tracker/drive-actions";
 import DriveUploader, { type UploadCandidate } from "./drive-uploader";
 
 const GB = 1024 ** 3;

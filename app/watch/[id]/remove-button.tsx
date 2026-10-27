@@ -20,7 +20,7 @@ export default function RemoveFromDrive({ videoId, title }: { videoId: string; t
           start(async () => {
             const r = await removeFromDriveAction(videoId);
             if (r.error) setError(r.error);
-            else router.push("/tracker/videos");
+            else router.push("/lessons");
           });
         }}
         className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-danger disabled:opacity-50"

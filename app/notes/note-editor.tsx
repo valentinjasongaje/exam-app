@@ -10,8 +10,7 @@ import { FormulaPreview } from "@/components/formula-math";
 type Card = { key: string; id?: string; name: string; formula: string; hint: string };
 
 const initialState: NoteFormState = { error: null };
-let nextKey = 0;
-const blank = (): Card => ({ key: `new-${nextKey++}`, name: "", formula: "", hint: "" });
+const blankWith = (key: string): Card => ({ key, name: "", formula: "", hint: "" });
 
 export default function NoteEditor({
   note,
@@ -30,10 +29,13 @@ export default function NoteEditor({
 }) {
   const [state, formAction, pending] = useActionState(saveNoteAction, initialState);
   const [subject, setSubject] = useState(note?.subject ?? subjects[0].slug);
+  // Keys for new rows come from a per-component counter so the server render and the browser agree.
+  const nextKey = useRef(2);
+  const blank = () => blankWith(`new-${nextKey.current++}`);
   const [cards, setCards] = useState<Card[]>(
     note?.cards.length
       ? note.cards.map((c) => ({ key: c.id, id: c.id, name: c.name, formula: c.formula, hint: c.hint ?? "" }))
-      : [blank(), blank()]
+      : [blankWith("new-0"), blankWith("new-1")]
   );
   // Last focused text field, so the symbol bar inserts where you're typing.
   const lastField = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
