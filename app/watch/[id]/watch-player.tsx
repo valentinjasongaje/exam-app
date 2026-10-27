@@ -10,26 +10,59 @@ import { BUCKET_SECONDS } from "@/lib/watch-coverage-shared";
 
 type Mode = "loading" | "native" | "drive";
 
-/** Registers the Drive streaming worker and waits until it controls this page. */
+const RELOAD_KEY = "player-helper-reloaded";
+
+function waitForController(ms: number) {
+  return new Promise<boolean>((resolve) => {
+    if (navigator.serviceWorker.controller) return resolve(true);
+    const t = setTimeout(() => resolve(!!navigator.serviceWorker.controller), ms);
+    navigator.serviceWorker.addEventListener(
+      "controllerchange",
+      () => {
+        clearTimeout(t);
+        resolve(true);
+      },
+      { once: true }
+    );
+  });
+}
+
+/**
+ * Registers the Drive streaming worker and makes sure it controls this page.
+ * A page that was opened before the worker became active (an old tab, a
+ * page loaded before the first visit to a video, or Ctrl+Shift+R) isn't
+ * controlled automatically: ask the worker to claim it, and as a last
+ * resort reload once (a normal reload always comes back controlled).
+ */
 async function ensureWorker() {
   if (!("serviceWorker" in navigator)) throw new Error("This browser can't run the built-in player (no service workers). Try Chrome, Edge or Safari, outside private mode.");
   const reg = await navigator.serviceWorker.register("/drive-sw.js");
   reg.update().catch(() => {});
   if (navigator.serviceWorker.controller) return;
-  await new Promise<void>((resolve, reject) => {
-    const t = setTimeout(
-      () => reject(new Error("The player helper didn't start in time. Reload the page (a normal reload, not Ctrl+Shift+R).")),
-      10000
-    );
-    navigator.serviceWorker.addEventListener(
-      "controllerchange",
-      () => {
-        clearTimeout(t);
-        resolve();
-      },
-      { once: true }
-    );
-  });
+
+  // Wait for an active worker (first install takes a moment), then ask it to take this page.
+  const ready = await Promise.race([navigator.serviceWorker.ready, new Promise<null>((r) => setTimeout(() => r(null), 10000))]);
+  if (ready?.active) ready.active.postMessage("claim");
+  if (await waitForController(4000)) {
+    try {
+      sessionStorage.removeItem(RELOAD_KEY);
+    } catch {}
+    return;
+  }
+
+  // Still not in control: one automatic normal reload per tab session.
+  let reloaded = false;
+  try {
+    reloaded = sessionStorage.getItem(RELOAD_KEY) === "1";
+    if (!reloaded) sessionStorage.setItem(RELOAD_KEY, "1");
+  } catch {
+    reloaded = true;
+  }
+  if (!reloaded) {
+    location.reload();
+    await new Promise(() => {}); // the page is going away
+  }
+  throw new Error("The player helper didn't start. Close this tab and open the video again.");
 }
 
 const posKey = (id: string) => `watch-pos:${id}`;

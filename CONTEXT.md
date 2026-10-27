@@ -1005,3 +1005,9 @@ Dragging the native scrub bar on a 2-hour video moves about a minute per pixel, 
   also run.
 - **Double-tap** the left or right third of the video (above the control bar) to skip 10 s; a single tap there
   plays/pauses. A "−10s / +20s" bubble shows the skip, and quick repeats add up.
+- Player helper start-up (`ensureWorker`): a page that was loaded while the worker was already active but not
+  controlling it (Ctrl+Shift+R, or an old tab) never gets `controllerchange` from the activate-time claim. Now the
+  player waits for `serviceWorker.ready` and posts "claim" to the worker (drive-sw.js v3 calls `clients.claim()`
+  on that message). If the page still isn't controlled after 4 s, it does one normal reload per tab session
+  (sessionStorage flag) before falling back to Drive's player. Reproduced with CDP `Page.reload {ignoreCache}`:
+  the old code fell back, the new code recovers.

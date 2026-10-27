@@ -5,7 +5,7 @@
  * Authorization header the <video> tag can't add itself. Only /drive-media/
  * is touched; every other request goes to the network as usual.
  */
-// v2: readable errors
+// v3: claim on request (pages opened before the worker was active)
 const PREFIX = "/drive-media/";
 let token = null;
 let expires = 0;
@@ -13,6 +13,12 @@ let pending = null;
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
+// A page that was already open when this worker became active (another tab
+// installed it, or the site was opened before it existed) isn't controlled
+// yet; the player asks the worker to take it over.
+self.addEventListener("message", (e) => {
+  if (e.data === "claim") e.waitUntil(self.clients.claim());
+});
 
 function getToken(force) {
   if (!force && token && Date.now() < expires) return Promise.resolve(token);
