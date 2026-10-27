@@ -975,15 +975,22 @@ time accumulates in `seconds`; `minutes` follows it (`lib/auto-log.ts` → `addA
   through the wasm query engine + `@prisma/adapter-pg`. This needs a temporary patch to `lib/prisma.ts` and
   `serverExternalPackages`. Never commit it.
 
-## Collapsible notes panel
+## Notes panel tabs
 
-The watch-page panel has four `CollapsibleSection`s (`components/collapsible-section.tsx`): Formulas, Timeline,
-Key points and Questions. Each has an icon, a count and its action button (Add formula / Mark this moment / Symbols /
-Add question).
-- Tap the title to fold a section (animated with a grid-rows transition). A folded section shows a one-line summary:
-  the formula names, "Now: <part being played>" for the timeline, the first line of the key points, or the
-  question count with how many are pending. Using a folded section's action button (or Alt+T) opens it.
-- The open/closed state is remembered in this browser across videos (`lib/section-state.ts`, localStorage
-  `notes-sections`, a useSyncExternalStore store shared across components).
-- A **jump bar** at the top (chips: Formulas 8 · Timeline 14 · Key points · Questions 1) opens a section and scrolls
-  to it (scroll-margin clears the pinned player on phones). **Fold all / Open all** sits on the right.
+The watch-page notes panel works like navigation, showing one section at a time. Tabs (with icons and counts):
+**Formulas · Timeline · Key points · Questions** (`NotesTabs` in watch-notes.tsx).
+- Each section is a `NotesTabPanel` (`components/notes-tab-panel.tsx`) with its title, icon and action button (Add
+  formula / Mark this moment / Symbols / Add question). Inactive panels stay mounted but `hidden`, so half-typed
+  forms survive switching. Each panel reports its count to the store.
+- The active tab and counts live in `lib/notes-tab.ts` (useSyncExternalStore, shared by WatchNotes and
+  VideoQuestions). The last tab used is remembered in localStorage `notes-tab`. Alt+T switches to Timeline.
+- The tab bar is sticky: on phones just under the pinned player (WatchPlayer publishes the player box height as the
+  CSS var `--player-h`), and at the top of the scrolling panel on large screens.
+
+## Watch page controls / Drive management
+
+Under the player there's only: Watched, the auto-tracking status, speed and Next. The "Just uploaded…" note, Open in
+Drive and Remove from Drive are gone. Removing videos from Drive moved to **Settings → Videos on Google Drive**
+(`app/settings/drive-videos.tsx`): the list of uploaded videos (watched ✓), a remove button per video with an
+inline confirm, and **Remove all watched**. It uses the same actions as before (`app/tracker/drive-actions.ts`, which
+now also revalidates /settings).

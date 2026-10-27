@@ -61,6 +61,7 @@ export default function WatchPlayer({
   const video = useRef<HTMLVideoElement>(null);
   const lastSaved = useRef(0);
   const router = useRouter();
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // ---- automatic watch tracking ----
   // Which 10-second stretches were really played, and how much real time
@@ -242,9 +243,24 @@ export default function WatchPlayer({
     setMode("drive");
   }
 
+  // Publishes the pinned player's height as --player-h, so things pinned under it
+  // on phones (the notes tabs) sit just below it whatever is showing.
+  useEffect(() => {
+    const box = rootRef.current?.parentElement;
+    if (!box) return;
+    const set = () => document.documentElement.style.setProperty("--player-h", `${box.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(box);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty("--player-h");
+    };
+  }, [mode]);
+
   if (mode === "drive") {
     return (
-      <div>
+      <div ref={rootRef}>
         <div className="relative aspect-video w-full">
           <iframe
             src={`https://drive.google.com/file/d/${fileId}/preview`}
@@ -268,7 +284,7 @@ export default function WatchPlayer({
   }
 
   return (
-    <div className="relative aspect-video w-full">
+    <div ref={rootRef} className="relative aspect-video w-full">
       {mode === "loading" ? (
         <div className="absolute inset-0 flex items-center justify-center text-white/70">
           <Loader2 className="animate-spin" />

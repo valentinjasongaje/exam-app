@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowRightLeft, Check, ChevronsDownUp, ChevronsUpDown, Clock, Lightbulb, ListOrdered, Loader2, Pencil, Play, Plus, Sigma, Trash2, X } from "lucide-react";
+import { ArrowRightLeft, Check, Clock, HelpCircle, Lightbulb, ListOrdered, Loader2, Pencil, Play, Plus, Sigma, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { autosaveNoteAction } from "../../notes/actions";
 import SymbolBar from "@/components/symbol-bar";
-import CollapsibleSection from "@/components/collapsible-section";
-import { jumpToSection, sectionState } from "@/lib/section-state";
+import NotesTabPanel from "@/components/notes-tab-panel";
+import { notesTab, type NotesTabId } from "@/lib/notes-tab";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime, parseTime, parseTimeline } from "@/lib/timestamps";
@@ -23,38 +23,58 @@ type Card = { key: string; id?: string; name: string; formula: string; hint: str
 type Status = "idle" | "dirty" | "saving" | "saved" | "error";
 type Field = HTMLInputElement | HTMLTextAreaElement;
 
-/** Chips at the top of the panel: jump straight to a section (opening it), or fold them all. */
-function JumpBar({ items }: { items: { id: string; label: string; count?: number }[] }) {
-  const allOpen = useSyncExternalStore(
-    sectionState.subscribe,
-    () => items.every((i) => sectionState.isOpen(i.id)),
-    () => true
-  );
+/** Tabs at the top of the notes panel: one section at a time, like navigation. */
+function NotesTabs() {
+  const active = useSyncExternalStore(notesTab.subscribe, notesTab.get, () => "formulas" as NotesTabId);
+  const counts = useSyncExternalStore(
+    notesTab.subscribe,
+    () => TABS.map((t) => notesTab.count(t.id) ?? 0).join(","),
+    () => ""
+  ).split(",");
   return (
-    <div className="-mt-2 flex flex-wrap items-center gap-1.5">
-      {items.map((i) => (
-        <button
-          key={i.id}
-          type="button"
-          onClick={() => jumpToSection(i.id)}
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-ink"
-        >
-          {i.label}
-          {!!i.count && <span className="text-ink-faint tabular-nums">{i.count}</span>}
-        </button>
-      ))}
-      <button
-        type="button"
-        onClick={() => sectionState.setAll(items.map((i) => i.id), !allOpen)}
-        title={allOpen ? "Fold all sections" : "Open all sections"}
-        className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-ink-faint hover:text-ink"
-      >
-        {allOpen ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
-        {allOpen ? "Fold all" : "Open all"}
-      </button>
+    // Stays in view while scrolling: under the pinned player on phones, at the top of the panel on large screens.
+    <div
+      role="tablist"
+      aria-label="Notes"
+      className="sticky top-[calc(4rem+var(--player-h,56.25vw)+0.5rem)] z-10 grid grid-cols-4 gap-1 rounded-xl border border-border bg-bg-muted p-1 shadow-sm sm:static sm:shadow-none lg:sticky lg:top-0"
+    >
+      {TABS.map((t, i) => {
+        const on = active === t.id;
+        const n = Number(counts[i] || 0);
+        return (
+          <button
+            key={t.id}
+            id={`notes-tabbtn-${t.id}`}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            aria-controls={`notes-tab-${t.id}`}
+            onClick={() => notesTab.set(t.id)}
+            className={clsx(
+              "relative flex flex-col items-center gap-0.5 rounded-lg px-1 py-1.5 text-[11px] font-medium transition-colors",
+              on ? "bg-bg-elevated text-ink shadow-sm" : "text-ink-muted hover:text-ink"
+            )}
+          >
+            <t.icon size={16} className={on ? "text-accent" : undefined} />
+            <span className="truncate">{t.label}</span>
+            {n > 0 && (
+              <span className={clsx("absolute top-0.5 right-1 rounded-full px-1 text-[10px] tabular-nums", on ? "bg-accent-soft text-accent" : "text-ink-faint")}>
+                {n}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
+
+const TABS: { id: NotesTabId; label: string; icon: React.ComponentType<{ size?: number; className?: string }> }[] = [
+  { id: "formulas", label: "Formulas", icon: Sigma },
+  { id: "timeline", label: "Timeline", icon: ListOrdered },
+  { id: "keypoints", label: "Key points", icon: Lightbulb },
+  { id: "questions", label: "Questions", icon: HelpCircle },
+];
 
 const smallBtn =
   "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-accent hover:bg-accent-soft disabled:cursor-not-allowed disabled:text-ink-faint disabled:hover:bg-transparent";
@@ -72,14 +92,12 @@ export default function WatchNotes({
   topic,
   note,
   initialMarkers,
-  questionCount,
 }: {
   videoId: string;
   subject: string;
   topic: string;
   note: { id: string; body: string; cards: { id: string; name: string; formula: string; hint: string | null }[] } | null;
   initialMarkers: Marker[];
-  questionCount: number;
 }) {
   const [noteId, setNoteId] = useState<string | null>(note?.id ?? null);
   const [body, setBody] = useState(note?.body ?? "");
@@ -271,10 +289,9 @@ export default function WatchNotes({
   }, [playerReady]);
   const active = [...markers].reverse().find((m) => m.seconds <= now + 0.5);
   const activeId = active?.id;
-  const activeLabel = playerReady && now > 0 ? active?.label : undefined;
 
   function markNow() {
-    sectionState.set("timeline", true);
+    notesTab.set("timeline");
     const t = playerBridge.get()?.getTime() ?? 0;
     setMarkerDraft({ id: null, time: formatTime(t), label: "" });
   }
@@ -394,21 +411,13 @@ export default function WatchNotes({
         </span>
       </div>
 
-      <JumpBar
-        items={[
-          { id: "formulas", label: "Formulas", count: cards.length },
-          { id: "timeline", label: "Timeline", count: markers.length },
-          { id: "keypoints", label: "Key points" },
-          { id: "questions", label: "Questions", count: questionCount },
-        ]}
-      />
+      <NotesTabs />
 
-      <CollapsibleSection
+      <NotesTabPanel
         id="formulas"
-        title="Formulas"
+        title="Formulas to memorize"
         icon={Sigma}
         count={cards.length}
-        summary={cards.length ? cards.map((c) => c.name).join(" · ") : "Formulas to memorize from this video"}
         action={
           !(editing && editing.key === null) && (
             <button type="button" onClick={() => setEditing({ key: null, name: "", formula: "", hint: "" })} className={smallBtn}>
@@ -457,16 +466,13 @@ export default function WatchNotes({
             <Play size={12} className="fill-current" /> {savedCount === 1 ? "Recall this formula" : `Recall these ${savedCount} formulas`}
           </Link>
         )}
-      </CollapsibleSection>
+      </NotesTabPanel>
 
-      <CollapsibleSection
+      <NotesTabPanel
         id="timeline"
         title="Timeline"
         icon={ListOrdered}
         count={markers.length}
-        summary={
-          activeLabel ? `Now: ${activeLabel}` : markers.length ? markers.map((m) => m.label).join(" · ") : "Mark where each part of the video starts"
-        }
         action={
           <button
             type="button"
@@ -537,13 +543,12 @@ export default function WatchNotes({
         {markers.length === 0 && !markerDraft && legacyLines === 0 && (
           <p className="text-xs text-ink-faint">When a new part starts, tap Mark this moment and name it. Tap a line later to jump back.</p>
         )}
-      </CollapsibleSection>
+      </NotesTabPanel>
 
-      <CollapsibleSection
+      <NotesTabPanel
         id="keypoints"
         title="Key points"
         icon={Lightbulb}
-        summary={body.trim() ? body.trim().split("\n")[0] : "Terms and ideas to remember"}
         action={
           <button
             type="button"
@@ -569,7 +574,7 @@ export default function WatchNotes({
           placeholder={"Terms, definitions and rules to remember, e.g.\n• Abscissa = x-coordinate, ordinate = y-coordinate\n• René Descartes: founder of analytic geometry"}
           className="field min-h-36 text-sm leading-relaxed"
         />
-      </CollapsibleSection>
+      </NotesTabPanel>
 
       {error && <p className="text-xs text-danger">{error}</p>}
     </div>

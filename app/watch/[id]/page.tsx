@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ExternalLink, SkipForward } from "lucide-react";
+import { SkipForward } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { formatMinutes, subjectName } from "@/lib/study-plan";
 import { sectionLabel } from "@/lib/video-library";
 import WatchCheckbox from "../../lessons/watch-checkbox";
-import RemoveFromDrive from "./remove-button";
 import WatchNotes from "./watch-notes";
 import WatchPlayer from "./watch-player";
 import SpeedControl from "./speed-control";
@@ -89,11 +88,7 @@ export default async function WatchPage({
       </div>
 
       <div className="mb-6 min-w-0 lg:col-start-1 lg:row-start-3">
-        <p className="mt-2 text-xs text-ink-faint">
-          Just uploaded? Drive may need a few minutes to process it. Not playing? Sign this
-          browser in to the Google account the video was uploaded to.
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2.5 text-sm font-medium">
             <WatchCheckbox key={`${video.id}-${done}`} id={video.id} watched={done} label={video.title} />
             {done ? "Watched" : "Mark as watched"}
@@ -105,17 +100,6 @@ export default async function WatchPage({
               <SkipForward size={14} /> Next: {next.title}
             </Link>
           )}
-          {video.driveFileId && (
-            <a
-              href={`https://drive.google.com/file/d/${video.driveFileId}/view`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
-            >
-              <ExternalLink size={14} /> Open in Drive
-            </a>
-          )}
-          {video.driveFileId && <RemoveFromDrive videoId={video.id} title={video.title} />}
         </div>
       </div>
 
@@ -124,12 +108,11 @@ export default async function WatchPage({
           key={video.id}
           videoId={video.id}
           initialMarkers={markers}
-          questionCount={questions.length}
           subject={video.subject}
           topic={topic}
           note={note ? { id: note.id, body: note.body, cards: note.cards } : null}
         />
-        <div className="mt-5 border-t border-border pt-4">
+        <div className="mt-5">
           <VideoQuestions key={`q-${video.id}`} videoId={video.id} initial={questions.map(toClient)} aiEnabled={aiConfigured()} />
         </div>
       </aside>

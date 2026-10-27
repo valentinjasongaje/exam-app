@@ -16,6 +16,7 @@ async function requireUserId() {
 function refresh() {
   revalidatePath("/tracker", "layout");
   revalidatePath("/lessons", "layout");
+  revalidatePath("/settings");
 }
 
 function fail(e: unknown): DriveActionResult {

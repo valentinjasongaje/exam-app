@@ -7,7 +7,7 @@ import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
 import SymbolBar from "@/components/symbol-bar";
-import CollapsibleSection from "@/components/collapsible-section";
+import NotesTabPanel from "@/components/notes-tab-panel";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime } from "@/lib/timestamps";
 import { shrinkImage } from "@/lib/shrink-image";
@@ -256,16 +256,11 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
   const solvedCount = items.filter((q) => q.kind === "solve" && q.answer).length;
 
   return (
-    <CollapsibleSection
+    <NotesTabPanel
       id="questions"
-      title="Questions"
+      title="Questions from this video"
       icon={HelpCircle}
       count={items.length}
-      summary={
-        items.length
-          ? `${items.length} question${items.length === 1 ? "" : "s"}${pendingCount ? ` · ${pendingCount} pending` : ""}`
-          : "Add the instructor's questions and solved problems"
-      }
       action={
         !draft && (
           <button
@@ -544,6 +539,6 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
           Instructor solves a problem or asks a question? Add it here. Capture the board so you can practise it later.
         </p>
       )}
-    </CollapsibleSection>
+    </NotesTabPanel>
   );
 }
