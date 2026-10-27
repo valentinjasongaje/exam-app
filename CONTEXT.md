@@ -974,3 +974,16 @@ time accumulates in `seconds`; `minutes` follows it (`lib/auto-log.ts` → `addA
 - Local visual audits: there's no native Prisma engine in the sandbox, so run the app against a scratch Postgres
   through the wasm query engine + `@prisma/adapter-pg`. This needs a temporary patch to `lib/prisma.ts` and
   `serverExternalPackages`. Never commit it.
+
+## Collapsible notes panel
+
+The watch-page panel has four `CollapsibleSection`s (`components/collapsible-section.tsx`): Formulas, Timeline,
+Key points and Questions. Each has an icon, a count and its action button (Add formula / Mark this moment / Symbols /
+Add question).
+- Tap the title to fold a section (animated with a grid-rows transition). A folded section shows a one-line summary:
+  the formula names, "Now: <part being played>" for the timeline, the first line of the key points, or the
+  question count with how many are pending. Using a folded section's action button (or Alt+T) opens it.
+- The open/closed state is remembered in this browser across videos (`lib/section-state.ts`, localStorage
+  `notes-sections`, a useSyncExternalStore store shared across components).
+- A **jump bar** at the top (chips: Formulas 8 · Timeline 14 · Key points · Questions 1) opens a section and scrolls
+  to it (scroll-margin clears the pinned player on phones). **Fold all / Open all** sits on the right.

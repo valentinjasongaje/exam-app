@@ -124,11 +124,12 @@ export default async function WatchPage({
           key={video.id}
           videoId={video.id}
           initialMarkers={markers}
+          questionCount={questions.length}
           subject={video.subject}
           topic={topic}
           note={note ? { id: note.id, body: note.body, cards: note.cards } : null}
         />
-        <div className="mt-4">
+        <div className="mt-5 border-t border-border pt-4">
           <VideoQuestions key={`q-${video.id}`} videoId={video.id} initial={questions.map(toClient)} aiEnabled={aiConfigured()} />
         </div>
       </aside>

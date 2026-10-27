@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowRightLeft, Check, Clock, Loader2, Pencil, Play, Plus, Sigma, Trash2, X } from "lucide-react";
+import { ArrowRightLeft, Check, ChevronsDownUp, ChevronsUpDown, Clock, Lightbulb, ListOrdered, Loader2, Pencil, Play, Plus, Sigma, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { autosaveNoteAction } from "../../notes/actions";
 import SymbolBar from "@/components/symbol-bar";
+import CollapsibleSection from "@/components/collapsible-section";
+import { jumpToSection, sectionState } from "@/lib/section-state";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime, parseTime, parseTimeline } from "@/lib/timestamps";
@@ -21,18 +23,38 @@ type Card = { key: string; id?: string; name: string; formula: string; hint: str
 type Status = "idle" | "dirty" | "saving" | "saved" | "error";
 type Field = HTMLInputElement | HTMLTextAreaElement;
 
-const Section = ({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) => (
-  <section className="flex flex-col gap-2">
-    <div className="flex min-h-7 items-center justify-between gap-2">
-      <h3 className="text-xs font-semibold tracking-wide text-ink-muted uppercase">
-        {title}
-        {!!count && <span className="ml-1.5 font-normal normal-case">{count}</span>}
-      </h3>
-      {action}
+/** Chips at the top of the panel: jump straight to a section (opening it), or fold them all. */
+function JumpBar({ items }: { items: { id: string; label: string; count?: number }[] }) {
+  const allOpen = useSyncExternalStore(
+    sectionState.subscribe,
+    () => items.every((i) => sectionState.isOpen(i.id)),
+    () => true
+  );
+  return (
+    <div className="-mt-2 flex flex-wrap items-center gap-1.5">
+      {items.map((i) => (
+        <button
+          key={i.id}
+          type="button"
+          onClick={() => jumpToSection(i.id)}
+          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-ink-muted transition-colors hover:border-accent hover:text-ink"
+        >
+          {i.label}
+          {!!i.count && <span className="text-ink-faint tabular-nums">{i.count}</span>}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={() => sectionState.setAll(items.map((i) => i.id), !allOpen)}
+        title={allOpen ? "Fold all sections" : "Open all sections"}
+        className="ml-auto inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs text-ink-faint hover:text-ink"
+      >
+        {allOpen ? <ChevronsDownUp size={13} /> : <ChevronsUpDown size={13} />}
+        {allOpen ? "Fold all" : "Open all"}
+      </button>
     </div>
-    {children}
-  </section>
-);
+  );
+}
 
 const smallBtn =
   "inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-medium text-accent hover:bg-accent-soft disabled:cursor-not-allowed disabled:text-ink-faint disabled:hover:bg-transparent";
@@ -50,12 +72,14 @@ export default function WatchNotes({
   topic,
   note,
   initialMarkers,
+  questionCount,
 }: {
   videoId: string;
   subject: string;
   topic: string;
   note: { id: string; body: string; cards: { id: string; name: string; formula: string; hint: string | null }[] } | null;
   initialMarkers: Marker[];
+  questionCount: number;
 }) {
   const [noteId, setNoteId] = useState<string | null>(note?.id ?? null);
   const [body, setBody] = useState(note?.body ?? "");
@@ -245,9 +269,12 @@ export default function WatchNotes({
     const t = setInterval(() => setNow(playerBridge.get()?.getTime() ?? 0), 1000);
     return () => clearInterval(t);
   }, [playerReady]);
-  const activeId = [...markers].reverse().find((m) => m.seconds <= now + 0.5)?.id;
+  const active = [...markers].reverse().find((m) => m.seconds <= now + 0.5);
+  const activeId = active?.id;
+  const activeLabel = playerReady && now > 0 ? active?.label : undefined;
 
   function markNow() {
+    sectionState.set("timeline", true);
     const t = playerBridge.get()?.getTime() ?? 0;
     setMarkerDraft({ id: null, time: formatTime(t), label: "" });
   }
@@ -367,9 +394,21 @@ export default function WatchNotes({
         </span>
       </div>
 
-      <Section
-        title="Formulas to memorize"
+      <JumpBar
+        items={[
+          { id: "formulas", label: "Formulas", count: cards.length },
+          { id: "timeline", label: "Timeline", count: markers.length },
+          { id: "keypoints", label: "Key points" },
+          { id: "questions", label: "Questions", count: questionCount },
+        ]}
+      />
+
+      <CollapsibleSection
+        id="formulas"
+        title="Formulas"
+        icon={Sigma}
         count={cards.length}
+        summary={cards.length ? cards.map((c) => c.name).join(" · ") : "Formulas to memorize from this video"}
         action={
           !(editing && editing.key === null) && (
             <button type="button" onClick={() => setEditing({ key: null, name: "", formula: "", hint: "" })} className={smallBtn}>
@@ -418,11 +457,16 @@ export default function WatchNotes({
             <Play size={12} className="fill-current" /> {savedCount === 1 ? "Recall this formula" : `Recall these ${savedCount} formulas`}
           </Link>
         )}
-      </Section>
+      </CollapsibleSection>
 
-      <Section
+      <CollapsibleSection
+        id="timeline"
         title="Timeline"
+        icon={ListOrdered}
         count={markers.length}
+        summary={
+          activeLabel ? `Now: ${activeLabel}` : markers.length ? markers.map((m) => m.label).join(" · ") : "Mark where each part of the video starts"
+        }
         action={
           <button
             type="button"
@@ -493,10 +537,13 @@ export default function WatchNotes({
         {markers.length === 0 && !markerDraft && legacyLines === 0 && (
           <p className="text-xs text-ink-faint">When a new part starts, tap Mark this moment and name it. Tap a line later to jump back.</p>
         )}
-      </Section>
+      </CollapsibleSection>
 
-      <Section
+      <CollapsibleSection
+        id="keypoints"
         title="Key points"
+        icon={Lightbulb}
+        summary={body.trim() ? body.trim().split("\n")[0] : "Terms and ideas to remember"}
         action={
           <button
             type="button"
@@ -522,7 +569,7 @@ export default function WatchNotes({
           placeholder={"Terms, definitions and rules to remember, e.g.\n• Abscissa = x-coordinate, ordinate = y-coordinate\n• René Descartes: founder of analytic geometry"}
           className="field min-h-36 text-sm leading-relaxed"
         />
-      </Section>
+      </CollapsibleSection>
 
       {error && <p className="text-xs text-danger">{error}</p>}
     </div>

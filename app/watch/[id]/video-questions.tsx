@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
-import { Camera, Check, Clock, ImagePlus, ListChecks, Loader2, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { HelpCircle, Camera, Check, Clock, ImagePlus, ListChecks, Loader2, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
 import SymbolBar from "@/components/symbol-bar";
+import CollapsibleSection from "@/components/collapsible-section";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime } from "@/lib/timestamps";
 import { shrinkImage } from "@/lib/shrink-image";
@@ -255,18 +256,18 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
   const solvedCount = items.filter((q) => q.kind === "solve" && q.answer).length;
 
   return (
-    <section className="flex flex-col gap-2 border-t border-border pt-4">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">
-          Questions from this video
-          {items.length > 0 && (
-            <span className="ml-1.5 font-normal text-ink-muted">
-              {items.length}
-              {pendingCount > 0 && ` · ${pendingCount} pending`}
-            </span>
-          )}
-        </h2>
-        {!draft && (
+    <CollapsibleSection
+      id="questions"
+      title="Questions"
+      icon={HelpCircle}
+      count={items.length}
+      summary={
+        items.length
+          ? `${items.length} question${items.length === 1 ? "" : "s"}${pendingCount ? ` · ${pendingCount} pending` : ""}`
+          : "Add the instructor's questions and solved problems"
+      }
+      action={
+        !draft && (
           <button
             type="button"
             onClick={() => open(emptyDraft(now()))}
@@ -274,8 +275,10 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
           >
             <Plus size={12} /> Add question
           </button>
-        )}
-      </div>
+        )
+      }
+    >
+      {pendingCount > 0 && <p className="-mt-1 text-xs text-accent">{pendingCount} pending: add the answer when it&rsquo;s solved</p>}
 
       {items.length > 0 && (
         <ul className="flex flex-col gap-1.5">
@@ -541,6 +544,6 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
           Instructor solves a problem or asks a question? Add it here. Capture the board so you can practise it later.
         </p>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }
