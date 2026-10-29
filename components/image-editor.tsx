@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Square, Paintbrush, Pipette, Undo2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
@@ -56,7 +57,10 @@ export function ImageEditor({
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY };
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
   }
 
   function sampleColorAt(point: { x: number; y: number }) {
@@ -68,7 +72,9 @@ export function ImageEditor({
   function pushHistory() {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d")!;
-    historyRef.current.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    historyRef.current.push(
+      ctx.getImageData(0, 0, canvas.width, canvas.height),
+    );
     if (historyRef.current.length > MAX_HISTORY) historyRef.current.shift();
     setCanUndo(true);
   }
@@ -112,7 +118,7 @@ export function ImageEditor({
         Math.min(start.x, point.x),
         Math.min(start.y, point.y),
         Math.abs(point.x - start.x),
-        Math.abs(point.y - start.y)
+        Math.abs(point.y - start.y),
       );
     } else {
       const last = lastPointRef.current!;
@@ -149,7 +155,17 @@ export function ImageEditor({
     onSave(canvasRef.current!.toDataURL("image/png"));
   }
 
-  return (
+  // Keep the page behind from scrolling while the editor is open.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  // Rendered into <body> so it's always centred on the screen, whatever page element it's opened from.
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="flex max-h-full w-full max-w-2xl flex-col rounded-xl bg-bg-elevated p-4">
         <div className="mb-3 flex flex-wrap items-center gap-3 text-sm">
@@ -159,7 +175,9 @@ export function ImageEditor({
               onClick={() => setMode("rect")}
               className={clsx(
                 "flex h-7 w-7 items-center justify-center rounded-md",
-                mode === "rect" ? "bg-accent-soft text-accent" : "text-ink-muted hover:text-ink"
+                mode === "rect"
+                  ? "bg-accent-soft text-accent"
+                  : "text-ink-muted hover:text-ink",
               )}
               title="Rectangle patch"
             >
@@ -170,7 +188,9 @@ export function ImageEditor({
               onClick={() => setMode("brush")}
               className={clsx(
                 "flex h-7 w-7 items-center justify-center rounded-md",
-                mode === "brush" ? "bg-accent-soft text-accent" : "text-ink-muted hover:text-ink"
+                mode === "brush"
+                  ? "bg-accent-soft text-accent"
+                  : "text-ink-muted hover:text-ink",
               )}
               title="Freehand brush"
             >
@@ -181,7 +201,9 @@ export function ImageEditor({
               onClick={enterEyedropper}
               className={clsx(
                 "flex h-7 w-7 items-center justify-center rounded-md",
-                mode === "eyedropper" ? "bg-accent-soft text-accent" : "text-ink-muted hover:text-ink"
+                mode === "eyedropper"
+                  ? "bg-accent-soft text-accent"
+                  : "text-ink-muted hover:text-ink",
               )}
               title="Pick a color from the image"
             >
@@ -233,15 +255,21 @@ export function ImageEditor({
         </div>
 
         <p className="mb-3 text-xs text-ink-muted">
-          Draw a rectangle over a watermark to patch it, or use the eyedropper to match the
-          surrounding color first.
+          Draw a rectangle over a watermark to patch it, or use the eyedropper
+          to match the surrounding color first.
         </p>
 
         <div className="overflow-auto rounded-lg border border-border bg-bg-muted">
-          {!loaded && <p className="p-6 text-center text-sm text-ink-muted">Loading…</p>}
+          {!loaded && (
+            <p className="p-6 text-center text-sm text-ink-muted">Loading…</p>
+          )}
           <canvas
             ref={canvasRef}
-            className={clsx("max-w-full", !loaded && "hidden", mode === "eyedropper" ? "cursor-crosshair" : "cursor-crosshair")}
+            className={clsx(
+              "max-w-full",
+              !loaded && "hidden",
+              mode === "eyedropper" ? "cursor-crosshair" : "cursor-crosshair",
+            )}
             onMouseDown={handleDown}
             onMouseMove={handleMove}
             onMouseUp={handleUp}
@@ -256,6 +284,7 @@ export function ImageEditor({
           <Button onClick={handleSave}>Save edit</Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

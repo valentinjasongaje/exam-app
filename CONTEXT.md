@@ -1055,3 +1055,8 @@ and dropped the whole answer table, so every question reported `no-answer-row`. 
 lib/exam-parser.js inserts the missing ">" before parsing, and the answer lookup falls back to any
 `tr[data-id=…]` if the `table#answer` wrapper is still damaged. `tidyText()` also fixes the "tanˉ¹" (modifier
 macron → superscript minus) and "doesn`t" (backtick → ’) quirks in question, choice and answer text.
+
+## Fix: image editor off-centre on long pages (Admin → Import)
+- Cause: `app/template.tsx` wraps every page in `.animate-enter`, whose fill-mode `both` left a `transform` on the wrapper after the fade-in. A transformed ancestor becomes the containing block for `position: fixed`, so the editor overlay was centred on the whole page, not the screen.
+- Fix: `components/image-editor.tsx` now renders through `createPortal(…, document.body)` and locks background scroll while open. `.animate-enter`, `.stagger > *` and `.bar-fill` in `globals.css` use fill-mode `backwards`, so finished animations leave no transform.
+- Rule: any new full-screen overlay should portal to `document.body` (as the nav menu does).
