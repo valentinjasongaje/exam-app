@@ -381,7 +381,7 @@ export default function WatchPlayer({
   }
 
   return (
-    <div ref={rootRef} className="relative aspect-video w-full">
+    <div ref={rootRef} className="relative aspect-video w-full" onContextMenu={(e) => e.preventDefault()}>
       {mode === "loading" ? (
         <div className="absolute inset-0 flex items-center justify-center text-white/70">
           <Loader2 className="animate-spin" />
@@ -392,6 +392,8 @@ export default function WatchPlayer({
           src={`/drive-media/${fileId}`}
           title={title}
           controls
+          // No Download in the ⋮ menu (casual saving); the right-click menu is blocked on the wrapper.
+          controlsList="nodownload"
           playsInline
           preload="metadata"
           onLoadedMetadata={onLoaded}

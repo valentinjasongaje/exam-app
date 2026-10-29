@@ -454,3 +454,19 @@ model MistakeCard {
   @@unique([userId, questionId])
   @@index([userId, masteredAt, dueDate])
 }
+
+// ---------- Access control ----------
+// Only approved emails (and the admin) can sign in. Someone not on the list
+// who tries is recorded as a request the admin can approve.
+
+model AllowedEmail {
+  email   String   @id // lower-case
+  addedAt DateTime @default(now())
+}
+
+model AccessRequest {
+  email       String   @id // lower-case
+  name        String?
+  requestedAt DateTime @default(now())
+  lastTriedAt DateTime @default(now())
+}

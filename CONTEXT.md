@@ -1033,3 +1033,16 @@ Dragging the native scrub bar on a 2-hour video moves about a minute per pixel, 
   redirects others to /daily), Today's plan card, and Settings → Videos on Google Drive.
 - Regular users see each plan video as ▶ title ☁ when uploaded, and greyed out with a "SOON" tag when not yet uploaded.
   Row order is now play icon + title + cloud (for everyone).
+
+## Sign-in allowlist & video saving
+
+- **Only approved emails can sign in** (`lib/access.ts`). Allowed: `ADMIN_EMAIL` (env), any existing ADMIN user, and
+  `AllowedEmail` rows (lower-case). In `auth.ts`, the `signIn` callback turns others away to `/login?error=NotApproved`
+  and upserts an `AccessRequest` (email, name, last tried). The `jwt` callback re-checks an existing session every
+  5 minutes (`accessCheckedAt`) and returns null, which ends the session, if the email was removed.
+- The migration approves every existing user's email so nobody is locked out on deploy.
+- Admin → Users → **Who can sign in** (`access-panel.tsx`, `access-actions.ts`): pending requests (Approve /
+  Dismiss), add an email, and the approved list with Remove (you can't remove yourself).
+- The player's `<video>` has `controlsList="nodownload"` (no Download in the ⋮ menu) and the right-click menu is
+  blocked on its wrapper. This deters casual saving only: the file ID is still visible in dev tools and the stream
+  key travels to the browser (see "Admin vs regular users").

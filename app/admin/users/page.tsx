@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, Badge } from "@/components/ui";
+import { auth } from "@/auth";
+import AccessPanel from "./access-panel";
 
 export default async function AdminUsersPage() {
+  const session = await auth();
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "asc" },
     include: {
@@ -37,6 +40,7 @@ export default async function AdminUsersPage() {
   return (
     <div>
       <PageHeader title="Users" subtitle={`${rows.length} registered`} />
+      <AccessPanel myEmail={session?.user?.email ?? null} />
 
       {/* Mobile: stacked cards */}
       <div className="flex flex-col gap-3 sm:hidden">

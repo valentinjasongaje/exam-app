@@ -24,7 +24,14 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPage() {
+const ERRORS: Record<string, string> = {
+  NotApproved: "This Google account isn't approved yet. Your request was sent to the admin; try again once they approve it.",
+  AccessDenied: "This Google account isn't approved yet. Ask the admin to add your email.",
+};
+
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
+  const message = error ? (ERRORS[error] ?? "Couldn't sign you in. Try again.") : null;
   return (
     <main className="bg-hero-glow flex w-full flex-1 flex-col items-center justify-center px-4">
       <Card className="w-full max-w-sm text-center">
@@ -32,6 +39,11 @@ export default function LoginPage() {
           Welcome back
         </p>
         <h1 className="mb-6 text-2xl font-semibold">Log in</h1>
+        {message && (
+          <p role="alert" className="mb-4 rounded-lg border border-danger/40 bg-danger-soft px-3 py-2 text-left text-sm text-danger">
+            {message}
+          </p>
+        )}
         <form action={googleSignInAction}>
           <button
             type="submit"
