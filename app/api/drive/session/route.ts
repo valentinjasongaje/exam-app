@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { DriveError, accessTokenFor, ensureFolder, requestOrigin } from "@/lib/google-drive";
-import { WATCH_PLAN } from "@/lib/video-library";
+import { WATCH_PLAN, planKey } from "@/lib/video-library";
 
 /**
  * Opens a resumable upload on Google Drive for one plan video and returns
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         "X-Upload-Content-Length": String(plan.bytes),
         Origin: requestOrigin(req.headers),
       },
-      body: JSON.stringify({ name: plan.file, parents: [folderId], appProperties: { planPath: plan.localPath } }),
+      body: JSON.stringify({ name: plan.file, parents: [folderId], appProperties: { planKey: planKey(plan.localPath) } }),
     });
     const url = init.headers.get("location");
     if (!init.ok || !url) {

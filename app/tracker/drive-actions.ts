@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DriveError, accessTokenFor, deleteFile, listUploads, revoke } from "@/lib/google-drive";
-import { WATCH_PLAN } from "@/lib/video-library";
+import { WATCH_PLAN, planKey } from "@/lib/video-library";
 
 export type DriveActionResult = { error: string | null; message?: string };
 
@@ -80,7 +80,14 @@ export async function syncDriveAction(): Promise<DriveActionResult> {
   try {
     const { token, conn } = await accessTokenFor(userId);
     const files = conn.folderId ? await listUploads(token, conn.folderId) : [];
-    const byPath = new Map(files.filter((f) => f.appProperties?.planPath).map((f) => [f.appProperties!.planPath, f]));
+    // Uploads carry planKey (a short hash of the G:\ path); early ones carry the path itself (planPath).
+    const pathByKey = new Map(WATCH_PLAN.map((p) => [planKey(p.localPath), p.localPath]));
+    const byPath = new Map(
+      files.flatMap((f) => {
+        const path = f.appProperties?.planPath ?? (f.appProperties?.planKey ? pathByKey.get(f.appProperties.planKey) : undefined);
+        return path ? [[path, f] as const] : [];
+      })
+    );
     const videos = await prisma.studyVideo.findMany({ where: { userId } });
     const byLocal = new Map(videos.filter((v) => v.localPath).map((v) => [v.localPath!, v]));
     let linked = 0;

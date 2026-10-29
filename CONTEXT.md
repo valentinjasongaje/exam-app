@@ -1011,3 +1011,7 @@ Dragging the native scrub bar on a 2-hour video moves about a minute per pixel, 
   on that message). If the page still isn't controlled after 4 s, it does one normal reload per tab session
   (sessionStorage flag) before falling back to Drive's player. Reproduced with CDP `Page.reload {ignoreCache}`:
   the old code fell back, the new code recovers.
+- Drive uploads tag the file with `appProperties.planKey` (a 16-hex FNV-1a hash of the G:\ path, `planKey()` in
+  lib/video-library.ts), not the path itself. Drive caps a property at 124 bytes (key + value), and 14 of the 64 plan
+  paths are longer, which failed with 403 propertyLengthLimitExceeded. "Sync with Drive" matches both planKey and
+  the older planPath.

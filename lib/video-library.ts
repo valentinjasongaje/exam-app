@@ -68,3 +68,21 @@ export const BATCH_ORDER = [
 export function sectionLabel(key: string | null) {
   return SECTIONS.find((s) => s.key === key)?.label ?? "Added by you";
 }
+
+/**
+ * Short, stable id for a plan video, stored on its Google Drive copy
+ * (appProperties.planKey) so "Sync with Drive" can match files back to the
+ * plan. Drive limits each property to 124 bytes (key + value), and some
+ * G:\ paths are longer than that, so the path itself can't be stored.
+ */
+export function planKey(localPath: string) {
+  // FNV-1a 64-bit, hex: 16 characters, no imports, same result on server and client.
+  const prime = BigInt("0x100000001b3");
+  const mask = BigInt("0xffffffffffffffff");
+  let h = BigInt("0xcbf29ce484222325");
+  for (const b of new TextEncoder().encode(localPath)) {
+    h ^= BigInt(b);
+    h = (h * prime) & mask;
+  }
+  return h.toString(16).padStart(16, "0");
+}
