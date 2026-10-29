@@ -13,6 +13,7 @@ import { WATCH_PLAN, planKey } from "@/lib/video-library";
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  if (session.user.role !== "ADMIN") return NextResponse.json({ error: "Only the admin uploads videos." }, { status: 403 });
   const { localPath, size } = (await req.json().catch(() => ({}))) as { localPath?: string; size?: number };
   const plan = WATCH_PLAN.find((v) => v.localPath === localPath);
   if (!plan) return NextResponse.json({ error: "That video isn't in the watch plan." }, { status: 400 });

@@ -28,12 +28,13 @@ export default function NavLinks({ isAdmin, name }: { isAdmin: boolean; name: st
   }, [open]);
 
   const focusMode = FOCUS_ROUTES.some((r) => r.test(pathname));
+  const items = NAV_ITEMS.filter((i) => !i.adminOnly || isAdmin);
 
   return (
     <>
       {/* Tablet / desktop: icons always, labels from md up */}
       <div className="hidden items-center gap-0.5 text-sm sm:flex">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const active = item.match(pathname);
           const Icon = item.icon;
           return (
@@ -85,7 +86,7 @@ export default function NavLinks({ isAdmin, name }: { isAdmin: boolean; name: st
                 </button>
               </div>
               <div className="flex flex-col gap-0.5 text-base">
-                {NAV_ITEMS.map((item) => {
+                {items.map((item) => {
                   const active = item.match(pathname);
                   const Icon = item.icon;
                   return (
@@ -131,7 +132,7 @@ export default function NavLinks({ isAdmin, name }: { isAdmin: boolean; name: st
             className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
           >
             <div className="grid grid-cols-5">
-              {NAV_ITEMS.filter((i) => i.mobile).map((item) => {
+              {items.filter((i) => i.mobile).map((item) => {
                 const active = item.match(pathname);
                 const Icon = item.icon;
                 return (

@@ -9,8 +9,9 @@ export default async function LessonsLayout({ children }: { children: React.Reac
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  // For the "you opened … on your laptop, log it?" prompt.
-  const mine = await prisma.studyVideo.findMany({
+  // For the "you opened … on your laptop, log it?" prompt (admin only: they play from G:).
+  const isAdmin = session.user.role === "ADMIN";
+  const mine = !isAdmin ? [] : await prisma.studyVideo.findMany({
     where: { userId: session.user.id, localPath: { not: null } },
     select: { localPath: true, watchedMinutes: true, durationMinutes: true },
   });
@@ -29,7 +30,7 @@ export default async function LessonsLayout({ children }: { children: React.Reac
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:py-10">
       <LessonsTabs />
-      <LocalWatchPrompt plan={plan} />
+      {isAdmin && <LocalWatchPrompt plan={plan} />}
       {children}
     </main>
   );

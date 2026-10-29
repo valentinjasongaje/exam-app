@@ -172,6 +172,7 @@ export async function deleteTopicAction(formData: FormData) {
 export async function addVideoAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const userId = await requireUserId();
   if (!userId) return { error: "Not logged in." };
+  if ((await auth())?.user?.role !== "ADMIN") return { error: "Only the admin adds videos." };
   const subject = str(formData, "subject");
   const title = str(formData, "title");
   const url = str(formData, "url") || null;

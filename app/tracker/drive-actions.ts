@@ -8,9 +8,10 @@ import { WATCH_PLAN, planKey } from "@/lib/video-library";
 
 export type DriveActionResult = { error: string | null; message?: string };
 
+/** Drive management is admin-only (the admin's Drive is the shared video library). */
 async function requireUserId() {
   const session = await auth();
-  return session?.user?.id ?? null;
+  return session?.user?.role === "ADMIN" ? session.user.id : null;
 }
 
 function refresh() {
@@ -26,7 +27,7 @@ function fail(e: unknown): DriveActionResult {
 /** Removes one video's Drive copy (permanent delete, frees the space now). Local file and progress are untouched. */
 export async function removeFromDriveAction(videoId: string): Promise<DriveActionResult> {
   const userId = await requireUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: "Only the admin manages Drive videos." };
   const video = await prisma.studyVideo.findFirst({ where: { id: videoId, userId } });
   if (!video?.driveFileId) return { error: null };
   try {
@@ -47,7 +48,7 @@ export async function removeFromDriveAction(videoId: string): Promise<DriveActio
 /** Frees Drive space by removing every uploaded video already marked watched. */
 export async function removeWatchedFromDriveAction(): Promise<DriveActionResult> {
   const userId = await requireUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: "Only the admin manages Drive videos." };
   const videos = await prisma.studyVideo.findMany({ where: { userId, driveFileId: { not: null } } });
   const watched = videos.filter((v) => v.watchedMinutes >= v.durationMinutes);
   if (watched.length === 0) return { error: null, message: "No watched videos on Drive." };
@@ -76,7 +77,7 @@ export async function removeWatchedFromDriveAction(): Promise<DriveActionResult>
  */
 export async function syncDriveAction(): Promise<DriveActionResult> {
   const userId = await requireUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: "Only the admin manages Drive videos." };
   try {
     const { token, conn } = await accessTokenFor(userId);
     const files = conn.folderId ? await listUploads(token, conn.folderId) : [];
@@ -132,7 +133,7 @@ export async function syncDriveAction(): Promise<DriveActionResult> {
 
 export async function disconnectDriveAction(): Promise<DriveActionResult> {
   const userId = await requireUserId();
-  if (!userId) return { error: "Not logged in." };
+  if (!userId) return { error: "Only the admin manages Drive videos." };
   await revoke(userId);
   refresh();
   return { error: null };

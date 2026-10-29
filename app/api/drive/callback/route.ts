@@ -14,6 +14,7 @@ export async function GET(req: Request) {
 
   const session = await auth();
   if (!session?.user) return NextResponse.redirect(`${origin}/login`);
+  if (session.user.role !== "ADMIN") return NextResponse.redirect(`${origin}/lessons`);
   const url = new URL(req.url);
   const state = url.searchParams.get("state");
   const cookieState = req.headers

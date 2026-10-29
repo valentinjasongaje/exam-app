@@ -4,7 +4,7 @@ import { CalendarDays, ClipboardCheck, NotebookPen, PlayCircle, Sun, TrendingUp,
  * The main sections of the app, in order. `match` decides which item is
  * highlighted for a path (sub-pages count, e.g. /watch belongs to Lessons).
  */
-export type NavItem = { href: string; label: string; icon: LucideIcon; match: (path: string) => boolean; mobile?: boolean };
+export type NavItem = { href: string; label: string; icon: LucideIcon; match: (path: string) => boolean; mobile?: boolean; adminOnly?: boolean };
 
 const under = (...prefixes: string[]) => (path: string) => prefixes.some((p) => path === p || path.startsWith(`${p}/`));
 
@@ -14,7 +14,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Practice", icon: ClipboardCheck, match: under("/dashboard", "/subject", "/exam", "/attempt"), mobile: true },
   { href: "/notes", label: "Notes", icon: NotebookPen, match: under("/notes"), mobile: true },
   { href: "/stats", label: "Progress", icon: TrendingUp, match: under("/stats", "/tracker"), mobile: true },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays, match: under("/calendar") },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays, match: under("/calendar"), adminOnly: true },
 ];
 
 /** Full-screen study modes where the phone tab bar would only get in the way. */

@@ -1015,3 +1015,21 @@ Dragging the native scrub bar on a 2-hour video moves about a minute per pixel, 
   lib/video-library.ts), not the path itself. Drive caps a property at 124 bytes (key + value), and 14 of the 64 plan
   paths are longer, which failed with 403 propertyLengthLimitExceeded. "Sync with Drive" matches both planKey and
   the older planPath.
+
+## Admin vs regular users (shared video library)
+
+- **The admin's Google Drive is the shared library** (`lib/shared-videos.ts`). The first ADMIN user uploads.
+  `sharedDriveFiles()` maps localPath → the admin's driveFileId. Every account keeps its own StudyVideo rows
+  (progress, notes, questions); `ensurePlanVideos()` creates a regular user's 64 plan rows on first visit, so each
+  video has an id for /watch.
+- Playback: /lessons, /watch and Today resolve the Drive file per row (the admin's own row, otherwise the shared
+  one). `/api/drive/token` always returns the **admin's** drive.file access token, so every signed-in user's
+  service worker streams the admin's uploads. Trade-off: a signed-in user could read that short-lived token in dev
+  tools; it only covers files this app uploaded (it could delete those videos). Anyone with a Google account can
+  sign in, so consider an email allowlist if the site is shared widely.
+- Admin-only: Drive connect/callback/session/complete routes, all drive-actions (sync/remove/disconnect), adding
+  hand-made videos, the Drive panel, upload queue, the laptop "Video not opening?" setup, the G:\ folder (copy path)
+  icon, local ▶ links, the laptop log prompt, the outdated-plan card, **Calendar** (nav item `adminOnly`; the page
+  redirects others to /daily), Today's plan card, and Settings → Videos on Google Drive.
+- Regular users see each plan video as ▶ title ☁ when uploaded, and greyed out with a "SOON" tag when not yet uploaded.
+  Row order is now play icon + title + cloud (for everyone).

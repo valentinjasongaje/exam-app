@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   const session = await auth();
   const origin = requestOrigin(req.headers);
   if (!session?.user) return NextResponse.redirect(`${origin}/login`);
+  if (session.user.role !== "ADMIN") return NextResponse.redirect(`${origin}/lessons`);
   const state = randomBytes(24).toString("base64url");
   const res = NextResponse.redirect(authUrl(origin, state));
   res.cookies.set("drive_oauth_state", state, {

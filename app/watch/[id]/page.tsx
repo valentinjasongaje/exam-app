@@ -14,6 +14,7 @@ import { bucketCount, countSet, decode } from "@/lib/watch-coverage";
 import VideoQuestions from "./video-questions";
 import { toClient } from "./question-types";
 import { aiConfigured } from "@/lib/ai-explain";
+import { sharedDriveFiles } from "@/lib/shared-videos";
 
 /**
  * Plays a plan video from the user's Google Drive (Drive's own player, so it
@@ -34,13 +35,23 @@ export default async function WatchPage({
   const userId = session!.user.id;
   const video = await prisma.studyVideo.findFirst({ where: { id, userId } });
   if (!video) notFound();
+  // Admin plays their own uploads; everyone else plays the admin's (shared library).
+  const isAdmin = session!.user.role === "ADMIN";
+  const shared = await sharedDriveFiles();
+  const fileFor = (v: { localPath: string | null; driveFileId: string | null }) =>
+    (isAdmin ? v.driveFileId : null) ?? (v.localPath ? (shared.get(v.localPath) ?? null) : null);
+  const fileId = fileFor(video);
 
   const topic = video.title.replace(/^\S+ \d+ · /, "");
   const [next, note, questions, markers] = await Promise.all([
-    prisma.studyVideo.findFirst({
-      where: { userId, section: video.section, driveFileId: { not: null }, order: { gt: video.order }, id: { not: video.id } },
-      orderBy: { order: "asc" },
-    }),
+    // Next video in the same section that can be played.
+    prisma.studyVideo
+      .findMany({
+        where: { userId, section: video.section, order: { gt: video.order }, id: { not: video.id } },
+        orderBy: { order: "asc" },
+        select: { id: true, title: true, localPath: true, driveFileId: true },
+      })
+      .then((rows) => rows.find((r) => fileFor(r)) ?? null),
     prisma.studyNote.findFirst({
       where: { userId, subject: video.subject, topic: { equals: topic, mode: "insensitive" } },
       orderBy: { updatedAt: "desc" },
@@ -71,10 +82,10 @@ export default async function WatchPage({
       </div>
 
       <div className="sticky top-16 z-20 -mx-4 min-w-0 bg-black sm:mx-0 sm:rounded-xl lg:static lg:col-start-1 lg:row-start-2 lg:self-start lg:overflow-hidden">
-        {video.driveFileId ? (
+        {fileId ? (
           <WatchPlayer
             videoId={video.id}
-            fileId={video.driveFileId}
+            fileId={fileId}
             title={video.title}
             startAt={startAt}
             initialShare={Math.min(100, playedShare)}
@@ -82,7 +93,7 @@ export default async function WatchPage({
           />
         ) : (
           <div className="bg-bg-muted p-8 text-center text-sm text-ink-muted">
-            This video isn&rsquo;t on Google Drive. Upload it from the video checklist.
+            This video isn&rsquo;t available yet.
           </div>
         )}
       </div>

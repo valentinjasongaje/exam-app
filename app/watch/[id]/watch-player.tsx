@@ -259,7 +259,7 @@ export default function WatchPlayer({
         const msg: string = d?.error?.message ?? d?.error ?? "";
         why =
           r.status === 401
-            ? "Google Drive access expired. Reconnect Drive on the Video checklist."
+            ? "The video library's Google Drive access expired. The admin needs to reconnect Drive (Lessons → Videos)."
             : r.status === 403
               ? `Google Drive refused the file (403)${msg ? `: ${msg}` : ""}.`
               : r.status === 404

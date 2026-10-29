@@ -33,6 +33,8 @@ export default async function CalendarPage({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+  // The calendar is the admin's own review schedule.
+  if (session.user.role !== "ADMIN") redirect("/daily");
   const userId = session.user.id;
 
   const params = await searchParams;

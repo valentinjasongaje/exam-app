@@ -9,6 +9,7 @@ import { WATCH_PLAN } from "@/lib/video-library";
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Not logged in." }, { status: 401 });
+  if (session.user.role !== "ADMIN") return NextResponse.json({ error: "Only the admin uploads videos." }, { status: 403 });
   const userId = session.user.id;
   const { localPath, fileId } = (await req.json().catch(() => ({}))) as { localPath?: string; fileId?: string };
   const order = WATCH_PLAN.findIndex((v) => v.localPath === localPath);
