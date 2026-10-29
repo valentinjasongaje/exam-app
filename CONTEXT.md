@@ -1046,3 +1046,12 @@ Dragging the native scrub bar on a 2-hour video moves about a minute per pixel, 
 - The player's `<video>` has `controlsList="nodownload"` (no Download in the ⋮ menu) and the right-click menu is
   blocked on its wrapper. This deters casual saving only: the file ID is still visible in dev tools and the stream
   key travels to the browser (see "Admin vs regular users").
+
+## Exam import: damaged HTML
+
+Some scraped files (e.g. "RC Exam - Elec 21") have a closing tag missing its ">" that runs into the next tag:
+`</questions<table id="answer" …>`. Browsers recover from it, but cheerio/parse5 read it as one broken end tag
+and dropped the whole answer table, so every question reported `no-answer-row`. `repairHtml()` in
+lib/exam-parser.js inserts the missing ">" before parsing, and the answer lookup falls back to any
+`tr[data-id=…]` if the `table#answer` wrapper is still damaged. `tidyText()` also fixes the "tanˉ¹" (modifier
+macron → superscript minus) and "doesn`t" (backtick → ’) quirks in question, choice and answer text.
