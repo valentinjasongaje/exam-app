@@ -71,7 +71,7 @@ export default async function WatchPage({
   // element only sticks within its parent). On large screens: player and
   // controls on the left, notes on the right.
   return (
-    <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
+    <div className="grid grid-cols-1 gap-x-6 lg:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_26rem]">
       <div className="mb-3 min-w-0 lg:col-start-1 lg:row-start-1">
         <Link href="/lessons" className="text-sm text-ink-muted hover:text-ink">← Video checklist</Link>
         <p className="mt-2 text-xs font-medium tracking-wide text-accent uppercase">

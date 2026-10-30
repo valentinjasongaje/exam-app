@@ -1074,3 +1074,6 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 ## Fix: no fullscreen on iPhone Safari
 - The invisible double-tap skip zones started at `top-0`, covering the top-left corner where iOS Safari puts its inline fullscreen button. They now start at `top-12`.
 - Added a Fullscreen button beside the 10s skip buttons (`playerBridge.fullscreen`): uses `video.requestFullscreen()` where supported, else `webkitEnterFullscreen()` (iPhone only allows the `<video>` itself to go fullscreen).
+
+## Watch page wider on big monitors
+- `app/watch/layout.tsx`: from `2xl` (1536px) the page grows past `max-w-7xl` up to 1800px, capped by `calc((100dvh - 14rem)*16/9 + 29.5rem)` so the whole video stays on screen in short windows. Notes column is 26rem at 2xl (24rem at lg).
