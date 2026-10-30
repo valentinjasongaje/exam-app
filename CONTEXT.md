@@ -1066,3 +1066,7 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 - Cause: `public/drive-sw.js` passed Google's cross-origin response straight to the `<video>`. Browsers hide `Content-Range` on that response (Google doesn't expose it), and Safari refuses to play a 206 without it. Chrome is lenient, so it only broke on Safari.
 - Fix (worker v4): the worker fetches the file's `size` and `mimeType` once (`?fields=size,mimeType`), then answers every range request with its own `206` + `Content-Range`/`Content-Length`/`Content-Type`/`Accept-Ranges`, or a `416` for out-of-range requests. A 401 still triggers one token refresh.
 - The Drive iframe fallback can't work for non-admin accounts or for Safari without Google cookies; it's only a last resort.
+
+## Fix: player stuck over the page in phone landscape
+- On phones the player (and the notes tabs under it) are `sticky` so they stay visible while typing notes. In landscape the screen is shorter than the video, so the pinned player covered the screen while the page scrolled behind it.
+- Both now use `max-lg:[@media(max-height:600px)]:static`: pinned only when the screen is taller than 600px (portrait phones); short/landscape phones scroll normally. Desktop (lg) layout unchanged.
