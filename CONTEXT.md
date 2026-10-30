@@ -1083,3 +1083,6 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 - `saveAnswerAction` refuses answers after a daily attempt's deadline (+10 s grace for in-flight saves); board exams unchanged.
 - `showFeedback` on new daily attempts = `User.instantFeedback` (was always true). Off: picking only highlights the choice, it can be changed until Next (scored on Next), no explanation; results and the review link come at the end. On: unchanged (locks, shows right/wrong + explanation). Formula/solved-problem cards are self-graded flashcards, so they always reveal. Mistake review (`startMistakeReviewAction`) still always shows feedback.
 - `/daily/session` no longer redirects finished attempts to `/daily`: `finishInPlaceAction` revalidates and refreshes the page, and the redirect was hiding the results screen. Finished attempts render the results (`alreadyFinished`).
+
+## Daily session results list
+- The end screen (`daily-session.tsx` → `QuestionResults`) lists every question of the session: Correct / Wrong / Not answered badge, all choices with the right one in green and your wrong pick in red ("Your answer"), and the explanation. Toggle "All N / Mistakes N". Picks are tracked in an `answers` map seeded from `answeredChoiceId`, so the list (and the Questions score) survive a reload. "Review the questions" link removed (the list replaces it).
