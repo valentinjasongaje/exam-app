@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { clsx } from "clsx";
-import { RotateCcw, RotateCw } from "lucide-react";
+import { Maximize, RotateCcw, RotateCw } from "lucide-react";
 import { playerBridge } from "@/lib/player-bridge";
 
 const RATES = [1, 1.25, 1.5, 1.75, 2];
@@ -20,6 +20,9 @@ export function SkipButtons() {
       </button>
       <button type="button" onClick={() => playerBridge.get()?.skip(10)} className={btn} title="Forward 10 s (→ or L)">
         10s <RotateCw size={14} />
+      </button>
+      <button type="button" onClick={() => playerBridge.get()?.fullscreen()} className={btn} title="Fullscreen" aria-label="Fullscreen">
+        <Maximize size={14} />
       </button>
     </div>
   );

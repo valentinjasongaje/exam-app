@@ -1070,3 +1070,7 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 ## Fix: player stuck over the page in phone landscape
 - On phones the player (and the notes tabs under it) are `sticky` so they stay visible while typing notes. In landscape the screen is shorter than the video, so the pinned player covered the screen while the page scrolled behind it.
 - Both now use `max-lg:[@media(max-height:600px)]:static`: pinned only when the screen is taller than 600px (portrait phones); short/landscape phones scroll normally. Desktop (lg) layout unchanged.
+
+## Fix: no fullscreen on iPhone Safari
+- The invisible double-tap skip zones started at `top-0`, covering the top-left corner where iOS Safari puts its inline fullscreen button. They now start at `top-12`.
+- Added a Fullscreen button beside the 10s skip buttons (`playerBridge.fullscreen`): uses `video.requestFullscreen()` where supported, else `webkitEnterFullscreen()` (iPhone only allows the `<video>` itself to go fullscreen).

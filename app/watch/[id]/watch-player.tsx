@@ -202,6 +202,13 @@ export default function WatchPlayer({
         return new Promise<Blob | null>((res) => c.toBlob(res, "image/jpeg", 0.85));
       },
       skip: (d) => skipBy(d),
+      // iPhone Safari only allows the video element itself to go fullscreen (webkitEnterFullscreen).
+      fullscreen: () => {
+        const v = video.current as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | null;
+        if (!v) return;
+        if (document.fullscreenEnabled && v.requestFullscreen) v.requestFullscreen().catch(() => v.webkitEnterFullscreen?.());
+        else v.webkitEnterFullscreen?.();
+      },
       getRate: () => video.current?.playbackRate ?? 1,
       setRate: (r) => {
         if (video.current) video.current.playbackRate = r;
@@ -411,7 +418,7 @@ export default function WatchPlayer({
       )}
       {mode === "native" && (
         <>
-          {/* Double-tap zones; they stop above the control bar and leave the middle for the play button. */}
+          {/* Double-tap zones; they leave the top strip (Safari's fullscreen/volume buttons), the control bar and the middle (play button) free. */}
           {(["back", "fwd"] as const).map((side) => (
             <button
               key={side}
@@ -419,7 +426,7 @@ export default function WatchPlayer({
               tabIndex={-1}
               aria-hidden
               onClick={() => onZoneTap(side)}
-              className={clsx("absolute top-0 bottom-14 w-[35%] cursor-default", side === "back" ? "left-0" : "right-0")}
+              className={clsx("absolute top-12 bottom-14 w-[35%] cursor-default", side === "back" ? "left-0" : "right-0")}
             />
           ))}
           {flash && (
