@@ -10,6 +10,8 @@ import { dueMistakes } from "@/lib/mistakes";
 export const DAILY = { formulas: 6, questions: 8, problems: 2 };
 /** Rough minutes per item, for the time estimate. */
 export const MINUTES = { formula: 0.5, question: 1.2, problem: 2 };
+/** The session's real countdown, from when it starts (survives reloads). */
+export const DAILY_MINUTES = 15;
 
 function shuffle<T>(xs: T[]) {
   const a = [...xs];

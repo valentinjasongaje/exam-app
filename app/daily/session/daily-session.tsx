@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, Eye, PlayCircle, X } from "lucide-react";
+import { AlarmClock, ArrowRight, Check, Eye, PlayCircle, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import FormulaMath from "@/components/formula-math";
+import { ExamTimer } from "@/components/exam-timer";
+import { useCountdown } from "@/lib/use-countdown";
 import { formatTime } from "@/lib/timestamps";
 import { recordRecallAction } from "../../notes/actions";
 import { recordProblemAction } from "../../watch/[id]/question-actions";
@@ -40,16 +42,26 @@ const SECTION = { formula: "Formula warm-up", question: "Questions", problem: "S
 
 /**
  * One flow for the daily session: formulas (recall), multiple-choice
- * questions (answers saved to the day's attempt, instant feedback), then
- * solved problems from the videos. Each item is saved as you go.
+ * questions (answers saved to the day's attempt; right/wrong shown at once
+ * only if Settings → "Show the answer right after each question" is on),
+ * then solved problems from the videos. Each item is saved as you go.
+ * A real countdown runs from when the session started; at zero it ends.
  */
 export default function DailySession({
   attemptId,
+  alreadyFinished,
+  deadline: serverDeadline,
+  minutes,
+  showFeedback,
   formulas,
   questions,
   problems,
 }: {
   attemptId: string | null;
+  alreadyFinished: boolean;
+  deadline: string | null;
+  minutes: number;
+  showFeedback: boolean;
   formulas: Formula[];
   questions: Question[];
   problems: Problem[];
@@ -68,7 +80,11 @@ export default function DailySession({
     question: [questions.filter((q) => q.choices.find((c) => c.id === q.answeredChoiceId)?.isCorrect).length, questions.filter((q) => q.answeredChoiceId).length],
     problem: [0, 0],
   });
-  const [finished, setFinished] = useState(false);
+  const [finished, setFinished] = useState(alreadyFinished);
+  const [timeUp, setTimeUp] = useState(false);
+  // Recall-only sessions (no question attempt) start their clock on open.
+  const [deadline] = useState(() => serverDeadline ?? new Date(Date.now() + minutes * 60_000).toISOString());
+  const clock = useCountdown(deadline);
   const [, startTransition] = useTransition();
   const shownAt = useRef(0);
 
@@ -83,6 +99,10 @@ export default function DailySession({
   }
 
   function next() {
+    // Without instant feedback the pick can change until Next, so it's scored here.
+    if (step?.type === "question" && !showFeedback && picked) {
+      tally("question", !!step.item.choices.find((c) => c.id === picked)?.isCorrect);
+    }
     setRevealed(false);
     setPicked(null);
     if (i + 1 >= steps.length) finish();
@@ -105,13 +125,26 @@ export default function DailySession({
   }
 
   function answer(q: Question, choiceId: string) {
-    if (picked || !attemptId) return;
+    if (!attemptId || clock.expired) return;
+    if (showFeedback) {
+      if (picked) return; // locked once revealed
+      tally("question", !!q.choices.find((c) => c.id === choiceId)?.isCorrect);
+    } else if (picked === choiceId) return;
     setPicked(choiceId);
-    tally("question", !!q.choices.find((c) => c.id === choiceId)?.isCorrect);
     startTransition(() => saveAnswerAction(attemptId, q.id, choiceId));
   }
 
-  if (steps.length === 0 || finished || i >= steps.length) {
+  // Time's up: end the session (unanswered questions count as unanswered).
+  const over = steps.length === 0 || finished || i >= steps.length;
+  useEffect(() => {
+    if (!clock.expired || over) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reacting to the clock reaching zero
+    setTimeUp(true);
+    finish();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clock.expired, over]);
+
+  if (over) {
     const rows = [
       { label: "Formulas", s: score.formula },
       { label: "Questions", s: score.question },
@@ -119,7 +152,13 @@ export default function DailySession({
     ].filter((r) => r.s[1] > 0);
     return (
       <div className="mx-auto max-w-lg py-6 text-center">
-        <p className="text-sm text-ink-muted">{steps.length === 0 && !attemptId ? "Nothing due right now" : "Done for today"}</p>
+        {timeUp ? (
+          <p className="inline-flex items-center gap-1.5 text-sm font-medium text-danger">
+            <AlarmClock size={16} /> Time&rsquo;s up
+          </p>
+        ) : (
+          <p className="text-sm text-ink-muted">{steps.length === 0 && !attemptId ? "Nothing due right now" : "Done for today"}</p>
+        )}
         {rows.length > 0 && (
           <ul className="mt-4 grid gap-2">
             {rows.map((r) => (
@@ -147,17 +186,13 @@ export default function DailySession({
     );
   }
 
-  const leftMinutes = Math.max(
-    1,
-    Math.round(steps.slice(i).reduce((m, s) => m + (s.type === "formula" ? 0.5 : s.type === "question" ? 1.2 : 2), 0))
-  );
-
   return (
     <div className="mx-auto max-w-3xl">
+      {clock.ready && <ExamTimer label={clock.label!} expired={clock.expired} />}
       <div className="mb-2 flex items-center justify-between text-xs text-ink-muted tabular-nums">
         <span className="font-medium text-accent">{SECTION[step.type]}</span>
         <span>
-          {i + 1} of {steps.length} · ~{leftMinutes} min left
+          {i + 1} of {steps.length}
         </span>
       </div>
       <div className="mb-4 h-1.5 overflow-hidden rounded-full bg-bg-muted">
@@ -231,17 +266,19 @@ export default function DailySession({
             )}
             <div className="mt-4 flex flex-col gap-2">
               {step.item.choices.map((c) => {
-                const show = !!picked;
+                const show = !!picked && showFeedback;
                 const isPicked = picked === c.id;
                 return (
                   <button
                     key={c.id}
                     type="button"
                     disabled={show}
+                    aria-pressed={isPicked}
                     onClick={() => answer(step.item, c.id)}
                     className={clsx(
                       "flex items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
-                      !show && "border-border hover:border-accent hover:bg-bg-muted",
+                      !show && isPicked && "border-accent bg-accent-soft",
+                      !show && !isPicked && "border-border hover:border-accent hover:bg-bg-muted",
                       show && c.isCorrect && "border-success bg-success-soft",
                       show && isPicked && !c.isCorrect && "border-danger bg-danger-soft",
                       show && !c.isCorrect && !isPicked && "border-border opacity-60"
@@ -255,7 +292,7 @@ export default function DailySession({
                 );
               })}
             </div>
-            {picked && (step.item.explanation || step.item.explanationImageUrl) && (
+            {picked && showFeedback && (step.item.explanation || step.item.explanationImageUrl) && (
               <div className="mt-4 rounded-lg bg-bg-muted p-3 text-sm text-ink-muted">
                 {step.item.explanation && <p className="whitespace-pre-line">{step.item.explanation}</p>}
                 {step.item.explanationImageUrl && (

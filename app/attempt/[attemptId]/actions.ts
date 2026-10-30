@@ -15,8 +15,11 @@ async function requireOwnAttempt(attemptId: string) {
   return attempt;
 }
 
-function isTimeExpired(attempt: { mode: string; timeLimitMinutes: number | null; startedAt: Date }) {
-  if (attempt.mode !== "BOARD_EXAM" || !attempt.timeLimitMinutes) return false;
+function isTimeExpired(attempt: { mode: string; label: string | null; timeLimitMinutes: number | null; startedAt: Date }) {
+  if (!attempt.timeLimitMinutes) return false;
+  // Board exams and the daily session are timed (the daily one gets a few seconds' grace for in-flight saves).
+  if (attempt.label === "daily") return Date.now() > attempt.startedAt.getTime() + attempt.timeLimitMinutes * 60_000 + 10_000;
+  if (attempt.mode !== "BOARD_EXAM") return false;
   return Date.now() > attempt.startedAt.getTime() + attempt.timeLimitMinutes * 60_000;
 }
 

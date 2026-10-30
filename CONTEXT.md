@@ -1077,3 +1077,9 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 
 ## Watch page wider on big monitors
 - `app/watch/layout.tsx`: from `2xl` (1536px) the page grows past `max-w-7xl` up to 1800px, capped by `calc((100dvh - 14rem)*16/9 + 29.5rem)` so the whole video stays on screen in short windows. Notes column is 26rem at 2xl (24rem at lg).
+
+## Daily session: real countdown + respects the instant-feedback setting
+- New daily attempts store `timeLimitMinutes: DAILY_MINUTES` (15, `lib/daily.ts`). The session page passes `deadline = startedAt + limit` (older attempts without a limit get 15), so reloading or resuming doesn't reset the clock. The client uses `useCountdown` + `ExamTimer` (same look as board exams); at zero it finishes the attempt and shows "Time's up" with the results. Recall-only sessions (no question attempt) start a 15-min clock on open.
+- `saveAnswerAction` refuses answers after a daily attempt's deadline (+10 s grace for in-flight saves); board exams unchanged.
+- `showFeedback` on new daily attempts = `User.instantFeedback` (was always true). Off: picking only highlights the choice, it can be changed until Next (scored on Next), no explanation; results and the review link come at the end. On: unchanged (locks, shows right/wrong + explanation). Formula/solved-problem cards are self-graded flashcards, so they always reveal. Mistake review (`startMistakeReviewAction`) still always shows feedback.
+- `/daily/session` no longer redirects finished attempts to `/daily`: `finishInPlaceAction` revalidates and refreshes the page, and the redirect was hiding the results screen. Finished attempts render the results (`alreadyFinished`).

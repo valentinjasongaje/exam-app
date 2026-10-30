@@ -41,7 +41,7 @@ export default function SettingsForm({
         <span>
           Show the answer right after each question
           <span className="mt-0.5 block text-xs text-ink-muted">
-            Practice mode with one-question-at-a-time layout only — never during board exams.
+            Practice (one question at a time) and the daily session — never during board exams.
           </span>
         </span>
       </label>

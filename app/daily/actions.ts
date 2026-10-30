@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { finishAttempt } from "@/lib/attempt-finish";
-import { pickDailyQuestions, startOfToday } from "@/lib/daily";
+import { DAILY_MINUTES, pickDailyQuestions, startOfToday } from "@/lib/daily";
 import { dueMistakes } from "@/lib/mistakes";
 
 async function requireUser() {
@@ -40,6 +40,7 @@ export async function startDailyAction(formData?: FormData) {
 
   const questionIds = await pickDailyQuestions(userId);
   if (questionIds.length === 0) redirect("/daily/session");
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { instantFeedback: true } });
   const attempt = await prisma.attempt.create({
     data: {
       userId,
@@ -49,7 +50,9 @@ export async function startDailyAction(formData?: FormData) {
       layout: "ONE_AT_A_TIME",
       shuffleSeed: null,
       mode: "PRACTICE",
-      showFeedback: true,
+      // Follows Settings → "Show the answer right after each question".
+      showFeedback: user?.instantFeedback ?? false,
+      timeLimitMinutes: DAILY_MINUTES,
     },
   });
   redirect(`/daily/session?attempt=${attempt.id}`);
