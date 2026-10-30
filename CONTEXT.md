@@ -1060,3 +1060,9 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 - Cause: `app/template.tsx` wraps every page in `.animate-enter`, whose fill-mode `both` left a `transform` on the wrapper after the fade-in. A transformed ancestor becomes the containing block for `position: fixed`, so the editor overlay was centred on the whole page, not the screen.
 - Fix: `components/image-editor.tsx` now renders through `createPortal(…, document.body)` and locks background scroll while open. `.animate-enter`, `.stagger > *` and `.bar-fill` in `globals.css` use fill-mode `backwards`, so finished animations leave no transform.
 - Rule: any new full-screen overlay should portal to `document.body` (as the nav menu does).
+
+## Fix: videos not playing on iPhone Safari
+- Symptom: the built-in player failed on iOS Safari and fell back to Drive's embedded player, which asks for cookie access (Safari blocks third-party cookies) and then shows a Google 400.
+- Cause: `public/drive-sw.js` passed Google's cross-origin response straight to the `<video>`. Browsers hide `Content-Range` on that response (Google doesn't expose it), and Safari refuses to play a 206 without it. Chrome is lenient, so it only broke on Safari.
+- Fix (worker v4): the worker fetches the file's `size` and `mimeType` once (`?fields=size,mimeType`), then answers every range request with its own `206` + `Content-Range`/`Content-Length`/`Content-Type`/`Accept-Ranges`, or a `416` for out-of-range requests. A 401 still triggers one token refresh.
+- The Drive iframe fallback can't work for non-admin accounts or for Safari without Google cookies; it's only a last resort.
