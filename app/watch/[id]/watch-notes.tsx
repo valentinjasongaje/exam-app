@@ -36,7 +36,7 @@ function NotesTabs() {
     <div
       role="tablist"
       aria-label="Notes"
-      className="sticky top-[calc(4rem+var(--player-h,56.25vw)+0.5rem)] z-10 grid grid-cols-4 gap-1 rounded-xl border border-border bg-bg-muted p-1 shadow-sm sm:static sm:shadow-none lg:sticky lg:top-0"
+      className="sticky top-[calc(4rem+var(--player-h,56.25vw)+0.5rem)] z-10 grid grid-cols-4 gap-1 rounded-xl border border-border bg-bg-muted p-1 shadow-sm max-lg:[@media(max-height:600px)]:static sm:static sm:shadow-none lg:sticky lg:top-0"
     >
       {TABS.map((t, i) => {
         const on = active === t.id;

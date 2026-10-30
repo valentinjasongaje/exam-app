@@ -81,7 +81,7 @@ export default async function WatchPage({
         <p className="text-sm text-ink-muted">{formatMinutes(video.durationMinutes)}</p>
       </div>
 
-      <div className="sticky top-16 z-20 -mx-4 min-w-0 bg-black sm:mx-0 sm:rounded-xl lg:static lg:col-start-1 lg:row-start-2 lg:self-start lg:overflow-hidden">
+      <div className="sticky top-16 z-20 -mx-4 min-w-0 bg-black max-lg:[@media(max-height:600px)]:static sm:mx-0 sm:rounded-xl lg:static lg:col-start-1 lg:row-start-2 lg:self-start lg:overflow-hidden">
         {fileId ? (
           <WatchPlayer
             videoId={video.id}
