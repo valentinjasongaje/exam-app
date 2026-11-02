@@ -15,6 +15,8 @@ import VideoQuestions from "./video-questions";
 import { toClient } from "./question-types";
 import { aiConfigured } from "@/lib/ai-explain";
 import { sharedDriveFiles } from "@/lib/shared-videos";
+import { partLabel, sameLecture, videoTopic } from "@/lib/video-parts";
+import { clsx } from "clsx";
 
 /**
  * Plays a plan video from the user's Google Drive (Drive's own player, so it
@@ -42,8 +44,17 @@ export default async function WatchPage({
     (isAdmin ? v.driveFileId : null) ?? (v.localPath ? (shared.get(v.localPath) ?? null) : null);
   const fileId = fileFor(video);
 
-  const topic = video.title.replace(/^\S+ \d+ · /, "");
-  const [next, note, questions, markers] = await Promise.all([
+  // A lecture is several videos (parts, versions). Notes, formulas, questions and markers belong to the lecture.
+  const topic = videoTopic(video.title);
+  const parts = await prisma.studyVideo.findMany({
+    where: { userId, subject: video.subject, ...sameLecture(video.title) },
+    orderBy: { order: "asc" },
+    select: { id: true, title: true, order: true, localPath: true, driveFileId: true, watchedMinutes: true, durationMinutes: true },
+  });
+  const partInfo = new Map(parts.map((p, i) => [p.id, { label: partLabel(p.title), order: i }]));
+  const here = partInfo.get(video.id) ?? { label: partLabel(video.title), order: 0 };
+  const partIds = parts.length > 0 ? parts.map((p) => p.id) : [video.id];
+  const [next, note, questions, allMarkers] = await Promise.all([
     // Next video in the same section that can be played.
     prisma.studyVideo
       .findMany({
@@ -57,9 +68,17 @@ export default async function WatchPage({
       orderBy: { updatedAt: "desc" },
       include: { cards: { orderBy: { order: "asc" } } },
     }),
-    prisma.videoQuestion.findMany({ where: { userId, videoId: video.id }, orderBy: [{ seconds: "asc" }, { createdAt: "asc" }] }),
-    prisma.videoMarker.findMany({ where: { userId, videoId: video.id }, orderBy: { seconds: "asc" }, select: { id: true, seconds: true, label: true } }),
+    prisma.videoQuestion.findMany({ where: { userId, videoId: { in: partIds } }, orderBy: [{ seconds: "asc" }, { createdAt: "asc" }] }),
+    prisma.videoMarker.findMany({ where: { userId, videoId: { in: partIds } }, orderBy: { seconds: "asc" }, select: { id: true, videoId: true, seconds: true, label: true } }),
   ]);
+  const markers = allMarkers.filter((m) => m.videoId === video.id).map(({ id, seconds, label }) => ({ id, seconds, label }));
+  const otherMarkers = allMarkers
+    .filter((m) => m.videoId !== video.id)
+    .map((m) => ({ ...m, part: partInfo.get(m.videoId)?.label ?? "Other part", order: partInfo.get(m.videoId)?.order ?? 0 }))
+    .sort((a, b) => a.order - b.order || a.seconds - b.seconds);
+  const sharedQuestions = questions
+    .map((q) => ({ ...toClient(q), partLabel: partInfo.get(q.videoId)?.label ?? null, partOrder: partInfo.get(q.videoId)?.order ?? 0 }))
+    .sort((a, b) => a.partOrder - b.partOrder || (a.seconds ?? 1e9) - (b.seconds ?? 1e9));
   const done = video.watchedMinutes >= video.durationMinutes;
   const n = bucketCount(video.durationMinutes);
   const playedShare = video.watchedBuckets
@@ -113,6 +132,39 @@ export default async function WatchPage({
             </Link>
           )}
         </div>
+
+        {parts.length > 1 && (
+          <nav aria-label="Parts of this lecture" className="mt-4">
+            <p className="mb-1.5 text-xs font-medium text-ink-muted">All parts of this lecture</p>
+            <div className="flex flex-wrap gap-1.5">
+              {parts.map((p) => {
+                const current = p.id === video.id;
+                const watched = p.watchedMinutes >= p.durationMinutes;
+                const playable = !!fileFor(p);
+                return (
+                  <Link
+                    key={p.id}
+                    href={`/watch/${p.id}`}
+                    aria-current={current ? "page" : undefined}
+                    title={playable ? undefined : "Not uploaded yet"}
+                    className={clsx(
+                      "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                      current
+                        ? "border-accent bg-accent text-accent-ink"
+                        : watched
+                          ? "border-success/40 bg-success-soft/50 text-ink-muted hover:border-accent"
+                          : "border-border-strong text-ink hover:border-accent",
+                      !playable && !current && "opacity-50"
+                    )}
+                  >
+                    {partLabel(p.title) ?? p.title}
+                    {watched && !current ? " ✓" : ""}
+                  </Link>
+                );
+              })}
+            </div>
+          </nav>
+        )}
       </div>
 
       <aside className="rounded-xl border border-border bg-bg-elevated p-4 lg:sticky lg:top-20 lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto">
@@ -120,12 +172,13 @@ export default async function WatchPage({
           key={video.id}
           videoId={video.id}
           initialMarkers={markers}
+          otherMarkers={otherMarkers}
           subject={video.subject}
           topic={topic}
           note={note ? { id: note.id, body: note.body, cards: note.cards } : null}
         />
         <div className="mt-5">
-          <VideoQuestions key={`q-${video.id}`} videoId={video.id} initial={questions.map(toClient)} aiEnabled={aiConfigured()} />
+          <VideoQuestions key={`q-${video.id}`} videoId={video.id} part={here} initial={sharedQuestions} aiEnabled={aiConfigured()} />
         </div>
       </aside>
     </div>

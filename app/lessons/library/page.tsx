@@ -29,7 +29,7 @@ export default function LibraryPage() {
     {
       label: "Your watch plan",
       value: formatMinutes(planMinutes),
-      sub: `${WATCH_PLAN.length} videos · ${formatMinutes(Math.round(planMinutes / 1.5))} at 1.5x · one recording per topic`,
+      sub: `${WATCH_PLAN.length} videos · ${formatMinutes(Math.round(planMinutes / 1.5))} at 1.5x · Oct 2025, every version, in parts`,
     },
   ];
 
@@ -39,7 +39,7 @@ export default function LibraryPage() {
         icon={Library}
         eyebrow="Lessons"
         title="Video library"
-        subtitle={`Review lectures, refreshers and calculator techniques on your drive (${LIBRARY_STATS.files.toLocaleString()} videos, ${formatMinutes(LIBRARY_STATS.totalMinutes)}), measured ${LIBRARY_STATS.measuredOn}. The plan uses one recording per topic; the rest are here when you want another instructor's take.`}
+        subtitle={`Review lectures, refreshers and calculator techniques on your drive (${LIBRARY_STATS.files.toLocaleString()} videos, ${formatMinutes(LIBRARY_STATS.totalMinutes)}), measured ${LIBRARY_STATS.measuredOn}. The watch plan follows the October 2025 recordings (not listed here); the older batches below are here when you want another instructor's take.`}
       />
 
       <div className="mb-10 grid grid-cols-2 gap-3 md:grid-cols-4">

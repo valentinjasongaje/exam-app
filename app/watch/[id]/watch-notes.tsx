@@ -92,12 +92,15 @@ export default function WatchNotes({
   topic,
   note,
   initialMarkers,
+  otherMarkers = [],
 }: {
   videoId: string;
   subject: string;
   topic: string;
   note: { id: string; body: string; cards: { id: string; name: string; formula: string; hint: string | null }[] } | null;
   initialMarkers: Marker[];
+  /** Markers set on the other parts of this lecture: shown as links, since their times belong to those parts. */
+  otherMarkers?: (Marker & { videoId: string; part: string })[];
 }) {
   const [noteId, setNoteId] = useState<string | null>(note?.id ?? null);
   const [body, setBody] = useState(note?.body ?? "");
@@ -472,7 +475,7 @@ export default function WatchNotes({
         id="timeline"
         title="Timeline"
         icon={ListOrdered}
-        count={markers.length}
+        count={markers.length + otherMarkers.length}
         action={
           <button
             type="button"
@@ -540,7 +543,27 @@ export default function WatchNotes({
             )}
           </ol>
         )}
-        {markers.length === 0 && !markerDraft && legacyLines === 0 && (
+        {otherMarkers.length > 0 && (
+          <div className={markers.length > 0 ? "mt-2 border-t border-border pt-2" : undefined}>
+            <p className="mb-1 px-1.5 text-xs font-medium text-ink-muted">In other parts of this lecture</p>
+            <ol className="flex flex-col">
+              {otherMarkers.map((m) => (
+                <li key={m.id}>
+                  <Link
+                    href={`/watch/${m.videoId}?t=${m.seconds}`}
+                    className="flex min-w-0 items-baseline gap-2 rounded-md px-1.5 py-1 text-sm hover:bg-bg-muted"
+                  >
+                    <span className="shrink-0 font-mono text-xs text-accent tabular-nums">
+                      {m.part} · {formatTime(m.seconds)}
+                    </span>
+                    <span className="min-w-0 text-ink-muted">{m.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+        {markers.length === 0 && otherMarkers.length === 0 && !markerDraft && legacyLines === 0 && (
           <p className="text-xs text-ink-faint">When a new part starts, tap Mark this moment and name it. Tap a line later to jump back.</p>
         )}
       </NotesTabPanel>

@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { Cloud, Play, PlayCircle, Trash2 } from "lucide-react";
 import { clsx } from "clsx";
@@ -5,6 +6,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { TRACKER_SUBJECTS, subjectName } from "@/lib/study-plan";
 import { SECTIONS, WATCH_PLAN, type PlanSection } from "@/lib/video-library";
+import { baseTitle, partLabel } from "@/lib/video-parts";
 import { PageHeader, Card, Button } from "@/components/ui";
 import ProgressBar from "../tracker/progress-bar";
 import { AddVideoForm } from "../tracker/add-item-form";
@@ -162,8 +164,19 @@ export default async function VideosPage({
     subject === "all" ? allRows : allRows.filter((r) => r.subject === subject);
   const withRunning = rows.map((r, i) => ({
     ...r,
+    base: baseTitle(r.title),
+    label: partLabel(r.title) ?? r.title,
     running: rows.slice(0, i + 1).reduce((x, y) => x + y.minutes / 1.5, 0),
   }));
+  // A lecture is several files (parts, versions): one header row per lecture, with its totals.
+  const lectures = new Map<string, { count: number; minutes: number; done: number }>();
+  for (const r of withRunning) {
+    const g = lectures.get(r.base) ?? { count: 0, minutes: 0, done: 0 };
+    g.count++;
+    g.minutes += r.minutes;
+    if (isDone(r)) g.done++;
+    lectures.set(r.base, g);
+  }
   const shownTotal = rows.reduce((x, r) => x + r.minutes, 0);
   const shownWatched = rows.filter(isDone).reduce((x, r) => x + r.minutes, 0);
   const upNext = TRACKER_SUBJECTS.filter(
@@ -201,9 +214,20 @@ export default async function VideosPage({
         <tbody>
           {withRunning.map((r, i) => {
             const done = isDone(r);
+            const lecture = lectures.get(r.base)!;
             return (
+              <Fragment key={r.key}>
+                {(i === 0 || withRunning[i - 1].base !== r.base) && (
+                  <tr className="border-b border-border bg-bg-muted/40">
+                    <td colSpan={8} className="px-3 py-2 text-xs">
+                      <span className="font-medium text-ink">{r.base}</span>
+                      <span className="ml-2 text-ink-muted tabular-nums">
+                        {lecture.count} {lecture.count === 1 ? "video" : "videos"} · {hm(lecture.minutes)} · {lecture.done}/{lecture.count} watched
+                      </span>
+                    </td>
+                  </tr>
+                )}
               <tr
-                key={r.key}
                 className={clsx(
                   "border-b border-border last:border-0",
                   done && "bg-success-soft/40",
@@ -233,7 +257,7 @@ export default async function VideosPage({
                         size={13}
                         className="shrink-0 fill-current text-accent transition-transform group-hover:scale-110"
                       />
-                      {r.title}
+                      {r.label}
                       <Cloud
                         size={13}
                         className="shrink-0 text-ink-faint"
@@ -246,7 +270,7 @@ export default async function VideosPage({
                       title="Not uploaded yet"
                     >
                       <Play size={13} className="shrink-0" />
-                      {r.title}
+                      {r.label}
                       <span className="rounded bg-bg-muted px-1.5 text-[10px] font-medium tracking-wide uppercase">
                         soon
                       </span>
@@ -259,7 +283,7 @@ export default async function VideosPage({
                         done ? "text-ink-muted" : "text-ink",
                       )}
                     >
-                      <span className="hover:underline">{r.title}</span>
+                      <span className="hover:underline">{r.label}</span>
                     </OpenVideo>
                   )}
                   <span className="block pl-5 text-xs text-ink-faint">
@@ -313,6 +337,7 @@ export default async function VideosPage({
                   </span>
                 </td>
               </tr>
+              </Fragment>
             );
           })}
         </tbody>
@@ -361,9 +386,11 @@ export default async function VideosPage({
       {isAdmin && outOfDate.length > 0 && (
         <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 border-accent/40 bg-accent-soft/40">
           <p className="text-sm">
-            Some saved videos are from the earlier plan. Update to keep only
-            review lectures, refreshers and calculator techniques; your ticks on
-            the rest are kept.
+            The plan now follows the October 2025 recordings, split into parts.
+            Updating replaces the earlier videos: their watched progress,
+            timeline markers and questions go with them, but your notes and
+            formulas stay (they belong to the topic, not the video). Files
+            already uploaded to Drive are left there.
           </p>
           <form action={syncWatchPlanAction}>
             <Button type="submit" size="sm">
@@ -439,7 +466,7 @@ export default async function VideosPage({
       )}
 
       {/* Section summary, tap to switch */}
-      <div className="stagger mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="stagger mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {summary.map((s) => (
           <Link
             key={s.key}

@@ -10,23 +10,29 @@ import type { TrackerSubjectSlug } from "./study-plan";
  * Scope is only the Review lectures, Refreshers and Calculator techniques —
  * pre-season basics, short clips and consultations are deliberately left out.
  *
- * - `plan`: one recording per topic (Oct 2024 batch, Version 1), the videos
- *   that get imported into the Videos tab.
- * - `library`: every batch/version of those videos, grouped by folder, for
- *   the Library page ("where else is this topic explained").
+ * - `plan`: every recording in the Oct 2025 folder, one plan video per FILE:
+ *   lectures are recorded in parts (and some in several versions), so one
+ *   lecture is several plan videos that share a topic (lib/video-parts.ts).
+ *   All refreshers are one section. Regenerate with
+ *   `node scripts/build-video-plan.mjs` rather than editing the JSON.
+ * - `library`: every batch/version of the older recordings, grouped by
+ *   folder, for the Library page ("where else is this topic explained").
  */
 
+// "calculator" is kept so rows saved under the earlier plan still type-check; the Oct 2025 plan has none.
 export type PlanSection = "core" | "calculator" | "refresher";
 
 export type PlanVideo = {
   section: PlanSection;
   subject: TrackerSubjectSlug;
   topicNo: number;
-  title: string;
+  title: string; // "Math 01 · Differential Calculus 1 — Part 3" (see lib/video-parts.ts)
   file: string;
   localPath: string;
   minutes: number;
   bytes: number; // file size, used to match and verify Drive uploads
+  part?: number; // which part of the lecture this file is
+  variant?: string; // which recording of it, when there are several: "V1", "V2", "Set 1", "ECE Math"
 };
 
 export type LibraryGroup = {
@@ -53,9 +59,8 @@ export const WATCH_PLAN = data.plan as PlanVideo[];
 export const LIBRARY = data.library as LibraryGroup[];
 
 export const SECTIONS: { key: PlanSection; label: string; hint: string }[] = [
-  { key: "core", label: "Review lectures", hint: "Content pass, Oct 26 – early January. Oct 2024 review season, Version 1." },
-  { key: "calculator", label: "Calculator techniques", hint: "Canon F-789SGA lecture, then the three calculator-technique refreshers." },
-  { key: "refresher", label: "Refreshers", hint: "Phase 2 (January–February): Oct 2024 refresher season, Version 1." },
+  { key: "core", label: "Review lectures", hint: "Oct 2025 review season, in parts. Lectures with more than one recording (V1, V2, …) list every version; the notes, formulas and questions are shared across a lecture's parts." },
+  { key: "refresher", label: "Refreshers", hint: "Every refresher for all four subjects in one list, in parts, every version." },
 ];
 
 export const BATCH_ORDER = [

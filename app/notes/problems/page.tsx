@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { isTrackerSubject, subjectName, toDbDate, todayLocal } from "@/lib/study-plan";
 import { PageHeader, EmptyState } from "@/components/ui";
 import { shuffleCards } from "@/lib/shuffle-cards";
+import { baseTitle, sameLecture } from "@/lib/video-parts";
 import ProblemSession from "./problem-session";
 
 /**
@@ -28,12 +29,16 @@ export default async function ProblemsPage({
   const dueOnly = !p.video && p.all !== "1";
   const today = toDbDate(todayLocal());
 
+  // "From one video" means that video's whole lecture: its other parts' problems are included.
+  const from = p.video ? await prisma.studyVideo.findFirst({ where: { id: p.video, userId }, select: { subject: true, title: true } }) : null;
+  const lectureVideos = from ? { video: { is: { userId, subject: from.subject, ...sameLecture(from.title) } } } : p.video ? { videoId: p.video } : {};
+
   const rows = await prisma.videoQuestion.findMany({
     where: {
       userId,
       kind: "solve",
       answer: { not: null },
-      ...(p.video ? { videoId: p.video } : {}),
+      ...lectureVideos,
       ...(subject ? { subject } : {}),
       ...(dueOnly ? { OR: [{ dueDate: null }, { dueDate: { lte: today } }] } : {}),
     },
@@ -42,7 +47,9 @@ export default async function ProblemsPage({
   });
 
   const scope = p.video
-    ? rows[0]?.video.title ?? "This video"
+    ? from
+      ? baseTitle(from.title)
+      : "This video"
     : `${subject ? subjectName(subject) : "All subjects"} · ${dueOnly ? "due today" : "all problems"}`;
   const backHref = p.video ? `/watch/${p.video}` : `/notes${subject ? `?subject=${subject}` : ""}`;
 

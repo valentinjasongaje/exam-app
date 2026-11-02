@@ -13,6 +13,7 @@ import {
 } from "@/lib/study-plan";
 import { reviewDates } from "@/lib/schedule";
 import { WATCH_PLAN } from "@/lib/video-library";
+import { syncWatchPlan } from "@/lib/watch-plan-sync";
 
 export type FormState = { error: string | null; success?: boolean };
 
@@ -219,55 +220,13 @@ export async function updateVideoProgressAction(formData: FormData) {
 }
 
 /**
- * Brings the user's videos in line with the measured watch plan
- * (lib/video-library.ts): adds missing plan videos, updates the section of
- * ones already imported, and removes imported plan videos that are no longer
- * in the plan (e.g. the pre-season basics dropped on 2026-10-25). Videos the
- * user added by hand (section null) are never touched. Keyed by localPath,
- * so pressing it twice is harmless and watched progress is kept.
+ * Brings the user's videos in line with the watch plan (see
+ * lib/watch-plan-sync.ts for exactly what is added, kept, moved and removed).
  */
 export async function syncWatchPlanAction() {
   const userId = await requireUserId();
   if (!userId) return;
-  const byPath = new Map(WATCH_PLAN.map((v, i) => [v.localPath, { ...v, order: i }]));
-
-  const existing = await prisma.studyVideo.findMany({
-    where: { userId, OR: [{ section: { not: null } }, { localPath: { not: null } }] },
-    select: { id: true, localPath: true, section: true, order: true },
-  });
-  const have = new Set(existing.map((e) => e.localPath));
-
-  await prisma.$transaction([
-    prisma.studyVideo.deleteMany({
-      where: {
-        userId,
-        id: { in: existing.filter((e) => e.section && (!e.localPath || !byPath.has(e.localPath))).map((e) => e.id) },
-      },
-    }),
-    ...existing
-      .filter((e) => e.localPath && byPath.has(e.localPath))
-      .filter((e) => {
-        const p = byPath.get(e.localPath!)!;
-        return e.section !== p.section || e.order !== p.order;
-      })
-      .map((e) => {
-        const p = byPath.get(e.localPath!)!;
-        return prisma.studyVideo.update({ where: { id: e.id }, data: { section: p.section, order: p.order, title: p.title } });
-      }),
-    prisma.studyVideo.createMany({
-      data: [...byPath.values()]
-        .filter((v) => !have.has(v.localPath))
-        .map((v) => ({
-          userId,
-          subject: v.subject,
-          title: v.title,
-          section: v.section,
-          localPath: v.localPath,
-          durationMinutes: v.minutes,
-          order: v.order,
-        })),
-    }),
-  ]);
+  await syncWatchPlan(userId);
   refresh();
 }
 

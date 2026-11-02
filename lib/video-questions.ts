@@ -3,10 +3,8 @@ import type { VideoQuestion } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
 
-/** The topic part of a plan video title ("ELEX 03 · Diodes" → "Diodes"). */
-export function videoTopic(title: string) {
-  return title.replace(/^\S+ \d+ · /, "");
-}
+// The topic part of a plan video title ("ELEX 03 · Diodes — Part 2" → "Diodes"); shared by every part of a lecture.
+export { videoTopic } from "@/lib/video-parts";
 
 export const LABELS = ["A", "B", "C", "D"] as const;
 export type Label = (typeof LABELS)[number];

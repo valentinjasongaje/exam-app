@@ -682,6 +682,67 @@ that Windows laptop; elsewhere the copy-path button is the fallback.
 To re-measure after the drive changes, regenerate the JSON from a fresh
 duration scan rather than editing it by hand.
 
+### Plan replaced by the October 2025 recordings, in parts (2026-11-02)
+
+The October 2025 lectures are recorded in parts (`... Part 1.mp4` to `Part 6`),
+and some lectures in several versions. By the user's choice the plan now
+follows `G:\Excel Review Center\OCTOBER 2025` instead of Oct 2024: **454 files,
+248 h, 74.8 GB, 62 lectures**, uploaded **as parts, not joined**, every
+version included, all refreshers (all four subjects) in one `refresher`
+section; the `calculator` section no longer exists in `SECTIONS` (Oct 2025 has
+none; the type keeps the value so old rows still type-check).
+
+- **One plan video per file.** Title: `Math 01 · Differential Calculus 1 — Part 3`
+  or `Elec 01 · DC Electrical Circuits — V2 · Part 5`. Everything before the
+  em dash is the lecture. `lib/video-parts.ts` (`baseTitle`, `partLabel`,
+  `videoTopic`, `sameLecture`) is the one place that knows this; `videoTopic`
+  in `lib/video-questions.ts` re-exports it. Upload, Drive links, the shared
+  library, watched progress and "Next" are all keyed by `localPath` and needed
+  no change, and there is **no schema change**.
+- **Notes, formulas, questions and markers belong to the lecture.** Notes and
+  formula cards were already keyed by (subject, topic), so every part and
+  version of a lecture opens the same one once the title's "— …" ending is
+  ignored. The watch page also loads the questions and markers of all the
+  lecture's parts: a question/marker from another part is listed with its part
+  label and links to `/watch/<that part>?t=<seconds>` (its time belongs to that
+  part's timeline); editing a question uses *its own* part's video id
+  (`saveVideoQuestionAction` looks it up under `videoId`). New ones attach to
+  the part being watched. `/notes/problems?video=` practises the whole
+  lecture's solved problems. A "All parts of this lecture" chip strip sits under
+  the player (✓ on watched parts, dimmed when not uploaded yet).
+- **Checklist** (`/lessons`): a header row per lecture ("12 videos · 6:42 ·
+  3/12 watched") with rows labelled just "Part 1", "V2 · Part 3".
+- **Generator**: `node scripts/build-video-plan.mjs [--dry-run]` scans the
+  folder read-only (durations from each mp4's `mvhd` atom, no ffmpeg), keeps
+  `library`/`stats`, rewrites `plan`, fails on duplicate titles. Quirks it
+  handles: the lecture slot comes from the *folder* (a "Math 3" folder holds
+  files mislabelled "Math 04"); versions come from a `V1/V2/V3` folder, else
+  the file's `vN`, else GEAS 03's `Part 1`/`Part 2` folders ("Set 1/2"), else
+  Math's `ECE Math` folder; GEAS has both an `ESAS` and a `GEAS` refresher
+  series, so ESAS topics are named "ESAS Refresher N". Real part numbers are
+  kept, so **GEAS 08 V1 and Math Refresher 2 V1 are missing Part 4 in the
+  source folder** (not a bug here). Old uploads are not in `library`.
+- **Switching over** happens when the admin presses "Update plan" on /lessons
+  (`syncWatchPlanAction` → `lib/watch-plan-sync.ts`). It adds the new videos
+  (also for other accounts via `ensurePlanVideos`, which does not prune their
+  old rows; those stay invisible) and removes the old plan rows. Watched
+  progress and timeline markers on removed videos are lost (markers are times
+  in one specific recording); notes/formulas survive (topic-keyed); **solved
+  problems/questions are carried over** to the first part of the same lecture
+  (time cleared), and an old video that has questions but no matching lecture
+  is kept as a hand-added video instead of deleted. Real data at the time:
+  6 problems + 13 markers + 13 formulas, all on Math 01. Old Drive uploads
+  (63 files) are **left in Drive**: "Check Drive" ignores unknown files and
+  never deletes them; the user upgraded storage, so no clean-up was needed.
+- Verified: typecheck/lint/production build; plan integrity script (unique
+  paths and titles, every file present with its recorded size, no two lectures
+  share a (subject, topic) so notes can't merge by accident); `syncWatchPlan`
+  against a throwaway user in the real DB (13 checks, incl. idempotent second
+  run and the question carry-over; user deleted afterwards); the question and
+  timeline panels mounted with mock multi-part data. **Not exercised in a
+  browser while logged in as admin** (Google sign-in can't be driven here): the
+  /lessons grouped table and the watch page strip are checked by build only.
+
 ## Notes & formula recall (2026-10-25)
 
 `/notes` (nav: "Notes"): one note per topic (`StudyNote`: subject, topic,
@@ -773,6 +834,9 @@ lib/use-countdown.ts          Client hook: deadline ISO string -> { expired, lab
 lib/subjects.ts               Fixed 5-subject list (Math/GEAS/Elex/EST/ECT) - no free-text subjects
 lib/composed-attempt.ts       Helpers for exam-less attempts (mock board exams, weak-question drills)
 lib/concurrency.ts             mapWithConcurrency - order-preserving, capped-parallel map (used by admin import)
+lib/video-parts.ts            Title helpers for multi-part lectures (baseTitle/partLabel/videoTopic/sameLecture)
+lib/watch-plan-sync.ts        "Update plan": add/keep/move/remove videos, carries questions over
+scripts/build-video-plan.mjs  Rebuilds the plan in lib/video-library.json from the G: drive (read-only scan)
 scripts/parse-html.js         CLI: data/raw/*.html -> data/parsed/*.json
 scripts/seed.js               CLI: data/parsed/*.json -> Postgres
 scripts/verify-with-sqlite.js Historical, no longer needed

@@ -166,7 +166,18 @@ function PictureField({
  * /notes/problems) or a multiple-choice question that joins the subject's
  * "Video questions" exam once it has its answer.
  */
-export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoId: string; initial: VQ[]; aiEnabled: boolean }) {
+export default function VideoQuestions({
+  videoId,
+  part,
+  initial,
+  aiEnabled,
+}: {
+  videoId: string;
+  /** The part being watched: questions from the lecture's other parts are listed too, each linking to its own part. */
+  part: { label: string | null; order: number };
+  initial: VQ[];
+  aiEnabled: boolean;
+}) {
   const [items, setItems] = useState<VQ[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -200,10 +211,13 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
     }
   }
 
-  const upsert = (item: VQ) =>
+  // The server returns a question without its part info: keep what the list already knew, or this part for a new one.
+  const upsert = (saved: VQ) =>
     setItems((xs) => {
-      const next = xs.some((x) => x.id === item.id) ? xs.map((x) => (x.id === item.id ? item : x)) : [...xs, item];
-      return next.sort((a, b) => (a.seconds ?? 1e9) - (b.seconds ?? 1e9));
+      const prev = xs.find((x) => x.id === saved.id);
+      const item: VQ = { ...saved, partLabel: prev?.partLabel ?? part.label, partOrder: prev?.partOrder ?? part.order };
+      const next = prev ? xs.map((x) => (x.id === item.id ? item : x)) : [...xs, item];
+      return next.sort((a, b) => (a.partOrder ?? 0) - (b.partOrder ?? 0) || (a.seconds ?? 1e9) - (b.seconds ?? 1e9));
     });
 
   function save() {
@@ -212,7 +226,8 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
     startSaving(async () => {
       const fd = new FormData();
       if (d.id) fd.set("id", d.id);
-      fd.set("videoId", videoId);
+      // An existing question is looked up under the part it was asked in, not the one being watched.
+      fd.set("videoId", (d.id && items.find((x) => x.id === d.id)?.videoId) || videoId);
       fd.set("kind", d.kind);
       if (d.seconds !== null) fd.set("seconds", String(d.seconds));
       fd.set("text", d.text);
@@ -258,7 +273,7 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
   return (
     <NotesTabPanel
       id="questions"
-      title="Questions from this video"
+      title="Questions on this lecture"
       icon={HelpCircle}
       count={items.length}
       action={
@@ -282,7 +297,17 @@ export default function VideoQuestions({ videoId, initial, aiEnabled }: { videoI
             return (
               <li key={q.id} className="rounded-lg border border-border bg-bg-elevated p-2 text-sm">
                 <div className="flex items-start gap-2">
-                  {q.seconds !== null ? (
+                  {q.videoId !== videoId ? (
+                    // Asked in another part of this lecture: its time belongs to that part, so go there.
+                    <Link
+                      href={q.seconds !== null ? `/watch/${q.videoId}?t=${q.seconds}` : `/watch/${q.videoId}`}
+                      title="Open that part"
+                      className="shrink-0 rounded bg-bg-muted px-1 font-mono text-xs text-accent tabular-nums hover:underline"
+                    >
+                      {q.partLabel ?? "Other part"}
+                      {q.seconds !== null ? ` · ${formatTime(q.seconds)}` : ""}
+                    </Link>
+                  ) : q.seconds !== null ? (
                     <button
                       type="button"
                       onClick={() => playerBridge.get()?.seek(q.seconds!)}
