@@ -47,7 +47,7 @@ export default function WeekView({
             return (
               <Link
                 key={day.date}
-                href={calendarHref("week", anchor, day.date)}
+                href={calendarHref("week", anchor, day.date, true)}
                 scroll={false}
                 className={clsx(
                   "flex flex-col gap-1 border-l border-border px-1.5 pt-1 pb-2 text-xs transition-colors",
@@ -122,7 +122,7 @@ export default function WeekView({
               {day.blocks.map((b) => (
                 <Link
                   key={`${b.originalDate}-${b.key}`}
-                  href={calendarHref("week", anchor, day.date)}
+                  href={calendarHref("week", anchor, day.date, true)}
                   scroll={false}
                   title={`${b.title} · ${formatTime(b.start)}–${formatTime(b.end)}${b.skipped ? " (skipped)" : b.moved ? " (moved)" : ""}`}
                   className={clsx(

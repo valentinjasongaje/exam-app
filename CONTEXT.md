@@ -1150,3 +1150,11 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 
 ## Daily session results list
 - The end screen (`daily-session.tsx` → `QuestionResults`) lists every question of the session: Correct / Wrong / Not answered badge, all choices with the right one in green and your wrong pick in red ("Your answer"), and the explanation. Toggle "All N / Mistakes N". Picks are tracked in an `answers` map seeded from `answeredChoiceId`, so the list (and the Questions score) survive a reload. "Review the questions" link removed (the list replaces it).
+
+## Calendar: study log first, weekly subject targets instead of a fixed schedule (2026-11-03)
+Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so the calendar now records what was actually studied and the week is judged against per-subject targets.
+- `User.weeklyTargets` (JSONB, minutes per tracker subject; migration `20261103130000_weekly_targets`). Null = `DEFAULT_WEEKLY_TARGETS` = Math 6h + Elex 6h (`lib/study-balance.ts`). Edited in Settings → "Weekly study targets" (admin only, hours, 0/blank = no target; `targets-form.tsx`, `updateWeeklyTargetsAction`).
+- `weekBalance()` sums the Mon–Sun week per subject; `behindBy` = target spread evenly over the days elapsed minus studied; `mostBehind()` (≥30 min) drives the nudge. Subjects without a target still appear when studied ("no target").
+- Subject colours: `--subj-math/elex/est/geas` tokens (light + dark) → `bg-subj-*`; `subjectBg(slug)`.
+- `/calendar` defaults to **Log**: month cells show studied time + top subjects + a subject-mix bar; legend = subjects; right column = "This week" (`components/week-balance.tsx`) above the day panel, whose "Studied" list comes first with "+ Log study for this day". **Schedule** (`?plan=1`, `calendarHref(..., plan)`) keeps the old plan view (status bars, Month/Week, plan blocks, catch-up). Sessions under a minute (auto-log rounding) are hidden. Google Calendar feed card moved to the bottom (after the panels on phones).
+- Today (`/daily`): the admin's "Today's plan" card is now "This week" (same component + nudge) with today's studied total and a "log study" link to the calendar day.

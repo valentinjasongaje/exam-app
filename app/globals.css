@@ -18,6 +18,10 @@
   --danger: #a3392b;
   --danger-soft: #f5e1dc;
   --ring: rgba(168, 87, 31, 0.35);
+  --subj-math: #2f6aa3;
+  --subj-elex: #c0661d;
+  --subj-est: #2e7d5b;
+  --subj-geas: #7b58a8;
 }
 
 :root[data-theme="light"] {
@@ -43,6 +47,10 @@
   --danger: #e08a79;
   --danger-soft: #3a2019;
   --ring: rgba(224, 160, 91, 0.35);
+  --subj-math: #7eaee0;
+  --subj-elex: #e9a25c;
+  --subj-est: #7cc49c;
+  --subj-geas: #b89ae0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -64,6 +72,10 @@
     --danger: #e08a79;
     --danger-soft: #3a2019;
     --ring: rgba(224, 160, 91, 0.35);
+    --subj-math: #7eaee0;
+    --subj-elex: #e9a25c;
+    --subj-est: #7cc49c;
+    --subj-geas: #b89ae0;
   }
 }
 
@@ -84,6 +96,10 @@
   --color-success-soft: var(--success-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-subj-math: var(--subj-math);
+  --color-subj-elex: var(--subj-elex);
+  --color-subj-est: var(--subj-est);
+  --color-subj-geas: var(--subj-geas);
   --font-sans: var(--font-inter);
   --font-serif: var(--font-inter);
   --font-mono: var(--font-geist-mono);

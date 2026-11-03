@@ -1,8 +1,11 @@
-import { Cloud, Settings, SlidersHorizontal } from "lucide-react";
+import { Cloud, Settings, SlidersHorizontal, Target } from "lucide-react";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import SettingsForm from "./settings-form";
+import TargetsForm from "./targets-form";
+import { parseTargets } from "@/lib/study-balance";
+import { TRACKER_SUBJECTS } from "@/lib/study-plan";
 import DriveVideos from "./drive-videos";
 import { PageHeader, Card } from "@/components/ui";
 
@@ -33,6 +36,8 @@ export default async function SettingsPage() {
     }),
   ]);
 
+  const targets = parseTargets(user.weeklyTargets);
+
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-8 sm:py-10">
       <PageHeader icon={Settings} eyebrow="Preferences" title="Settings" />
@@ -49,6 +54,19 @@ export default async function SettingsPage() {
           initialInstantFeedback={user.instantFeedback}
         />
       </Card>
+      {isAdmin && (
+        <Card className="mb-6">
+          <h2 className="mb-1 flex items-center gap-2 font-semibold">
+            <Target size={17} className="text-accent" /> Weekly study targets
+          </h2>
+          <p className="mb-4 text-sm text-ink-muted">
+            Hours per week for each subject. Study them on any day; the calendar and Today show how each week is going. Leave a subject at 0 for no target.
+          </p>
+          <TargetsForm
+            subjects={TRACKER_SUBJECTS.map((s) => ({ slug: s.slug, name: s.name, minutes: targets[s.slug] ?? 0 }))}
+          />
+        </Card>
+      )}
       {isAdmin && (
         <Card>
           <h2 className="mb-1 flex items-center gap-2 font-semibold">

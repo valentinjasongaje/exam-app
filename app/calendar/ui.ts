@@ -25,8 +25,10 @@ export const PHASE_TINT = [
 
 export type View = "month" | "week";
 
-export function calendarHref(view: View, date: string, day?: string) {
+/** `plan` = show the old fixed schedule; the default is the study log. */
+export function calendarHref(view: View, date: string, day?: string, plan = false) {
   const p = new URLSearchParams({ view, date });
   if (day) p.set("day", day);
+  if (plan) p.set("plan", "1");
   return `/calendar?${p.toString()}`;
 }

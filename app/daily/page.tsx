@@ -2,12 +2,10 @@ import Link from "next/link";
 import { clsx } from "clsx";
 import {
   ArrowRight,
-  Briefcase,
   Calculator,
   CalendarDays,
   CheckCircle2,
   ClipboardCheck,
-  GraduationCap,
   Play,
   PlayCircle,
   RotateCcw,
@@ -25,9 +23,11 @@ import {
   subjectName,
   toDbDate,
   todayLocal,
+  weekStart,
 } from "@/lib/study-plan";
-import { blocksForDay, formatTime, plannedMinutes } from "@/lib/schedule";
-import { loadOverrides } from "@/lib/calendar-data";
+import { loadSessions } from "@/lib/calendar-data";
+import { parseTargets, weekBalance } from "@/lib/study-balance";
+import WeekBalance from "@/components/week-balance";
 import { DAILY, MINUTES, startOfToday } from "@/lib/daily";
 import { mistakeCounts } from "@/lib/mistakes";
 import { ensurePlanVideos, sharedDriveFiles } from "@/lib/shared-videos";
@@ -39,7 +39,7 @@ export const dynamic = "force-dynamic";
 
 /**
  * "Today": the home page. The daily 15-minute session, what to watch next,
- * today's plan from the calendar, and the mistake bank.
+ * this week's study per subject against its targets, and the mistake bank.
  */
 export default async function DailyPage() {
   const session = await auth();
@@ -58,8 +58,9 @@ export default async function DailyPage() {
     questionCount,
     todays,
     videos,
-    overrides,
+    weekSessions,
     logged,
+    me,
   ] = await Promise.all([
     prisma.formulaCard.count({ where: { userId, ...dueWhere } }),
     prisma.videoQuestion.count({
@@ -85,11 +86,12 @@ export default async function DailyPage() {
         localPath: true,
       },
     }),
-    loadOverrides(userId),
+    loadSessions(userId, weekStart(ymd), ymd),
     prisma.studySession.aggregate({
       where: { userId, date: today },
       _sum: { minutes: true },
     }),
+    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { weeklyTargets: true } }),
   ]);
 
   const f = Math.min(formulasDue, DAILY.formulas);
@@ -119,9 +121,9 @@ export default async function DailyPage() {
     unwatched.find((v) => v.watchedMinutes > 0) ?? unwatched[0] ?? null;
   const watchedCount = videos.length - unwatched.length;
 
-  const blocks = blocksForDay(ymd, overrides).filter((b) => !b.skipped);
-  const planned = plannedMinutes(blocks);
   const loggedMin = logged._sum.minutes ?? 0;
+  const balance = weekBalance(weekSessions, weekStart(ymd), ymd, parseTargets(me.weeklyTargets));
+  const pace = (daysBetween(weekStart(ymd), ymd) + 1) / 7;
   const daysLeft = daysBetween(ymd, EXAM_DATE);
   const dateLabel = formatDay(ymd, {
     weekday: "long",
@@ -325,83 +327,25 @@ export default async function DailyPage() {
           </Card>
         </div>
 
-        {/* Today's plan (the admin's own schedule) */}
+        {/* This week: study per subject vs. weekly targets (the admin's own log) */}
         {isAdmin && (
           <aside className="animate-enter flex flex-col gap-4">
             <Card>
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="flex items-center gap-2 font-semibold">
-                  <CalendarDays size={18} className="text-accent" />{" "}
-                  Today&rsquo;s plan
+                  <CalendarDays size={18} className="text-accent" /> This week
                 </h2>
-                <Link
-                  href="/calendar"
-                  className="text-xs text-accent hover:underline"
-                >
+                <Link href="/calendar" className="text-xs text-accent hover:underline">
                   Calendar
                 </Link>
               </div>
-              {planned > 0 && (
-                <div className="mb-3">
-                  <div className="mb-1 flex justify-between text-xs text-ink-muted">
-                    <span>Studied {formatMinutes(loggedMin)}</span>
-                    <span>Plan {formatMinutes(planned)}</span>
-                  </div>
-                  <ProgressBar
-                    value={loggedMin}
-                    max={planned}
-                    tone={loggedMin >= planned ? "success" : "accent"}
-                    className="h-1.5"
-                  />
-                </div>
-              )}
-              {blocks.length === 0 ? (
-                <p className="text-sm text-ink-muted">Nothing planned today.</p>
-              ) : (
-                <ol className="flex flex-col gap-1">
-                  {blocks.map((b) => {
-                    const Icon =
-                      b.kind === "work"
-                        ? Briefcase
-                        : b.kind === "class"
-                          ? GraduationCap
-                          : Timer;
-                    return (
-                      <li
-                        key={b.key + b.date}
-                        className={clsx(
-                          "flex items-start gap-2.5 rounded-lg px-2 py-1.5 text-sm",
-                          b.kind === "review"
-                            ? "bg-accent-soft/50"
-                            : "text-ink-muted",
-                        )}
-                      >
-                        <Icon
-                          size={15}
-                          className={clsx(
-                            "mt-0.5 shrink-0",
-                            b.kind === "review" && "text-accent",
-                          )}
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className={clsx(
-                              "block",
-                              b.kind === "review" && "font-medium text-ink",
-                            )}
-                          >
-                            {b.title}
-                          </span>
-                          <span className="text-xs text-ink-faint">
-                            {formatTime(b.start)}–{formatTime(b.end)}
-                            {b.moved && " · moved"}
-                          </span>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
+              <WeekBalance rows={balance} pace={pace} />
+              <p className="mt-3 border-t border-border pt-3 text-xs text-ink-muted">
+                Today: <span className="font-medium text-ink">{formatMinutes(loggedMin)}</span> studied ·{" "}
+                <Link href={`/calendar?view=month&date=${ymd}&day=${ymd}`} className="text-accent hover:underline">
+                  log study
+                </Link>
+              </p>
             </Card>
           </aside>
         )}

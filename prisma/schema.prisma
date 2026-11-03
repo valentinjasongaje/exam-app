@@ -98,6 +98,7 @@ model User {
   preferredLayout AttemptLayout @default(ONE_AT_A_TIME)
   shuffleEnabled  Boolean       @default(true)
   instantFeedback Boolean       @default(false) // practice + one-at-a-time only: reveal answer/explanation right after answering
+  weeklyTargets   Json? // minutes per tracker subject per week, e.g. {"math":360,"elex":360}; null = defaults (lib/study-balance.ts)
   calendarToken   String?       @unique // secret for the read-only ICS feed at /api/calendar/<token>; null = feed off
   createdAt       DateTime      @default(now())
 
