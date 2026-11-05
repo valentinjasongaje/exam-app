@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, useTransition } from "react";
 import Link from "next/link";
-import { HelpCircle, Camera, Check, Clock, ImagePlus, ListChecks, Loader2, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
+import { HelpCircle, Camera, Check, Clock, Crop, ImagePlus, ListChecks, Loader2, Pencil, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import FormulaMath, { FormulaPreview } from "@/components/formula-math";
@@ -11,6 +11,7 @@ import NotesTabPanel from "@/components/notes-tab-panel";
 import { playerBridge } from "@/lib/player-bridge";
 import { formatTime } from "@/lib/timestamps";
 import { shrinkImage } from "@/lib/shrink-image";
+import { ImageCropper } from "@/components/image-cropper";
 import {
   deleteVideoQuestionAction,
   makeMultipleChoiceAction,
@@ -77,7 +78,7 @@ const fromItem = (q: VQ): Draft => ({
 
 const hasAllChoices = (q: { choices: Record<Label, string> }) => LABELS.every((l) => q.choices[l].trim());
 
-/** Picture field: capture the current video frame or pick a photo; shows a preview. */
+/** Picture field: capture the current video frame or pick a photo, crop it, and see a preview. */
 function PictureField({
   label,
   captureLabel,
@@ -104,9 +105,17 @@ function PictureField({
   }, [pic.blob]);
   const shown = pic.removed ? null : pic.blob ? preview : pic.url;
 
+  // The picture being cropped (an object URL we made, or the current preview/saved URL).
+  const [crop, setCrop] = useState<{ src: string; own: boolean } | null>(null);
+  const openCrop = (blob: Blob) => setCrop({ src: URL.createObjectURL(blob), own: true });
+  const closeCrop = () => {
+    if (crop?.own) URL.revokeObjectURL(crop.src);
+    setCrop(null);
+  };
+
   async function capture() {
     const blob = await playerBridge.get()?.captureFrame();
-    if (blob) onChange({ ...pic, blob, removed: false });
+    if (blob) openCrop(blob);
     else onError("Couldn't grab the frame. Let the video play for a moment first.");
   }
 
@@ -138,7 +147,7 @@ function PictureField({
           onChange={async (e) => {
             const f = e.target.files?.[0];
             e.target.value = "";
-            if (f) onChange({ ...pic, blob: await shrinkImage(f), removed: false });
+            if (f) openCrop(await shrinkImage(f));
           }}
         />
       </div>
@@ -148,6 +157,15 @@ function PictureField({
           <img src={shown} alt={label} className="max-h-40 rounded-md border border-border" />
           <button
             type="button"
+            onClick={() => setCrop({ src: shown, own: false })}
+            aria-label={`Crop ${label.toLowerCase()}`}
+            title="Crop"
+            className="absolute top-1 right-7 rounded-full bg-black/60 p-0.5 text-white"
+          >
+            <Crop size={12} />
+          </button>
+          <button
+            type="button"
             onClick={() => onChange({ url: pic.url, blob: null, removed: true })}
             aria-label={`Remove ${label.toLowerCase()}`}
             className="absolute top-1 right-1 rounded-full bg-black/60 p-0.5 text-white"
@@ -155,6 +173,16 @@ function PictureField({
             <X size={12} />
           </button>
         </div>
+      )}
+      {crop && (
+        <ImageCropper
+          src={crop.src}
+          onClose={closeCrop}
+          onDone={(blob) => {
+            onChange({ ...pic, blob, removed: false });
+            closeCrop();
+          }}
+        />
       )}
     </div>
   );

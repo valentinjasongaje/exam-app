@@ -1158,3 +1158,7 @@ Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so t
 - Subject colours: `--subj-math/elex/est/geas` tokens (light + dark) → `bg-subj-*`; `subjectBg(slug)`.
 - `/calendar` defaults to **Log**: month cells show studied time + top subjects + a subject-mix bar; legend = subjects; right column = "This week" (`components/week-balance.tsx`) above the day panel, whose "Studied" list comes first with "+ Log study for this day". **Schedule** (`?plan=1`, `calendarHref(..., plan)`) keeps the old plan view (status bars, Month/Week, plan blocks, catch-up). Sessions under a minute (auto-log rounding) are hidden. Google Calendar feed card moved to the bottom (after the panels on phones).
 - Today (`/daily`): the admin's "Today's plan" card is now "This week" (same component + nudge) with today's studied total and a "log study" link to the calendar day.
+
+## Crop pictures in the video question form
+- `components/image-cropper.tsx`: modal (portalled to body, scroll lock, Esc) that starts with the whole image selected; drag to draw a box, drag a corner to resize, drag inside to move (pointer events, `touch-none`, corner hit areas enlarged). "Use this part" draws the box at natural resolution to a JPEG (0.9) blob.
+- `PictureField` in `app/watch/[id]/video-questions.tsx` opens it after **Capture frame** and after picking a **Photo**; a crop button on the preview re-crops the current picture (saved Blob URLs load with `crossOrigin="anonymous"`). Cancel keeps the previous picture.
