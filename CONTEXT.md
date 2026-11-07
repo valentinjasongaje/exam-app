@@ -1170,3 +1170,7 @@ Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so t
 ## ESAS refreshers removed from the watch plan
 - The 24 "ESAS 01–04 Refresher" parts (GEAS's older series) were dropped from `plan` in `lib/video-library.json` (454 → 430 videos; refreshers 166 → 142), and `scripts/build-video-plan.mjs` now skips refresher files coded ESAS so a rebuild keeps them out. Core GEAS lectures whose files are named "ESAS …" are unaffected.
 - Lessons lists from the plan, so they vanish at once. Existing `StudyVideo` rows stay until the admin presses **Update plan** (the out-of-date notice now counts them and no longer talks only about the Oct 2025 switch). Today's "Continue watching" and its watched count only consider videos still in the plan.
+## Calendar for every member (merged to master)
+- Calendar is in everyone's nav (`lib/nav-items.ts`, no `adminOnly`); `/calendar` no longer redirects members.
+- Members see their own study log, "This week" balance, day panel (Studied + Log study, topic reviews, their own events). Hidden for members: the Log/Schedule toggle (`showPlan` is admin-only, `?plan=1` ignored), the admin's review phases (phase tint, "Now: Content pass" subtitle, phase-start milestones; the exam date stays), and the Google Calendar feed card (the feed carries the admin's plan).
+- Weekly targets: Settings card and the Today "This week" card are shown to everyone. `parseTargets(json, fallback)`: the admin falls back to Math/Elex 6h; members start with no targets (their studied subjects show as "no target" until they set some).

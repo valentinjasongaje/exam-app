@@ -135,7 +135,7 @@ export default async function DailyPage() {
     weekSessions,
     weekStart(ymd),
     ymd,
-    parseTargets(me.weeklyTargets),
+    parseTargets(me.weeklyTargets, isAdmin ? undefined : {}),
   );
   const pace = (daysBetween(weekStart(ymd), ymd) + 1) / 7;
   const daysLeft = daysBetween(ymd, EXAM_DATE);
@@ -158,12 +158,7 @@ export default async function DailyPage() {
         }
       />
 
-      <div
-        className={clsx(
-          "grid gap-4",
-          isAdmin && "lg:grid-cols-[minmax(0,1fr)_20rem]",
-        )}
-      >
+      <div className={clsx("grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]")}>
         <div className="stagger flex min-w-0 flex-col gap-4">
           {/* Daily session */}
           <Card className="border-accent/40 bg-accent-soft/40">
@@ -341,8 +336,8 @@ export default async function DailyPage() {
           </Card>
         </div>
 
-        {/* This week: study per subject vs. weekly targets (the admin's own log) */}
-        {isAdmin && (
+        {/* This week: study per subject vs. weekly targets (everyone's own log) */}
+        {
           <aside className="animate-enter flex flex-col gap-4">
             <Card>
               <div className="mb-3 flex items-center justify-between gap-2">
@@ -372,7 +367,7 @@ export default async function DailyPage() {
               </p>
             </Card>
           </aside>
-        )}
+        }
       </div>
     </main>
   );
