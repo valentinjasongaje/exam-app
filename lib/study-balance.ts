@@ -6,7 +6,7 @@ import { TRACKER_SUBJECTS, daysBetween, isTrackerSubject, type TrackerSubjectSlu
  * whatever day it was studied on.
  */
 
-/** Starting targets (Math and Elex 6 h/week); editable in Settings. */
+/** The admin's starting targets (Math and Elex 6 h/week); editable in Settings. Members start with none. */
 export const DEFAULT_WEEKLY_TARGETS: Partial<Record<TrackerSubjectSlug, number>> = { math: 360, elex: 360 };
 
 /** Tailwind background class per subject (tokens in globals.css). */
@@ -18,9 +18,12 @@ export const SUBJECT_BG: Record<string, string> = {
 };
 export const subjectBg = (slug: string) => SUBJECT_BG[slug] ?? "bg-ink-faint";
 
-/** Stored JSON → targets; anything invalid falls back to the defaults. */
-export function parseTargets(json: unknown): Partial<Record<TrackerSubjectSlug, number>> {
-  if (!json || typeof json !== "object" || Array.isArray(json)) return { ...DEFAULT_WEEKLY_TARGETS };
+/** Stored JSON → targets; nothing saved yet (or invalid) falls back to `fallback`. */
+export function parseTargets(
+  json: unknown,
+  fallback: Partial<Record<TrackerSubjectSlug, number>> = DEFAULT_WEEKLY_TARGETS
+): Partial<Record<TrackerSubjectSlug, number>> {
+  if (!json || typeof json !== "object" || Array.isArray(json)) return { ...fallback };
   const out: Partial<Record<TrackerSubjectSlug, number>> = {};
   for (const [k, v] of Object.entries(json as Record<string, unknown>)) {
     if (isTrackerSubject(k) && typeof v === "number" && Number.isFinite(v) && v > 0) out[k] = Math.round(v);

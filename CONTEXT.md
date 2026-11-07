@@ -1166,3 +1166,8 @@ Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so t
 ## Read a saved video question in full (notes panel → Questions)
 - Hovering a question row (mouse only, 250 ms delay) opens `HoverPreview`: a card portalled to body with fixed positioning (so the scrolling notes panel can't clip it), below the row or above when there's no room; it stays open while the pointer is on it and closes on scroll or click. It shows `QuestionDetails`: full text, picture, the four choices with the correct one in green (or "No answer picked yet"), the solved answer for problems, explanation and solution picture.
 - Tapping/clicking the question text expands the same details inline (phones have no hover); the hover card is skipped while a row is expanded.
+
+## Calendar for every member (branch `members-calendar`, not pushed yet)
+- Calendar is in everyone's nav (`lib/nav-items.ts`, no `adminOnly`); `/calendar` no longer redirects members.
+- Members see their own study log, "This week" balance, day panel (Studied + Log study, topic reviews, their own events). Hidden for members: the Log/Schedule toggle (`showPlan` is admin-only, `?plan=1` ignored), the admin's review phases (phase tint, "Now: Content pass" subtitle, phase-start milestones; the exam date stays), and the Google Calendar feed card (the feed carries the admin's plan).
+- Weekly targets: Settings card and the Today "This week" card are shown to everyone. `parseTargets(json, fallback)`: the admin falls back to Math/Elex 6h; members start with no targets (their studied subjects show as "no target" until they set some).

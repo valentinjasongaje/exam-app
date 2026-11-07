@@ -14,7 +14,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Practice", icon: ClipboardCheck, match: under("/dashboard", "/subject", "/exam", "/attempt"), mobile: true },
   { href: "/notes", label: "Notes", icon: NotebookPen, match: under("/notes"), mobile: true },
   { href: "/stats", label: "Progress", icon: TrendingUp, match: under("/stats", "/tracker"), mobile: true },
-  { href: "/calendar", label: "Calendar", icon: CalendarDays, match: under("/calendar"), adminOnly: true },
+  { href: "/calendar", label: "Calendar", icon: CalendarDays, match: under("/calendar") },
 ];
 
 /** Full-screen study modes where the phone tab bar would only get in the way. */

@@ -91,7 +91,10 @@ export default async function DailyPage() {
       where: { userId, date: today },
       _sum: { minutes: true },
     }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { weeklyTargets: true } }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { weeklyTargets: true },
+    }),
   ]);
 
   const f = Math.min(formulasDue, DAILY.formulas);
@@ -122,7 +125,12 @@ export default async function DailyPage() {
   const watchedCount = videos.length - unwatched.length;
 
   const loggedMin = logged._sum.minutes ?? 0;
-  const balance = weekBalance(weekSessions, weekStart(ymd), ymd, parseTargets(me.weeklyTargets));
+  const balance = weekBalance(
+    weekSessions,
+    weekStart(ymd),
+    ymd,
+    parseTargets(me.weeklyTargets, isAdmin ? undefined : {}),
+  );
   const pace = (daysBetween(weekStart(ymd), ymd) + 1) / 7;
   const daysLeft = daysBetween(ymd, EXAM_DATE);
   const dateLabel = formatDay(ymd, {
@@ -144,12 +152,7 @@ export default async function DailyPage() {
         }
       />
 
-      <div
-        className={clsx(
-          "grid gap-4",
-          isAdmin && "lg:grid-cols-[minmax(0,1fr)_20rem]",
-        )}
-      >
+      <div className={clsx("grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]")}>
         <div className="stagger flex min-w-0 flex-col gap-4">
           {/* Daily session */}
           <Card className="border-accent/40 bg-accent-soft/40">
@@ -327,28 +330,38 @@ export default async function DailyPage() {
           </Card>
         </div>
 
-        {/* This week: study per subject vs. weekly targets (the admin's own log) */}
-        {isAdmin && (
+        {/* This week: study per subject vs. weekly targets (everyone's own log) */}
+        {
           <aside className="animate-enter flex flex-col gap-4">
             <Card>
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="flex items-center gap-2 font-semibold">
                   <CalendarDays size={18} className="text-accent" /> This week
                 </h2>
-                <Link href="/calendar" className="text-xs text-accent hover:underline">
+                <Link
+                  href="/calendar"
+                  className="text-xs text-accent hover:underline"
+                >
                   Calendar
                 </Link>
               </div>
               <WeekBalance rows={balance} pace={pace} />
               <p className="mt-3 border-t border-border pt-3 text-xs text-ink-muted">
-                Today: <span className="font-medium text-ink">{formatMinutes(loggedMin)}</span> studied ·{" "}
-                <Link href={`/calendar?view=month&date=${ymd}&day=${ymd}`} className="text-accent hover:underline">
+                Today:{" "}
+                <span className="font-medium text-ink">
+                  {formatMinutes(loggedMin)}
+                </span>{" "}
+                studied ·{" "}
+                <Link
+                  href={`/calendar?view=month&date=${ymd}&day=${ymd}`}
+                  className="text-accent hover:underline"
+                >
                   log study
                 </Link>
               </p>
             </Card>
           </aside>
-        )}
+        }
       </div>
     </main>
   );

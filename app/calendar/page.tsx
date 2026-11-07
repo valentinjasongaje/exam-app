@@ -27,7 +27,7 @@ import { PageHeader, Card } from "@/components/ui";
 import WeekBalance from "@/components/week-balance";
 import { parseTargets, subjectBg, weekBalance } from "@/lib/study-balance";
 import { TRACKER_SUBJECTS } from "@/lib/study-plan";
-import { buildDays } from "./build-days";
+import { buildDays, type CalendarDay } from "./build-days";
 import MonthView from "./month-view";
 import WeekView from "./week-view";
 import DayPanel from "./day-panel";
@@ -46,14 +46,15 @@ export default async function CalendarPage({
 }) {
   const session = await auth();
   if (!session?.user) redirect("/login");
-  // The calendar is the admin's own review schedule.
-  if (session.user.role !== "ADMIN") redirect("/daily");
+  // Everyone gets their own study log and weekly targets; the fixed
+  // schedule (plan blocks, phases, catch-up, Google Calendar feed) is the admin's own.
+  const isAdmin = session.user.role === "ADMIN";
   const userId = session.user.id;
 
   const params = await searchParams;
   const today = todayLocal();
   // Default: the study log (what you actually studied). `?plan=1` shows the old fixed schedule.
-  const showPlan = params.plan === "1";
+  const showPlan = isAdmin && params.plan === "1";
   const view: View = showPlan && params.view === "week" ? "week" : "month";
   const anchor = isValidYmd(params.date) ? params.date : today;
   const selected = isValidYmd(params.day) ? params.day : anchor;
@@ -111,10 +112,19 @@ export default async function CalendarPage({
     ]);
 
   const data = { overrides, sessions, events, reminders };
-  const days = buildDays(from, to, today, data);
+  // Members don't see the admin's review phases; only the exam date stays.
+  const forViewer = (d: CalendarDay): CalendarDay =>
+    isAdmin
+      ? d
+      : {
+          ...d,
+          phase: -1,
+          milestones: d.milestones.filter((m) => m.date === EXAM_DATE),
+        };
+  const days = buildDays(from, to, today, data).map(forViewer);
   const selectedDay =
     days.find((d) => d.date === selected) ??
-    buildDays(selected, selected, today, data)[0];
+    forViewer(buildDays(selected, selected, today, data)[0]);
 
   // Catch-up shows from today through Sunday of the current week.
   const showCatchUp =
@@ -149,7 +159,7 @@ export default async function CalendarPage({
     sessions,
     selWeek,
     today,
-    parseTargets(user.weeklyTargets),
+    parseTargets(user.weeklyTargets, isAdmin ? undefined : {}),
   );
   const isThisWeek = selWeek === weekStart(today);
   const pace = isThisWeek ? (daysBetween(selWeek, today) + 1) / 7 : undefined;
@@ -168,27 +178,29 @@ export default async function CalendarPage({
         title={title}
         subtitle={
           daysLeft >= 0
-            ? `${phase ? `${phase.upcoming ? "Up next" : "Now"}: ${phase.name} · ` : ""}${daysLeft} days to the exam`
+            ? `${isAdmin && phase ? `${phase.upcoming ? "Up next" : "Now"}: ${phase.name} · ` : ""}${daysLeft} days to the exam`
             : undefined
         }
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-lg border border-border-strong p-0.5 text-sm">
-              {([false, true] as const).map((p) => (
-                <Link
-                  key={String(p)}
-                  href={calendarHref("month", anchor, selected, p)}
-                  className={clsx(
-                    "rounded-md px-3 py-1 transition-colors",
-                    showPlan === p
-                      ? "bg-accent text-accent-ink"
-                      : "text-ink-muted hover:text-ink",
-                  )}
-                >
-                  {p ? "Schedule" : "Log"}
-                </Link>
-              ))}
-            </div>
+            {isAdmin && (
+              <div className="flex rounded-lg border border-border-strong p-0.5 text-sm">
+                {([false, true] as const).map((p) => (
+                  <Link
+                    key={String(p)}
+                    href={calendarHref("month", anchor, selected, p)}
+                    className={clsx(
+                      "rounded-md px-3 py-1 transition-colors",
+                      showPlan === p
+                        ? "bg-accent text-accent-ink"
+                        : "text-ink-muted hover:text-ink",
+                    )}
+                  >
+                    {p ? "Schedule" : "Log"}
+                  </Link>
+                ))}
+              </div>
+            )}
             {showPlan && (
               <div className="flex rounded-lg border border-border-strong p-0.5 text-sm">
                 {(["month", "week"] as const).map((v) => (
@@ -306,7 +318,6 @@ export default async function CalendarPage({
                 </span>
               ))}
           </div>
-
         </div>
 
         <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:row-span-2 lg:self-start">
@@ -337,13 +348,15 @@ export default async function CalendarPage({
           />
         </div>
 
-        {/* Below the week and day panels on phones */}
-        <Card className="min-w-0 lg:col-start-1">
-          <h2 className="mb-3 text-sm font-medium text-ink-muted">
-            Show in Google Calendar
-          </h2>
-          <FeedCard feedUrl={feedUrl} />
-        </Card>
+        {/* Below the week and day panels on phones. The feed carries the admin's plan. */}
+        {isAdmin && (
+          <Card className="min-w-0 lg:col-start-1">
+            <h2 className="mb-3 text-sm font-medium text-ink-muted">
+              Show in Google Calendar
+            </h2>
+            <FeedCard feedUrl={feedUrl} />
+          </Card>
+        )}
       </div>
     </main>
   );
