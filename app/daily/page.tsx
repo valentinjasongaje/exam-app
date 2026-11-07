@@ -29,6 +29,7 @@ import { loadSessions } from "@/lib/calendar-data";
 import { parseTargets, weekBalance } from "@/lib/study-balance";
 import WeekBalance from "@/components/week-balance";
 import { DAILY, MINUTES, startOfToday } from "@/lib/daily";
+import { WATCH_PLAN } from "@/lib/video-library";
 import { mistakeCounts } from "@/lib/mistakes";
 import { ensurePlanVideos, sharedDriveFiles } from "@/lib/shared-videos";
 import { Card, PageHeader } from "@/components/ui";
@@ -91,7 +92,10 @@ export default async function DailyPage() {
       where: { userId, date: today },
       _sum: { minutes: true },
     }),
-    prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { weeklyTargets: true } }),
+    prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { weeklyTargets: true },
+    }),
   ]);
 
   const f = Math.min(formulasDue, DAILY.formulas);
@@ -114,15 +118,25 @@ export default async function DailyPage() {
         ? shared.get(v.localPath)
         : undefined
       : v.driveFileId;
-  const unwatched = videos.filter(
+  // Only videos still in the plan (rows left from removed videos, e.g. the ESAS refreshers, are skipped).
+  const inPlan = new Set(WATCH_PLAN.map((p) => p.localPath));
+  const planVids = videos.filter(
+    (v) => !v.localPath || inPlan.has(v.localPath),
+  );
+  const unwatched = planVids.filter(
     (v) => v.watchedMinutes < v.durationMinutes && (isAdmin || playable(v)),
   );
   const next =
     unwatched.find((v) => v.watchedMinutes > 0) ?? unwatched[0] ?? null;
-  const watchedCount = videos.length - unwatched.length;
+  const watchedCount = planVids.length - unwatched.length;
 
   const loggedMin = logged._sum.minutes ?? 0;
-  const balance = weekBalance(weekSessions, weekStart(ymd), ymd, parseTargets(me.weeklyTargets));
+  const balance = weekBalance(
+    weekSessions,
+    weekStart(ymd),
+    ymd,
+    parseTargets(me.weeklyTargets),
+  );
   const pace = (daysBetween(weekStart(ymd), ymd) + 1) / 7;
   const daysLeft = daysBetween(ymd, EXAM_DATE);
   const dateLabel = formatDay(ymd, {
@@ -258,7 +272,7 @@ export default async function DailyPage() {
                   href="/lessons"
                   className="text-xs text-ink-muted hover:text-ink"
                 >
-                  {watchedCount}/{videos.length} watched
+                  {watchedCount}/{planVids.length} watched
                 </Link>
               </div>
               <Link
@@ -335,14 +349,24 @@ export default async function DailyPage() {
                 <h2 className="flex items-center gap-2 font-semibold">
                   <CalendarDays size={18} className="text-accent" /> This week
                 </h2>
-                <Link href="/calendar" className="text-xs text-accent hover:underline">
+                <Link
+                  href="/calendar"
+                  className="text-xs text-accent hover:underline"
+                >
                   Calendar
                 </Link>
               </div>
               <WeekBalance rows={balance} pace={pace} />
               <p className="mt-3 border-t border-border pt-3 text-xs text-ink-muted">
-                Today: <span className="font-medium text-ink">{formatMinutes(loggedMin)}</span> studied ·{" "}
-                <Link href={`/calendar?view=month&date=${ymd}&day=${ymd}`} className="text-accent hover:underline">
+                Today:{" "}
+                <span className="font-medium text-ink">
+                  {formatMinutes(loggedMin)}
+                </span>{" "}
+                studied ·{" "}
+                <Link
+                  href={`/calendar?view=month&date=${ymd}&day=${ymd}`}
+                  className="text-accent hover:underline"
+                >
                   log study
                 </Link>
               </p>

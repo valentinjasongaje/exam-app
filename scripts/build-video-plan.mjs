@@ -101,6 +101,8 @@ for (const file of walk(ROOT)) {
     // Slot comes from the file name ("ESAS 01 - Refresher 1"): GEAS has both an ESAS and a GEAS series
     // with overlapping numbers, so a series that isn't the subject's own code keeps its code in the topic.
     code = normCode(m.groups.code);
+    // The older ESAS refresher series (GEAS's former name) is left out of the plan.
+    if (code === "ESAS") continue;
     topicNo = Number(m.groups.no);
     topic = code === DEFAULT_CODE[subject] ? `Refresher ${topicNo}` : `${code} Refresher ${topicNo}`;
   } else {

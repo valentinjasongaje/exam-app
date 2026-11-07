@@ -169,7 +169,10 @@ export default async function VideosPage({
     running: rows.slice(0, i + 1).reduce((x, y) => x + y.minutes / 1.5, 0),
   }));
   // A lecture is several files (parts, versions): one header row per lecture, with its totals.
-  const lectures = new Map<string, { count: number; minutes: number; done: number }>();
+  const lectures = new Map<
+    string,
+    { count: number; minutes: number; done: number }
+  >();
   for (const r of withRunning) {
     const g = lectures.get(r.base) ?? { count: 0, minutes: 0, done: 0 };
     g.count++;
@@ -222,121 +225,124 @@ export default async function VideosPage({
                     <td colSpan={8} className="px-3 py-2 text-xs">
                       <span className="font-medium text-ink">{r.base}</span>
                       <span className="ml-2 text-ink-muted tabular-nums">
-                        {lecture.count} {lecture.count === 1 ? "video" : "videos"} · {hm(lecture.minutes)} · {lecture.done}/{lecture.count} watched
+                        {lecture.count}{" "}
+                        {lecture.count === 1 ? "video" : "videos"} ·{" "}
+                        {hm(lecture.minutes)} · {lecture.done}/{lecture.count}{" "}
+                        watched
                       </span>
                     </td>
                   </tr>
                 )}
-              <tr
-                className={clsx(
-                  "border-b border-border last:border-0",
-                  done && "bg-success-soft/40",
-                )}
-              >
-                <td className="px-3 py-2.5 align-middle">
-                  <WatchCheckbox
-                    key={`${r.key}-${done}`}
-                    localPath={r.localPath}
-                    watched={done}
-                    label={r.title}
-                  />
-                </td>
-                <td className="hidden py-2.5 text-xs text-ink-faint tabular-nums sm:table-cell">
-                  {i + 1}
-                </td>
-                <td className="px-2 py-2.5">
-                  {r.driveFileId && r.videoId ? (
-                    <Link
-                      href={`/watch/${r.videoId}`}
-                      className={clsx(
-                        "group inline-flex items-center gap-1.5 hover:underline",
-                        done ? "text-ink-muted" : "text-ink",
-                      )}
-                    >
-                      <Play
-                        size={13}
-                        className="shrink-0 fill-current text-accent transition-transform group-hover:scale-110"
-                      />
-                      {r.label}
-                      <Cloud
-                        size={13}
-                        className="shrink-0 text-ink-faint"
-                        aria-label="On Google Drive"
-                      />
-                    </Link>
-                  ) : !isAdmin ? (
-                    <span
-                      className="inline-flex items-center gap-1.5 text-ink-faint"
-                      title="Not uploaded yet"
-                    >
-                      <Play size={13} className="shrink-0" />
-                      {r.label}
-                      <span className="rounded bg-bg-muted px-1.5 text-[10px] font-medium tracking-wide uppercase">
-                        soon
+                <tr
+                  className={clsx(
+                    "border-b border-border last:border-0",
+                    done && "bg-success-soft/40",
+                  )}
+                >
+                  <td className="px-3 py-2.5 align-middle">
+                    <WatchCheckbox
+                      key={`${r.key}-${done}`}
+                      localPath={r.localPath}
+                      watched={done}
+                      label={r.title}
+                    />
+                  </td>
+                  <td className="hidden py-2.5 text-xs text-ink-faint tabular-nums sm:table-cell">
+                    {i + 1}
+                  </td>
+                  <td className="px-2 py-2.5">
+                    {r.driveFileId && r.videoId ? (
+                      <Link
+                        href={`/watch/${r.videoId}`}
+                        className={clsx(
+                          "group inline-flex items-center gap-1.5 hover:underline",
+                          done ? "text-ink-muted" : "text-ink",
+                        )}
+                      >
+                        <Play
+                          size={13}
+                          className="shrink-0 fill-current text-accent transition-transform group-hover:scale-110"
+                        />
+                        {r.label}
+                        <Cloud
+                          size={13}
+                          className="shrink-0 text-ink-faint"
+                          aria-label="On Google Drive"
+                        />
+                      </Link>
+                    ) : !isAdmin ? (
+                      <span
+                        className="inline-flex items-center gap-1.5 text-ink-faint"
+                        title="Not uploaded yet"
+                      >
+                        <Play size={13} className="shrink-0" />
+                        {r.label}
+                        <span className="rounded bg-bg-muted px-1.5 text-[10px] font-medium tracking-wide uppercase">
+                          soon
+                        </span>
+                      </span>
+                    ) : (
+                      <OpenVideo
+                        localPath={r.localPath!}
+                        className={clsx(
+                          "text-left",
+                          done ? "text-ink-muted" : "text-ink",
+                        )}
+                      >
+                        <span className="hover:underline">{r.label}</span>
+                      </OpenVideo>
+                    )}
+                    <span className="block pl-5 text-xs text-ink-faint">
+                      {subject === "all" &&
+                        section !== "calculator" &&
+                        subjectName(r.subject)}
+                      <span className="sm:hidden">
+                        {subject === "all" && section !== "calculator" && " · "}
+                        {hm(r.minutes)}
                       </span>
                     </span>
-                  ) : (
-                    <OpenVideo
-                      localPath={r.localPath!}
-                      className={clsx(
-                        "text-left",
-                        done ? "text-ink-muted" : "text-ink",
-                      )}
-                    >
-                      <span className="hover:underline">{r.label}</span>
-                    </OpenVideo>
-                  )}
-                  <span className="block pl-5 text-xs text-ink-faint">
-                    {subject === "all" &&
-                      section !== "calculator" &&
-                      subjectName(r.subject)}
-                    <span className="sm:hidden">
-                      {subject === "all" && section !== "calculator" && " · "}
-                      {hm(r.minutes)}
-                    </span>
-                  </span>
-                  {!done && r.watchedMinutes > 0 && (
-                    <span className="block pl-5 text-xs text-accent">
-                      {hm(r.watchedMinutes)} of {hm(r.minutes)} so far
-                    </span>
-                  )}
-                </td>
-                <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">
-                  {hm(r.minutes)}
-                </td>
-                <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums sm:table-cell">
-                  {hm(r.minutes / 1.5)}
-                </td>
-                <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums md:table-cell">
-                  {hm(r.running)}
-                </td>
-                <td className="hidden px-2 py-2.5 text-xs text-ink-muted md:table-cell">
-                  {done && r.completedAt ? dateFmt.format(r.completedAt) : ""}
-                </td>
-                <td className="px-2 py-2.5 text-right">
-                  <span className="inline-flex items-center justify-end gap-0.5">
-                    {canUpload &&
-                    !r.driveFileId &&
-                    r.localPath &&
-                    r.file &&
-                    r.bytes ? (
-                      <UploadRowButton
-                        target={{
-                          localPath: r.localPath,
-                          file: r.file,
-                          bytes: r.bytes,
-                        }}
-                        title={r.title}
-                      />
-                    ) : null}
-                    {isAdmin && r.localPath && (
-                      <span className="hidden sm:inline-flex">
-                        <CopyPath path={r.localPath} label="" />
+                    {!done && r.watchedMinutes > 0 && (
+                      <span className="block pl-5 text-xs text-accent">
+                        {hm(r.watchedMinutes)} of {hm(r.minutes)} so far
                       </span>
                     )}
-                  </span>
-                </td>
-              </tr>
+                  </td>
+                  <td className="hidden px-2 py-2.5 text-right tabular-nums sm:table-cell">
+                    {hm(r.minutes)}
+                  </td>
+                  <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums sm:table-cell">
+                    {hm(r.minutes / 1.5)}
+                  </td>
+                  <td className="hidden px-2 py-2.5 text-right text-ink-muted tabular-nums md:table-cell">
+                    {hm(r.running)}
+                  </td>
+                  <td className="hidden px-2 py-2.5 text-xs text-ink-muted md:table-cell">
+                    {done && r.completedAt ? dateFmt.format(r.completedAt) : ""}
+                  </td>
+                  <td className="px-2 py-2.5 text-right">
+                    <span className="inline-flex items-center justify-end gap-0.5">
+                      {canUpload &&
+                      !r.driveFileId &&
+                      r.localPath &&
+                      r.file &&
+                      r.bytes ? (
+                        <UploadRowButton
+                          target={{
+                            localPath: r.localPath,
+                            file: r.file,
+                            bytes: r.bytes,
+                          }}
+                          title={r.title}
+                        />
+                      ) : null}
+                      {isAdmin && r.localPath && (
+                        <span className="hidden sm:inline-flex">
+                          <CopyPath path={r.localPath} label="" />
+                        </span>
+                      )}
+                    </span>
+                  </td>
+                </tr>
               </Fragment>
             );
           })}
@@ -386,11 +392,13 @@ export default async function VideosPage({
       {isAdmin && outOfDate.length > 0 && (
         <Card className="mb-6 flex flex-wrap items-center justify-between gap-3 border-accent/40 bg-accent-soft/40">
           <p className="text-sm">
-            The plan now follows the October 2025 recordings, split into parts.
-            Updating replaces the earlier videos: their watched progress,
-            timeline markers and questions go with them, but your notes and
-            formulas stay (they belong to the topic, not the video). Files
-            already uploaded to Drive are left there.
+            {outOfDate.length} video{outOfDate.length === 1 ? " you" : "s you"}{" "}
+            imported {outOfDate.length === 1 ? "is" : "are"} no longer in the
+            plan (for example the removed ESAS refreshers). Updating removes
+            them with their watched progress and timeline markers; questions
+            move to the same lecture, and your notes and formulas stay (they
+            belong to the topic, not the video). Files already uploaded to Drive
+            are left there.
           </p>
           <form action={syncWatchPlanAction}>
             <Button type="submit" size="sm">

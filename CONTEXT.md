@@ -1166,3 +1166,7 @@ Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so t
 ## Read a saved video question in full (notes panel → Questions)
 - Hovering a question row (mouse only, 250 ms delay) opens `HoverPreview`: a card portalled to body with fixed positioning (so the scrolling notes panel can't clip it), below the row or above when there's no room; it stays open while the pointer is on it and closes on scroll or click. It shows `QuestionDetails`: full text, picture, the four choices with the correct one in green (or "No answer picked yet"), the solved answer for problems, explanation and solution picture.
 - Tapping/clicking the question text expands the same details inline (phones have no hover); the hover card is skipped while a row is expanded.
+
+## ESAS refreshers removed from the watch plan
+- The 24 "ESAS 01–04 Refresher" parts (GEAS's older series) were dropped from `plan` in `lib/video-library.json` (454 → 430 videos; refreshers 166 → 142), and `scripts/build-video-plan.mjs` now skips refresher files coded ESAS so a rebuild keeps them out. Core GEAS lectures whose files are named "ESAS …" are unaffected.
+- Lessons lists from the plan, so they vanish at once. Existing `StudyVideo` rows stay until the admin presses **Update plan** (the out-of-date notice now counts them and no longer talks only about the Oct 2025 switch). Today's "Continue watching" and its watched count only consider videos still in the plan.
