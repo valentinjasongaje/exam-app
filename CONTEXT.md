@@ -1162,3 +1162,7 @@ Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so t
 ## Crop pictures in the video question form
 - `components/image-cropper.tsx`: modal (portalled to body, scroll lock, Esc) that starts with the whole image selected; drag to draw a box, drag a corner to resize, drag inside to move (pointer events, `touch-none`, corner hit areas enlarged). "Use this part" draws the box at natural resolution to a JPEG (0.9) blob.
 - `PictureField` in `app/watch/[id]/video-questions.tsx` opens it after **Capture frame** and after picking a **Photo**; a crop button on the preview re-crops the current picture (saved Blob URLs load with `crossOrigin="anonymous"`). Cancel keeps the previous picture.
+
+## Read a saved video question in full (notes panel → Questions)
+- Hovering a question row (mouse only, 250 ms delay) opens `HoverPreview`: a card portalled to body with fixed positioning (so the scrolling notes panel can't clip it), below the row or above when there's no room; it stays open while the pointer is on it and closes on scroll or click. It shows `QuestionDetails`: full text, picture, the four choices with the correct one in green (or "No answer picked yet"), the solved answer for problems, explanation and solution picture.
+- Tapping/clicking the question text expands the same details inline (phones have no hover); the hover card is skipped while a row is expanded.
