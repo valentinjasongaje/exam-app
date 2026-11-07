@@ -45,31 +45,6 @@ export async function removeFromDriveAction(videoId: string): Promise<DriveActio
   }
 }
 
-/** Frees Drive space by removing every uploaded video already marked watched. */
-export async function removeWatchedFromDriveAction(): Promise<DriveActionResult> {
-  const userId = await requireUserId();
-  if (!userId) return { error: "Only the admin manages Drive videos." };
-  const videos = await prisma.studyVideo.findMany({ where: { userId, driveFileId: { not: null } } });
-  const watched = videos.filter((v) => v.watchedMinutes >= v.durationMinutes);
-  if (watched.length === 0) return { error: null, message: "No watched videos on Drive." };
-  try {
-    const { token } = await accessTokenFor(userId);
-    for (const v of watched) {
-      try {
-        await deleteFile(token, v.driveFileId!);
-      } catch (e) {
-        if (!(e instanceof DriveError) || e.status !== 404) throw e;
-      }
-      await prisma.studyVideo.update({ where: { id: v.id }, data: { driveFileId: null, driveUploadedAt: null } });
-    }
-    refresh();
-    return { error: null, message: `Removed ${watched.length} watched video${watched.length > 1 ? "s" : ""} from Drive.` };
-  } catch (e) {
-    refresh();
-    return fail(e);
-  }
-}
-
 /**
  * Re-checks Drive against the app: links uploads that finished but weren't
  * recorded (tab closed at the last second), and clears links to files that

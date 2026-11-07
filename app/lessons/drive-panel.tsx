@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Cloud, RefreshCw, Trash2, Unplug } from "lucide-react";
+import { Cloud, RefreshCw, Unplug } from "lucide-react";
 import { Button } from "@/components/ui";
-import { disconnectDriveAction, removeWatchedFromDriveAction, syncDriveAction, type DriveActionResult } from "../tracker/drive-actions";
+import { disconnectDriveAction, syncDriveAction, type DriveActionResult } from "../tracker/drive-actions";
 import DriveUploader, { type UploadCandidate } from "./drive-uploader";
 
 const GB = 1024 ** 3;
@@ -16,7 +16,6 @@ export default function DrivePanel({
   quotaError,
   onDriveCount,
   onDriveBytes,
-  watchedOnDrive,
   candidates,
   status,
 }: {
@@ -26,7 +25,6 @@ export default function DrivePanel({
   quotaError: string | null;
   onDriveCount: number;
   onDriveBytes: number;
-  watchedOnDrive: number;
   candidates: UploadCandidate[];
   status: string | null;
 }) {
@@ -48,8 +46,8 @@ export default function DrivePanel({
         <div className="text-sm">
           <p className="font-medium">Watch from anywhere with Google Drive</p>
           <p className="text-ink-muted">
-            Upload plan videos to your Drive, watch them here on your phone or any computer, and remove them when you&rsquo;re
-            done. The app can only see the videos it uploads.
+            Upload plan videos to your Drive and watch them here on your phone or any computer. Members watch the same
+            uploads, so keep them on Drive. The app can only see the videos it uploads.
           </p>
           {status && statusMsg[status] && <p className="mt-1 text-danger">{statusMsg[status]}</p>}
         </div>
@@ -84,19 +82,6 @@ export default function DrivePanel({
           <Button size="sm" onClick={() => setOpen((o) => !o)}>
             {open ? "Close uploader" : "Upload videos"}
           </Button>
-          {watchedOnDrive > 0 && (
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={pending}
-              onClick={() => {
-                if (confirm(`Delete ${watchedOnDrive} watched video${watchedOnDrive > 1 ? "s" : ""} from Google Drive? The files on G: and your progress stay.`))
-                  run(removeWatchedFromDriveAction);
-              }}
-            >
-              <Trash2 size={14} /> Free space ({watchedOnDrive} watched)
-            </Button>
-          )}
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(syncDriveAction)} title="Re-check what's on Drive">
             <RefreshCw size={14} className={pending ? "animate-spin" : ""} /> Check Drive
           </Button>

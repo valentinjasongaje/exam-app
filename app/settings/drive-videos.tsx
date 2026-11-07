@@ -3,13 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Cloud, Loader2, Trash2 } from "lucide-react";
-import { removeFromDriveAction, removeWatchedFromDriveAction } from "../tracker/drive-actions";
+import { removeFromDriveAction } from "../tracker/drive-actions";
 
 type Video = { id: string; title: string; watched: boolean };
 
 /**
- * Videos uploaded to Google Drive, with a remove button each (and one for
- * all watched ones) to free Drive space. The file on G: and progress stay.
+ * Videos uploaded to Google Drive, with a remove button each (for a bad or
+ * replaced upload). Members watch these same files, so there's deliberately no
+ * bulk "remove watched". The file on G: and progress stay.
  */
 export default function DriveVideos({ videos }: { videos: Video[] }) {
   const router = useRouter();
@@ -40,27 +41,6 @@ export default function DriveVideos({ videos }: { videos: Video[] }) {
         <span className="text-ink-muted">
           {videos.length} on Drive · {watched} watched
         </span>
-        {watched > 0 &&
-          (confirming === "watched" ? (
-            <span className="flex items-center gap-2 text-xs">
-              Remove {watched} watched?
-              <button type="button" onClick={() => run("watched", removeWatchedFromDriveAction)} className="font-medium text-danger hover:underline">
-                Remove
-              </button>
-              <button type="button" onClick={() => setConfirming(null)} className="text-ink-muted hover:underline">
-                Cancel
-              </button>
-            </span>
-          ) : (
-            <button
-              type="button"
-              disabled={!!busy}
-              onClick={() => setConfirming("watched")}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border-strong px-2.5 py-1.5 text-xs font-medium hover:bg-bg-muted disabled:opacity-50"
-            >
-              {busy === "watched" ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} Remove all watched
-            </button>
-          ))}
       </div>
       {msg && <p className={msg.error ? "text-xs text-danger" : "text-xs text-success"}>{msg.text}</p>}
       <ul className="max-h-96 overflow-y-auto rounded-lg border border-border">
@@ -71,7 +51,7 @@ export default function DriveVideos({ videos }: { videos: Video[] }) {
             {confirming === v.id ? (
               <span className="flex shrink-0 items-center gap-2 text-xs">
                 <button type="button" onClick={() => run(v.id, () => removeFromDriveAction(v.id))} className="font-medium text-danger hover:underline">
-                  Remove
+                  Remove for everyone
                 </button>
                 <button type="button" onClick={() => setConfirming(null)} className="text-ink-muted hover:underline">
                   Cancel
@@ -91,7 +71,7 @@ export default function DriveVideos({ videos }: { videos: Video[] }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-ink-faint">Removing deletes the Drive copy only. The file on G: and your progress stay, and you can upload it again.</p>
+      <p className="text-xs text-ink-faint">Members watch these same uploads: removing one makes it unplayable for everyone until it&rsquo;s uploaded again. Only the Drive copy is deleted; the file on G: and progress stay.</p>
     </div>
   );
 }

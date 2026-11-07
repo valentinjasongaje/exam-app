@@ -99,7 +99,7 @@ export function UploadQueueProvider({ freeBytes, children }: { freeBytes: number
   const add = (targets: UploadTarget[], file?: File) => {
     const fresh = targets.filter((t) => !jobsRef.current[t.localPath] || jobsRef.current[t.localPath].status === "error");
     if (freeBytes !== null && queuedBytes() + fresh.reduce((s, t) => s + t.bytes, 0) > freeBytes - 0.5 * GB) {
-      alert(`Not enough free space on Google Drive (${gb(Math.max(0, freeBytes))} free). Remove watched videos first.`);
+      alert(`Not enough free space on Google Drive (${gb(Math.max(0, freeBytes))} free). Free up space in Google Drive first.`);
       return;
     }
     const next = { ...jobsRef.current };

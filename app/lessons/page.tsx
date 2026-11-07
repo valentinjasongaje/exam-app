@@ -453,10 +453,6 @@ export default async function VideosPage({
               (s, v) => s + (planBytes.get(v.localPath ?? "") ?? 0),
               0,
             )}
-            watchedOnDrive={
-              onDrive.filter((v) => v.watchedMinutes >= v.durationMinutes)
-                .length
-            }
             status={params.drive ?? null}
             candidates={WATCH_PLAN.map((p) => {
               const v = byPath.get(p.localPath);

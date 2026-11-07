@@ -82,7 +82,7 @@ export default async function SettingsPage() {
                 ? `Connected as ${drive.googleEmail}. `
                 : "Connected. "
               : "Google Drive isn't connected. Connect it from Lessons → Videos. "}
-            Remove videos you&rsquo;re done with to free space.
+            Members watch these same uploads, so only remove one you need to replace.
           </p>
           <DriveVideos
             videos={driveVideos.map((v) => ({
