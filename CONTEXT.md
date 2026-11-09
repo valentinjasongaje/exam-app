@@ -1177,3 +1177,6 @@ Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so t
 
 ## No bulk "free space" deletion of Drive videos
 Members stream the admin's uploads, so deleting watched videos would break playback for everyone. Removed: the Lessons Drive panel's "Free space (N watched)" button, Settings' "Remove all watched", and `removeWatchedFromDriveAction`. Settings keeps a per-video remove (for a bad/replaced upload) whose confirm reads "Remove for everyone", with a note that members watch these files. Copy that suggested deleting watched videos was reworded.
+
+## Privacy policy and terms (for publishing the Google OAuth app)
+The Google OAuth app was in **Testing**, so refresh tokens expired after 7 days ("The video library's Google Drive access expired"). Publishing it needs a privacy policy (and terms) link on the Branding page, so `/privacy` and `/terms` were added: public (not in `proxy.ts`'s protected list), linked from `/login`. The policy describes what's stored, `drive.file`-only Drive access by the admin, Limited Use statement, processors (Vercel, Neon, Google, Anthropic) and deletion on request. After publishing ("In production"), Drive must be reconnected once from Lessons.

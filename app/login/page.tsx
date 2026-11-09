@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { googleSignInAction } from "./actions";
 import { Card } from "@/components/ui";
 
@@ -53,6 +54,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             Continue with Google
           </button>
         </form>
+        <p className="mt-4 text-center text-xs text-ink-faint">
+          <Link href="/privacy" className="hover:text-ink hover:underline">
+            Privacy
+          </Link>{" "}
+          ·{" "}
+          <Link href="/terms" className="hover:text-ink hover:underline">
+            Terms
+          </Link>
+        </p>
       </Card>
     </main>
   );
