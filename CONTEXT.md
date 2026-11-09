@@ -59,8 +59,15 @@ viewing per-user progress (read-only), managing exam content
 scraped HTML through the browser (parse → review → commit), instead of
 running the CLI scripts by hand.
 
-**Image storage: Vercel Blob**, for images uploaded through the admin
-import/edit flows (`lib/blob.ts`). The original CLI parser
+**Image storage: Cloudflare R2** (public bucket, APAC) when the `R2_*` env vars are set,
+else Vercel Blob; both through `uploadImage` in `lib/blob.ts`, for images uploaded through
+the admin import/edit flows. Env: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
+`R2_BUCKET`, `R2_PUBLIC_URL` (the bucket's `pub-….r2.dev` address; attach a custom domain
+later if needed and change this value, then replace the host in the saved links). Why R2: the
+Hobby Blob store was suspended in Nov 2026 after the bulk import exceeded 2,000 uploads/month
+(its files then return 403). `scripts/relink-pictures.ts` re-uploaded the pictures from the
+original exam files to R2 and updated `Question.imageUrl`/`explanationImageUrl`; it only touches
+rows still pointing at `vercel-storage.com` and matches them by `sourceItemId`. The original CLI parser
 (`scripts/parse-html.js`) still writes images to local disk under
 `data/parsed/images/` for its own JSON output — that's a separate, still-
 useful code path, not wired to Blob.
@@ -170,7 +177,7 @@ choices, matching expectations exactly):
     images to Vercel Blob and calls `lib/seed-exam.js`.
 - **`lib/prisma.ts`** — standard singleton Prisma client for the app
   runtime (CLI scripts still instantiate their own short-lived client).
-- **`lib/blob.ts`** — thin `@vercel/blob` wrapper used by both the admin
+- **`lib/blob.ts`** — picture upload (R2 via `@aws-sdk/client-s3`, else `@vercel/blob`) used by both the admin
   question-edit forms and the import commit step.
 
 All of the above was manually verified end-to-end in the browser (role
