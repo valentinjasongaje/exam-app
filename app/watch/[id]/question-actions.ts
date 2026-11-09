@@ -29,8 +29,9 @@ async function upload(file: FormDataEntryValue | null, prefix: string) {
   const ext = file.type.split("/")[1] || "jpg";
   try {
     return await uploadImage(Buffer.from(await file.arrayBuffer()), `${prefix}-${crypto.randomUUID()}.${ext}`, file.type);
-  } catch {
-    throw new Error("Couldn't upload the picture. Try again.");
+  } catch (e) {
+    console.error("Picture upload failed", e);
+    throw new Error(`Couldn't upload the picture. ${e instanceof Error ? e.message : "Try again."}`);
   }
 }
 
