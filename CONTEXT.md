@@ -342,19 +342,12 @@ build time didn't surface anything layout-specific.
 ## UI redesign, subject tiles, and board-exam timer (2026-07-11)
 
 The whole app UI was redesigned away from the generic Tailwind-scaffold
-look: warm paper palette (light/dark via `prefers-color-scheme`, plus a
-manual toggle — see below), a Fraunces (serif headings) + Geist Sans
+look: warm paper palette (light theme only; the dark theme and the nav toggle were removed in Nov 2026), a Fraunces (serif headings) + Geist Sans
 (body) type pairing, shared primitives in `components/ui.tsx` (`Button`,
 `LinkButton`, `Card`, `Badge`, `PageHeader`, `EmptyState`), and a
 `.choice-row` CSS class (globals.css, uses `:has()`) shared by every
 place a radio/checkbox choice is rendered (attempt pages, review,
-settings). A manual light/dark toggle lives in the nav
-(`app/theme-toggle.tsx`) — `data-theme` attribute on `<html>`, persisted
-to `localStorage`, applied pre-hydration via `next/script`
-`beforeInteractive` (not a raw `<script>` tag — that triggers a
-"scripts inside React components" dev warning) with
-`suppressHydrationWarning` on `<html>` since the pre-hydration script
-intentionally differs from the server-rendered markup.
+settings).
 
 **Dashboard is now subject-tile-first, grouped by exam track**:
 `/dashboard` shows two labeled sections — "Electronics Engineering"
@@ -854,7 +847,6 @@ data/raw/                     Scraped HTML files (2 samples included)
 data/parsed/                  Parser output for the 2 samples
 auth.ts                       Auth.js config (Google provider)
 proxy.ts                      Route protection (login required / admin-only)
-app/theme-toggle.tsx          Manual light/dark toggle (localStorage + data-theme)
 app/nav-links.tsx             Client nav links with active-route highlighting
 app/login/                    Sign-in page (Google only)
 app/settings/                 Per-user preferences (layout, shuffle)
@@ -1165,7 +1157,7 @@ macron → superscript minus) and "doesn`t" (backtick → ’) quirks in questio
 Jason couldn't follow the fixed day-by-day schedule (he switches subjects), so the calendar now records what was actually studied and the week is judged against per-subject targets.
 - `User.weeklyTargets` (JSONB, minutes per tracker subject; migration `20261103130000_weekly_targets`). Null = `DEFAULT_WEEKLY_TARGETS` = Math 6h + Elex 6h (`lib/study-balance.ts`). Edited in Settings → "Weekly study targets" (admin only, hours, 0/blank = no target; `targets-form.tsx`, `updateWeeklyTargetsAction`).
 - `weekBalance()` sums the Mon–Sun week per subject; `behindBy` = target spread evenly over the days elapsed minus studied; `mostBehind()` (≥30 min) drives the nudge. Subjects without a target still appear when studied ("no target").
-- Subject colours: `--subj-math/elex/est/geas` tokens (light + dark) → `bg-subj-*`; `subjectBg(slug)`.
+- Subject colours: `--subj-math/elex/est/geas` tokens → `bg-subj-*`; `subjectBg(slug)`.
 - `/calendar` defaults to **Log**: month cells show studied time + top subjects + a subject-mix bar; legend = subjects; right column = "This week" (`components/week-balance.tsx`) above the day panel, whose "Studied" list comes first with "+ Log study for this day". **Schedule** (`?plan=1`, `calendarHref(..., plan)`) keeps the old plan view (status bars, Month/Week, plan blocks, catch-up). Sessions under a minute (auto-log rounding) are hidden. Google Calendar feed card moved to the bottom (after the panels on phones).
 - Today (`/daily`): the admin's "Today's plan" card is now "This week" (same component + nudge) with today's studied total and a "log study" link to the calendar day.
 

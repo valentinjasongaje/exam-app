@@ -2,7 +2,6 @@ import Link from "next/link";
 import { GraduationCap } from "lucide-react";
 import { auth } from "@/auth";
 import NavLinks from "./nav-links";
-import ThemeToggle from "./theme-toggle";
 
 export default async function Nav() {
   const session = await auth();
@@ -27,7 +26,6 @@ export default async function Nav() {
               Log in
             </Link>
           )}
-          <ThemeToggle />
         </div>
       </nav>
     </header>

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Nav from "./nav";
 
@@ -36,15 +35,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
-      suppressHydrationWarning
     >
-      <head>
-        <Script id="theme-init" strategy="beforeInteractive">
-          {
-            "(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();"
-          }
-        </Script>
-      </head>
       <body className="min-h-full flex flex-col bg-bg text-ink">
         <Nav />
         {/* pb on phones leaves room for the bottom tab bar */}
