@@ -23,6 +23,8 @@ export type ReviewQuestion = {
   explanation: string | null;
   /** data: URLs of the solution pictures (usually one; joined into one before upload). */
   solutionImages: string[];
+  /** The original A–D choices when the file has them (HTML exports); null = rebuild them (review pages). */
+  choices: { text: string; isCorrect: boolean }[] | null;
 };
 
 export type ReviewExam = {
@@ -122,7 +124,17 @@ const imgs = (el: Element | null) =>
 /** "RC-Math", "ECE PB - Elec", "HB GEAS" … or, failing that, the file name → canonical subject. */
 export function subjectFrom(label: string, fileName: string) {
   const pick = (s: string) =>
-    /\bmath\b/i.test(s) ? "math" : /\bgeas\b|\besas\b/i.test(s) ? "geas" : /\belec\b|\belex\b/i.test(s) ? "elex" : /\best\b/i.test(s) ? "est" : "";
+    /\bmath\b/i.test(s)
+      ? "math"
+      : /\bgeas\b|\besas\b/i.test(s)
+        ? "geas"
+        : /\belec\b|\belex\b/i.test(s)
+          ? "elex"
+          : /\best\b/i.test(s)
+            ? "est"
+            : /\bect\b/i.test(s)
+              ? "ect"
+              : "";
   return pick(label) || pick(fileName.replace(/[-_]/g, " "));
 }
 
@@ -185,7 +197,7 @@ export function parseReviewPage(html: string, fileName: string): ReviewExam {
       unusable.push({ order, sourceItemId, text, correct, reason: "The answer refers to the original choices" });
       return;
     }
-    questions.push({ order, sourceItemId, text, image, correct, wrongPick, explanation, solutionImages });
+    questions.push({ order, sourceItemId, text, image, correct, wrongPick, explanation, solutionImages, choices: null });
   });
 
   return {
@@ -218,4 +230,78 @@ export async function joinImages(dataUrls: string[]): Promise<string | null> {
     y += b.height;
   }
   return c.toDataURL("image/png");
+}
+
+/**
+ * Parses one exam saved from the review center's exam page as plain .html
+ * (the "Excel Exams" exports): question cards with their four choices, plus
+ * the answer table with the correct answer and solution. Browser port of
+ * lib/exam-parser.js (which the older HTML import runs on the server).
+ */
+export function parseExamPage(html: string, fileName: string): ReviewExam {
+  // Same repair as lib/exam-parser.js: a closing tag missing its ">" ("</questions<table id=\"answer\">",
+  // seen in "RC Exam - Elec 21") swallows the answer table.
+  const doc = new DOMParser().parseFromString(html.replace(/<\/([a-zA-Z][\w-]*)\s*<(?=[a-zA-Z/!])/g, "</$1><"), "text/html");
+  const cards = [...doc.querySelectorAll("questions .card.card-widget, #question .card.card-widget")];
+  if (cards.length === 0) throw new Error("No exam questions found in this HTML file.");
+  const title = ((doc.querySelector("h1")?.textContent || doc.querySelector("title")?.textContent || "").trim() || titleFrom(fileName)).replace(/\s+/g, " ");
+  const norm = (x: string) => x.replace(/\s+/g, " ").trim().toLowerCase();
+
+  const questions: ReviewQuestion[] = [];
+  const unusable: ReviewExam["unusable"] = [];
+  const seen = new Set<string>();
+  cards.forEach((card, i) => {
+    const inputs = [...card.querySelectorAll("input.question-answer")];
+    const sourceItemId = inputs[0]?.getAttribute("data-item");
+    if (!sourceItemId || seen.has(sourceItemId)) return; // some exports list a question twice
+    seen.add(sourceItemId);
+    const order = questions.length + unusable.length + 1;
+
+    const comment = card.querySelector(".comment-text")?.cloneNode(true) as Element | undefined;
+    comment?.querySelectorAll(".username, .form-group").forEach((n) => n.remove());
+    const text = comment ? textOf(comment) : "";
+    const image = comment ? (imgs(comment)[0] ?? null) : null;
+
+    const choiceTexts = inputs.map((inp) => tidyText((inp.getAttribute("value") ?? "").replace(/\s+/g, " ").trim()));
+    const row =
+      doc.querySelector(`table#answer tr[data-id="${sourceItemId}"]`) ?? doc.querySelector(`tr[data-id="${sourceItemId}"]`);
+    const correct = row ? textOf(row.querySelectorAll("td")[2] ?? row) : "";
+    const sol = row?.querySelector(`#solution${sourceItemId} .card-body`) ?? null;
+    const solutionImages = imgs(sol);
+    const explanation = sol
+      ? textOf(sol)
+          .split("\n")
+          .filter((l) => l.trim().toLowerCase() !== "solution:")
+          .join("\n")
+          .trim() || null
+      : null;
+
+    const hit = correct ? choiceTexts.findIndex((c) => norm(c) === norm(correct)) : -1;
+    if (hit < 0 || choiceTexts.length < 2) {
+      unusable.push({ order, sourceItemId, text, correct, reason: !row || !correct ? "No answer key for this question" : "The correct answer isn\u2019t one of the choices" });
+      return;
+    }
+    questions.push({
+      order,
+      sourceItemId,
+      text,
+      image,
+      correct: choiceTexts[hit],
+      wrongPick: null,
+      explanation,
+      solutionImages,
+      choices: choiceTexts.map((t, k) => ({ text: t, isCorrect: k === hit })),
+    });
+    void i;
+  });
+
+  return {
+    fileName,
+    title,
+    subject: subjectFrom(title, fileName),
+    sourceSubject: title,
+    isBoardExam: questions.length + unusable.length >= 100,
+    questions,
+    unusable,
+  };
 }

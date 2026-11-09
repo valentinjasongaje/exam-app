@@ -8,7 +8,7 @@ const links = [
   { href: "/admin/users", label: "Users" },
   { href: "/admin/content", label: "Content" },
   { href: "/admin/import", label: "Import HTML" },
-  { href: "/admin/import/review", label: "Import .mhtml" },
+  { href: "/admin/import/review", label: "Bulk import" },
 ];
 
 export default function AdminNav() {

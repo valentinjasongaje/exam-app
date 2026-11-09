@@ -38,6 +38,8 @@ export type ReviewBatchQuestion = {
   wrongPick: string | null;
   explanation: string | null;
   solutionImage: string | null; // data: URL
+  /** The original choices (HTML exports), kept in order; null = rebuild them with AI (review pages). */
+  choices: { text: string; isCorrect: boolean }[] | null;
 };
 
 export type ReviewBatchResult = { sourceItemId: string; ok: boolean; error?: string };
@@ -65,10 +67,9 @@ function shuffle<T>(xs: T[]) {
 }
 
 /**
- * The exam a saved review page imports into. Its slug comes from the title;
- * if an exam with that slug already exists from a different source file
- * (e.g. the HTML export "Review Exam - GEAS 09.html" holds other questions),
- * a separate "(saved review)" exam is used instead of mixing the two.
+ * The exam a file imports into. Its slug comes from the title; if an exam
+ * with that slug already exists from a different source file, a numbered
+ * exam ("… (2)") is used instead of mixing two sets of questions.
  */
 async function examFor(input: { title: string; subject: string; isBoardExam: boolean; fileName: string }) {
   const canonical = CANONICAL_SUBJECTS.find((s) => s.slug === input.subject);
@@ -78,12 +79,17 @@ async function examFor(input: { title: string; subject: string; isBoardExam: boo
     update: {},
     create: { name: canonical.name, slug: canonical.slug },
   });
-  let title = input.title.trim();
-  let slug = slugify(title, { lower: true, strict: true });
-  const clash = await prisma.exam.findUnique({ where: { slug }, select: { sourceFile: true } });
-  if (clash && clash.sourceFile !== input.fileName) {
-    title = `${title} (saved review)`;
-    slug = `${slug}-saved-review`;
+  // Different files can share a title (e.g. "RC Exam - EST 47.html" and "RC Exam - EST 47-A.html" hold
+  // different questions): the first keeps it, later ones become "… (2)", "… (3)".
+  const base = input.title.trim();
+  const baseSlug = slugify(base, { lower: true, strict: true });
+  let title = base;
+  let slug = baseSlug;
+  for (let n = 2; ; n++) {
+    const clash = await prisma.exam.findUnique({ where: { slug }, select: { sourceFile: true } });
+    if (!clash || clash.sourceFile === input.fileName) break;
+    title = `${base} (${n})`;
+    slug = `${baseSlug}-${n}`;
   }
   return prisma.exam.upsert({
     where: { slug },
@@ -99,6 +105,8 @@ async function importOne(examId: string, subjectName: string, q: ReviewBatchQues
       upload(q.image, q.sourceItemId),
       upload(q.solutionImage, `${q.sourceItemId}-explanation`),
     ]);
+    const original =
+      q.choices && q.choices.length >= 2 && q.choices.filter((c) => c.isCorrect).length === 1 ? q.choices : null;
     const existing = q.wrongPick ? [q.wrongPick] : [];
     const ask = () =>
       makeDistractors({
@@ -111,11 +119,13 @@ async function importOne(examId: string, subjectName: string, q: ReviewBatchQues
         existing,
         count: 3 - existing.length,
       });
-    const made = await ask().catch(() => ask()); // one retry
-    const choices = shuffle([
-      { text: q.correct, isCorrect: true },
-      ...[...existing, ...made].map((text) => ({ text, isCorrect: false })),
-    ]).map((c, i) => ({ ...c, label: String.fromCharCode(65 + i) }));
+    const choices = (
+      original ??
+      shuffle([
+        { text: q.correct, isCorrect: true },
+        ...[...existing, ...(await ask().catch(() => ask()))].map((text) => ({ text, isCorrect: false })), // one retry
+      ])
+    ).map((c, i) => ({ ...c, label: String.fromCharCode(65 + i) }));
 
     await prisma.$transaction(async (tx) => {
       const row = await tx.question.upsert({
@@ -139,9 +149,10 @@ async function importOne(examId: string, subjectName: string, q: ReviewBatchQues
 }
 
 /**
- * Imports a few questions of one saved review page: uploads their pictures,
- * rebuilds A–D (correct answer + the reviewee's real wrong pick when there
- * is one + AI-written wrong choices, shuffled) and upserts them. Small
+ * Imports a few questions of one exam file: uploads their pictures, keeps
+ * the original A–D (HTML exports) or rebuilds them (review pages: correct
+ * answer + the reviewee's real wrong pick when there is one + AI-written
+ * wrong choices, shuffled) and upserts them. Small
  * batches keep each request well under Vercel's body size and time limits;
  * the page calls this repeatedly and can resume (done items are skipped).
  */
@@ -150,7 +161,7 @@ export async function importReviewBatchAction(input: {
   questions: ReviewBatchQuestion[];
 }): Promise<ReviewBatchResult[]> {
   await requireAdmin();
-  if (!aiConfigured()) {
+  if (!aiConfigured() && input.questions.some((q) => !q.choices)) {
     return input.questions.map((q) => ({ sourceItemId: q.sourceItemId, ok: false, error: "AI isn't set up (ANTHROPIC_API_KEY)." }));
   }
   let exam: { id: string };

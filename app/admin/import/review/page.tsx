@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2, FileArchive, Loader2, Square, Upload } fro
 import { clsx } from "clsx";
 import { Badge, Button, Card, PageHeader } from "@/components/ui";
 import { CANONICAL_SUBJECTS } from "@/lib/subjects";
-import { htmlFromMhtml, joinImages, parseReviewPage, type ReviewExam } from "@/lib/review-page";
+import { htmlFromMhtml, joinImages, parseExamPage, parseReviewPage, type ReviewExam } from "@/lib/review-page";
 import { shrinkImage } from "@/lib/shrink-image";
 import { existingItemIdsAction, importReviewBatchAction, type ReviewBatchQuestion } from "./actions";
 
@@ -20,7 +20,7 @@ type Row = ReviewExam & {
   status: "idle" | "running" | "done";
 };
 
-const EXAM_SUBJECTS = CANONICAL_SUBJECTS.filter((s) => s.slug !== "ect");
+const EXAM_SUBJECTS = CANONICAL_SUBJECTS;
 const BATCH = 4; // questions per request
 const MAX_BYTES = 3_000_000; // keep each request well under Vercel's ~4.5 MB body limit
 const PARALLEL_EXAMS = 2;
@@ -64,7 +64,11 @@ export default function ReviewImportPage() {
     const errs: string[] = [];
     for (const f of [...files].sort((a, b) => a.name.localeCompare(b.name))) {
       try {
-        parsed.push(parseReviewPage(htmlFromMhtml(await f.arrayBuffer()), f.name));
+        parsed.push(
+          /\.mht(ml)?$/i.test(f.name)
+            ? parseReviewPage(htmlFromMhtml(await f.arrayBuffer()), f.name)
+            : parseExamPage(await f.text(), f.name)
+        );
       } catch (e) {
         errs.push(`${f.name}: ${e instanceof Error ? e.message : "couldn't read it"}`);
       }
@@ -111,6 +115,7 @@ export default function ReviewImportPage() {
       inBank: rows.reduce((n, r) => n + (r.sameAs ? 0 : r.skip.size), 0),
       unusable: rows.filter((r) => !r.sameAs).reduce((n, r) => n + r.unusable.length, 0),
       noSubject: inc.filter((r) => !r.subject).length,
+      needAi: inc.reduce((n, r) => n + r.questions.filter((q) => !q.choices && !r.skip.has(q.sourceItemId) && !r.done.has(q.sourceItemId)).length, 0),
     };
   }, [rows]);
 
@@ -128,7 +133,7 @@ export default function ReviewImportPage() {
         const solutionImage = await slim(await joinImages(q.solutionImages));
         const size = (image?.length ?? 0) + (solutionImage?.length ?? 0) + q.text.length;
         if (batch.length > 0 && bytes + size > MAX_BYTES) break;
-        batch.push({ order: q.order, sourceItemId: q.sourceItemId, text: q.text, image, correct: q.correct, wrongPick: q.wrongPick, explanation: q.explanation, solutionImage });
+        batch.push({ order: q.order, sourceItemId: q.sourceItemId, text: q.text, image, correct: q.correct, wrongPick: q.wrongPick, explanation: q.explanation, solutionImage, choices: q.choices });
         bytes += size;
         i++;
       }
@@ -161,9 +166,28 @@ export default function ReviewImportPage() {
     stop.current = false;
     setRunning(true);
     const queue = rows.filter((r) => r.include && r.subject && todo(r).length > 0);
-    let next = 0;
+    // Two files with the same title (e.g. "RC Exam - EST 47" and "…47-A") must not run at once,
+    // or both could claim the same exam; the second becomes "… (2)" when it runs after the first.
+    const busy = new Set<string>();
+    const take = () => {
+      const i = queue.findIndex((r) => !busy.has(r.title.trim().toLowerCase()));
+      return i < 0 ? null : queue.splice(i, 1)[0];
+    };
     const worker = async () => {
-      while (next < queue.length && !stop.current) await importExam(queue[next++]);
+      while (queue.length && !stop.current) {
+        const r = take();
+        if (!r) {
+          await new Promise((res) => setTimeout(res, 300)); // wait for the same-titled one to finish
+          continue;
+        }
+        const key = r.title.trim().toLowerCase();
+        busy.add(key);
+        try {
+          await importExam(r);
+        } finally {
+          busy.delete(key);
+        }
+      }
     };
     await Promise.all(Array.from({ length: PARALLEL_EXAMS }, worker));
     setRunning(false);
@@ -175,8 +199,8 @@ export default function ReviewImportPage() {
     <div>
       <PageHeader
         icon={FileArchive}
-        title="Import saved review pages"
-        subtitle="Exam Review pages saved from the review center as .mhtml. They have the question, the answer and the solution but not the A–D choices: each question gets the correct answer, your old wrong answer when there is one, and AI-written wrong choices to make four."
+        title="Import exams in bulk"
+        subtitle="Exam pages saved from the review center: .html exam exports keep their own A–D choices; .mhtml Exam Review pages have no choices, so each question gets the correct answer, your old wrong answer when there is one, and AI-written wrong choices to make four. Questions already in your bank are skipped."
         action={
           <Link href="/admin/import" className="text-sm text-accent hover:underline">
             HTML exam import
@@ -188,7 +212,7 @@ export default function ReviewImportPage() {
         <input
           ref={input}
           type="file"
-          accept=".mhtml,.mht"
+          accept=".mhtml,.mht,.html,.htm"
           multiple
           className="hidden"
           onChange={(e) => {
@@ -199,7 +223,7 @@ export default function ReviewImportPage() {
         <div className="flex flex-wrap items-center gap-3">
           <Button type="button" onClick={() => input.current?.click()} disabled={reading || running}>
             {reading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
-            {reading ? "Reading files…" : rows.length ? "Choose other files" : "Choose .mhtml files"}
+            {reading ? "Reading files…" : rows.length ? "Choose other files" : "Choose exam files"}
           </Button>
           <span className="text-sm text-ink-muted">Select the whole folder&rsquo;s files at once; nothing is saved until you press Import.</span>
         </div>
@@ -222,8 +246,8 @@ export default function ReviewImportPage() {
                   {totals.files} file{totals.files === 1 ? "" : "s"}
                 </p>
                 <p className="text-ink-muted">
-                  {totals.inBank} already in your bank or repeated · {totals.unusable} can&rsquo;t be rebuilt (the answer refers to the original
-                  choices){totals.noSubject > 0 && <span className="text-danger"> · {totals.noSubject} file(s) need a subject</span>}
+                  {totals.inBank} already in your bank or repeated · {totals.unusable} can&rsquo;t be used (no usable answer){" "}
+                  · {totals.needAi.toLocaleString()} need AI choices{totals.noSubject > 0 && <span className="text-danger"> · {totals.noSubject} file(s) need a subject</span>}
                 </p>
               </div>
               <div className="flex items-center gap-2">
