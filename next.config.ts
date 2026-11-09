@@ -19,8 +19,15 @@ const nextConfig: NextConfig = {
       { source: "/tracker/library", destination: "/lessons/library", permanent: false },
     ];
   },
+  // Pictures live in a public R2 bucket but are served from this app's own address
+  // (/img/<file>): some networks can't resolve the bucket's r2.dev name. See lib/image-url.ts.
+  async rewrites() {
+    const base = process.env.R2_PUBLIC_URL?.trim().replace(/\/+$/, "");
+    return base ? [{ source: "/img/:path*", destination: `${base}/:path*` }] : [];
+  },
   async headers() {
     return [
+      { source: "/img/:path*", headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] },
       {
         source: "/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive, nosnippet" }],

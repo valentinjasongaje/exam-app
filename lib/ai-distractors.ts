@@ -1,3 +1,4 @@
+import { publicImageUrl } from "@/lib/image-url";
 import Anthropic from "@anthropic-ai/sdk";
 import { aiModel } from "@/lib/ai-explain";
 
@@ -28,11 +29,13 @@ export async function makeDistractors(input: {
   const existing = (input.existing ?? []).filter((x) => x.trim());
   const client = new Anthropic();
   const content: Anthropic.ContentBlockParam[] = [];
-  if (input.imageUrl && /^https:\/\//i.test(input.imageUrl)) {
-    content.push({ type: "image", source: { type: "url", url: input.imageUrl } });
+  const figure = publicImageUrl(input.imageUrl);
+  const solutionFigure = publicImageUrl(input.solutionImageUrl);
+  if (figure && /^https:\/\//i.test(figure)) {
+    content.push({ type: "image", source: { type: "url", url: figure } });
   }
-  if (input.solutionImageUrl && /^https:\/\//i.test(input.solutionImageUrl)) {
-    content.push({ type: "image", source: { type: "url", url: input.solutionImageUrl } });
+  if (solutionFigure && /^https:\/\//i.test(solutionFigure)) {
+    content.push({ type: "image", source: { type: "url", url: solutionFigure } });
   }
   content.push({
     type: "text",

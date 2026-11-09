@@ -1,5 +1,6 @@
 import { put } from "@vercel/blob";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { IMG_PREFIX } from "@/lib/image-url";
 
 /**
  * Where pictures are stored. With the R2_* variables set they go to a public
@@ -52,7 +53,7 @@ export async function uploadImage(
       console.error("R2 upload failed", e);
       throw new Error(`R2 upload failed (${err.name ?? "error"}): ${err.message ?? "unknown"}`);
     }
-    return `${process.env.R2_PUBLIC_URL!.trim().replace(/\/+$/, "")}/${filename}`;
+    return `${IMG_PREFIX}${filename}`; // served through the app, see lib/image-url.ts
   }
   const blob = await put(filename, buffer, {
     access: "public",

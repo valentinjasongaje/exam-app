@@ -1,3 +1,4 @@
+import { publicImageUrl } from "@/lib/image-url";
 import type Anthropic from "@anthropic-ai/sdk";
 
 /**
@@ -73,13 +74,15 @@ export function buildExplainMessage(q: QuestionInput): Anthropic.MessageParam {
   ].filter((l) => l !== null);
 
   const content: Anthropic.ContentBlockParam[] = [];
-  if (isRemoteImage(q.imageUrl)) {
+  const figure = publicImageUrl(q.imageUrl);
+  const solutionFigure = publicImageUrl(q.explanationImageUrl);
+  if (isRemoteImage(figure)) {
     content.push({ type: "text", text: "Figure for the question:" });
-    content.push({ type: "image", source: { type: "url", url: q.imageUrl } });
+    content.push({ type: "image", source: { type: "url", url: figure } });
   }
-  if (isRemoteImage(q.explanationImageUrl)) {
+  if (isRemoteImage(solutionFigure)) {
     content.push({ type: "text", text: "Figure from the review center's solution:" });
-    content.push({ type: "image", source: { type: "url", url: q.explanationImageUrl } });
+    content.push({ type: "image", source: { type: "url", url: solutionFigure } });
   }
   content.push({ type: "text", text: lines.join("\n") });
 

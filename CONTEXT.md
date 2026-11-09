@@ -62,8 +62,11 @@ running the CLI scripts by hand.
 **Image storage: Cloudflare R2** (public bucket, APAC) when the `R2_*` env vars are set,
 else Vercel Blob; both through `uploadImage` in `lib/blob.ts`, for images uploaded through
 the admin import/edit flows. Env: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`,
-`R2_BUCKET`, `R2_PUBLIC_URL` (the bucket's `pub-….r2.dev` address; attach a custom domain
-later if needed and change this value, then replace the host in the saved links). Why R2: the
+`R2_BUCKET`, `R2_PUBLIC_URL` (the bucket's `pub-….r2.dev` address). Pictures are saved as
+`/img/<file>` and served through the app: `next.config.ts` rewrites `/img/*` to `R2_PUBLIC_URL`
+(some networks, e.g. the owner's, can't resolve `r2.dev`); `lib/image-url.ts` `publicImageUrl()`
+turns a saved link back into a full https address for the AI. `scripts/links-to-img-path.ts` converted
+the already-saved bucket links to `/img/…`. Why R2: the
 Hobby Blob store was suspended in Nov 2026 after the bulk import exceeded 2,000 uploads/month
 (its files then return 403). `scripts/relink-pictures.ts` re-uploaded the pictures from the
 original exam files to R2 and updated `Question.imageUrl`/`explanationImageUrl`; it only touches
