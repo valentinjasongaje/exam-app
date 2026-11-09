@@ -145,7 +145,10 @@ export default function ImportPage() {
   if (!activeExams) {
     return (
       <div>
-        <PageHeader title="Import exams" subtitle="Upload scraped HTML files to preview before committing." />
+        <PageHeader
+          title="Import exams"
+          subtitle="Upload scraped HTML files to preview before committing. Saved review pages (.mhtml) go through Import .mhtml."
+        />
         <Card>
           <form action={formAction} className="flex flex-col gap-4">
             <label

@@ -7,7 +7,8 @@ import { clsx } from "clsx";
 const links = [
   { href: "/admin/users", label: "Users" },
   { href: "/admin/content", label: "Content" },
-  { href: "/admin/import", label: "Import" },
+  { href: "/admin/import", label: "Import HTML" },
+  { href: "/admin/import/review", label: "Import .mhtml" },
 ];
 
 export default function AdminNav() {
@@ -15,7 +16,9 @@ export default function AdminNav() {
   return (
     <nav className="flex flex-row gap-1 text-sm sm:flex-col">
       {links.map((l) => {
-        const active = pathname.startsWith(l.href);
+        // Most specific match wins ("/admin/import/review" isn't also "Import HTML").
+        const active =
+          pathname.startsWith(l.href) && !links.some((o) => o.href.length > l.href.length && o.href.startsWith(l.href) && pathname.startsWith(o.href));
         return (
           <Link
             key={l.href}
