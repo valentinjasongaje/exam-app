@@ -3,7 +3,6 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "Terms of service · Exam App" };
 
-const CONTACT = "valentinjasongaje@gmail.com";
 const UPDATED = "November 9, 2026";
 
 /** Public terms of service (linked from the Google OAuth consent screen). */
@@ -47,15 +46,6 @@ export default function TermsPage() {
               privacy policy
             </Link>
             .
-          </p>
-        </section>
-
-        <section>
-          <h2>Contact</h2>
-          <p>
-            <a href={`mailto:${CONTACT}`} className="text-accent hover:underline">
-              {CONTACT}
-            </a>
           </p>
         </section>
       </div>

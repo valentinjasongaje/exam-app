@@ -3,7 +3,6 @@ import Link from "next/link";
 
 export const metadata: Metadata = { title: "Privacy policy · Exam App" };
 
-const CONTACT = "valentinjasongaje@gmail.com";
 const UPDATED = "November 9, 2026";
 
 /** Public privacy policy (linked from the Google OAuth consent screen). */
@@ -68,23 +67,9 @@ export default function PrivacyPage() {
         <section>
           <h2>Keeping and deleting your data</h2>
           <p>
-            Your data is kept while you use the site. Ask the administrator at{" "}
-            <a href={`mailto:${CONTACT}`} className="text-accent hover:underline">
-              {CONTACT}
-            </a>{" "}
-            and your account and data will be deleted. You can also remove the app&rsquo;s access to your Google account at any
+            Your data is kept while you use the site. Ask the administrator who approved your access and your account and
+            data will be deleted. You can also remove the app&rsquo;s access to your Google account at any
             time in your Google Account settings under Security → Third-party apps.
-          </p>
-        </section>
-
-        <section>
-          <h2>Contact</h2>
-          <p>
-            Questions about this policy:{" "}
-            <a href={`mailto:${CONTACT}`} className="text-accent hover:underline">
-              {CONTACT}
-            </a>
-            .
           </p>
         </section>
 
