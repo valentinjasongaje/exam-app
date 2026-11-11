@@ -121,8 +121,15 @@ export default function WatchPlayer({
       .catch(() => {});
   }
 
+  // Full reset only when a (different) video opens. Must run before the mode effect below.
   useEffect(() => {
-    watchProgress.set({ share: initialShare, completed: initialCompleted, justCompleted: false, tracking: false, mode: "loading" });
+    watchProgress.set({ justCompleted: false, tracking: false, mode: "loading" });
+  }, [videoId]);
+
+  // Saved progress from the server. Background refreshes (a progress save, a note) re-send it;
+  // they only update the numbers: resetting mode/tracking here showed "Starting player…" mid-playback.
+  useEffect(() => {
+    watchProgress.set({ share: initialShare, completed: initialCompleted });
   }, [initialShare, initialCompleted]);
 
   useEffect(() => {
