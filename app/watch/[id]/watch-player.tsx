@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, RotateCcw, RotateCw } from "lucide-react";
+import { ExternalLink, Loader2, RotateCcw, RotateCw } from "lucide-react";
 import { clsx } from "clsx";
 import { playerBridge } from "@/lib/player-bridge";
 import { watchProgress } from "@/lib/watch-progress-store";
@@ -81,6 +81,7 @@ export default function WatchPlayer({
   startAt,
   initialShare,
   initialCompleted,
+  openInDrive = false,
 }: {
   videoId: string;
   fileId: string;
@@ -88,6 +89,8 @@ export default function WatchPlayer({
   startAt: number | null;
   initialShare: number;
   initialCompleted: boolean;
+  /** Show a small "open in Google Drive" button (admin only: the files are private to the admin's Drive). */
+  openInDrive?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("loading");
   const [reason, setReason] = useState<string | null>(null);
@@ -448,6 +451,21 @@ export default function WatchPlayer({
               {flash.side === "back" ? "−" : "+"}
               {flash.n}s
             </div>
+          )}
+          {openInDrive && (
+            // Drive's own player can lower the quality on a slow connection; this pauses here and opens it there.
+            <a
+              href={`https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => video.current?.pause()}
+              title="Open in Google Drive (choose a lower quality there if it keeps buffering)"
+              aria-label="Open in Google Drive"
+              className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1.5 text-xs text-white/85 transition hover:bg-black/75 hover:text-white"
+            >
+              <ExternalLink size={14} />
+              <span className="hidden sm:inline">Drive</span>
+            </a>
           )}
         </>
       )}

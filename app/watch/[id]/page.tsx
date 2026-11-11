@@ -109,6 +109,7 @@ export default async function WatchPage({
             startAt={startAt}
             initialShare={Math.min(100, playedShare)}
             initialCompleted={done}
+            openInDrive={isAdmin}
           />
         ) : (
           <div className="bg-bg-muted p-8 text-center text-sm text-ink-muted">
