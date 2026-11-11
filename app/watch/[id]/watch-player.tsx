@@ -89,7 +89,7 @@ export default function WatchPlayer({
   startAt: number | null;
   initialShare: number;
   initialCompleted: boolean;
-  /** Show a small "open in Google Drive" button (admin only: the files are private to the admin's Drive). */
+  /** Show a small "open in Google Drive" button (members need view access to the admin's Drive files). */
   openInDrive?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("loading");
