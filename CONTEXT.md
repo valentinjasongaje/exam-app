@@ -1207,3 +1207,5 @@ The Google OAuth app was in **Testing**, so refresh tokens expired after 7 days 
 
 ## "Drive" button on the player
 The built-in player shows a small "↗ Drive" button in the video's top-right corner (below the double-tap zones' `top-12` start, so it doesn't steal taps). It pauses the in-app video and opens `drive.google.com/file/d/<id>/view` in a new tab, where Drive's own player can lower the quality on a slow connection (the Drive API only serves the original file). Shown to everyone: members use the admin's files, so the admin gives them view access in Google Drive (otherwise Drive shows "You need access").
+
+- The Drive button is hidden until needed: with a mouse it appears while hovering the video (`[@media(hover:hover)]:group-hover`); on touch screens (`hover:none`) it shows while the video is paused (`data-paused` on the player wrapper, set from the video's play/pause events). Keyboard focus also reveals it.

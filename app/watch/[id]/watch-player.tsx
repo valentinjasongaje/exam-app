@@ -296,6 +296,8 @@ export default function WatchPlayer({
   }
 
   // ---- skipping: buttons, keyboard (← → / J L, Shift = 30 s, K or space = play/pause), double-tap ----
+  // Paused (or not started): on touch screens the Drive button shows only then.
+  const [paused, setPaused] = useState(true);
   const [flash, setFlash] = useState<{ side: "back" | "fwd"; n: number; key: number } | null>(null);
   const tapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -398,7 +400,12 @@ export default function WatchPlayer({
   }
 
   return (
-    <div ref={rootRef} className="relative aspect-video w-full" onContextMenu={(e) => e.preventDefault()}>
+    <div
+      ref={rootRef}
+      data-paused={paused}
+      className="group relative aspect-video w-full"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {mode === "loading" ? (
         <div className="absolute inset-0 flex items-center justify-center text-white/70">
           <Loader2 className="animate-spin" />
@@ -416,8 +423,12 @@ export default function WatchPlayer({
           onLoadedMetadata={onLoaded}
           onTimeUpdate={onTime}
           onSeeking={resetTrack}
-          onPlay={resetTrack}
+          onPlay={() => {
+            resetTrack();
+            setPaused(false);
+          }}
           onPause={() => {
+            setPaused(true);
             resetTrack();
             flush();
           }}
@@ -461,7 +472,13 @@ export default function WatchPlayer({
               onClick={() => video.current?.pause()}
               title="Open in Google Drive (choose a lower quality there if it keeps buffering)"
               aria-label="Open in Google Drive"
-              className="absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1.5 text-xs text-white/85 transition hover:bg-black/75 hover:text-white"
+              className={clsx(
+                "absolute top-2 right-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1.5 text-xs text-white/85 transition hover:bg-black/75 hover:text-white",
+                // Mouse: only while hovering the video. Touch screens (no hover): only while paused.
+                "pointer-events-none opacity-0 focus-visible:pointer-events-auto focus-visible:opacity-100",
+                "[@media(hover:hover)]:group-hover:pointer-events-auto [@media(hover:hover)]:group-hover:opacity-100",
+                "[@media(hover:none)]:group-data-[paused=true]:pointer-events-auto [@media(hover:none)]:group-data-[paused=true]:opacity-100"
+              )}
             >
               <ExternalLink size={14} />
               <span className="hidden sm:inline">Drive</span>
