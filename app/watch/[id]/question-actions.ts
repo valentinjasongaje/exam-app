@@ -170,7 +170,8 @@ export async function recordProblemAction(id: string, correct: boolean, seconds?
   const session = await auth();
   const userId = session?.user?.id;
   if (!userId) return;
-  const q = await prisma.videoQuestion.findFirst({ where: { id, userId, kind: "solve" } });
+  // Solved problems and (from a lecture's practice) multiple-choice questions share the same spacing.
+  const q = await prisma.videoQuestion.findFirst({ where: { id, userId } });
   if (!q) return;
   await addAutoTime({
     userId,

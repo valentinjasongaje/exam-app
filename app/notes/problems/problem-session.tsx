@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, Eye, PlayCircle, RotateCcw, X } from "lucide-react";
+import { ArrowRight, Check, Eye, PlayCircle, RotateCcw, X } from "lucide-react";
+import { clsx } from "clsx";
 import { Button } from "@/components/ui";
 import FormulaMath from "@/components/formula-math";
 import { formatTime } from "@/lib/timestamps";
@@ -12,7 +13,11 @@ type Problem = {
   id: string;
   text: string;
   imageUrl: string | null;
+  /** Solved problems: the final answer. */
   answer: string;
+  /** Multiple-choice questions: A–D and the right letter (null for solved problems). */
+  choices: { label: string; text: string }[] | null;
+  correct: string | null;
   solutionImageUrl: string | null;
   explanation: string | null;
   topic: string;
@@ -31,11 +36,18 @@ function shuffle<T>(arr: T[]) {
 
 const watchHref = (p: Problem) => `/watch/${p.videoId}${p.seconds ? `?t=${p.seconds}` : ""}`;
 
-/** Problem → solve on paper → reveal answer + solution → Got it / Missed. */
+/** The right choice's text for a multiple-choice question. */
+const rightChoice = (p: Problem) => p.choices?.find((c) => c.label === p.correct);
+
+/**
+ * Solved problem → solve on paper → reveal answer + solution → Got it / Missed.
+ * Multiple choice → pick → right/wrong at once (+ explanation) → Next.
+ */
 export default function ProblemSession({ problems, backHref }: { problems: Problem[]; backHref: string }) {
   const [order, setOrder] = useState(problems);
   const [i, setI] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, boolean>>({});
   const [, startTransition] = useTransition();
   const shownAt = useRef(0);
@@ -54,6 +66,7 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
     shownAt.current = Date.now();
     startTransition(() => recordProblemAction(cur.id, ok, secs));
     setRevealed(false);
+    setPicked(null);
     setI((n) => n + 1);
     window.scrollTo({ top: 0 });
   }
@@ -65,7 +78,7 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
         <p className="mt-1 text-4xl font-semibold tabular-nums">
           {got}/{order.length}
         </p>
-        <p className="mt-1 text-sm text-ink-muted">problems solved</p>
+        <p className="mt-1 text-sm text-ink-muted">{order.some((x) => x.choices) ? "right" : "problems solved"}</p>
         {missed.length > 0 && (
           <div className="mt-6 text-left">
             <p className="mb-2 text-sm font-medium">Missed this round</p>
@@ -74,7 +87,13 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
                 <li key={x.id} className="rounded-lg border border-danger/30 bg-danger-soft/40 px-3 py-2 text-sm">
                   <span className="line-clamp-2 text-ink-muted">{x.text}</span>
                   <span className="mt-1 block text-base text-ink">
-                    <FormulaMath formula={x.answer} fit />
+                    {x.choices ? (
+                      <>
+                        {x.correct}. {rightChoice(x)?.text}
+                      </>
+                    ) : (
+                      <FormulaMath formula={x.answer} fit />
+                    )}
                   </span>
                   <Link href={watchHref(x)} className="mt-1 inline-flex items-center gap-1 text-xs text-accent hover:underline">
                     <PlayCircle size={12} /> Rewatch the solution{x.seconds ? ` (${formatTime(x.seconds)})` : ""}
@@ -126,7 +145,51 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
           <img src={p.imageUrl} alt="The problem" className="mt-4 w-full rounded-lg border border-border" />
         )}
 
-        {!revealed ? (
+        {p.choices ? (
+          <>
+            <div className="mt-6 flex flex-col gap-2">
+              {p.choices.map((c) => {
+                const show = picked !== null;
+                const right = c.label === p.correct;
+                const mine = picked === c.label;
+                return (
+                  <button
+                    key={c.label}
+                    type="button"
+                    disabled={show}
+                    onClick={() => setPicked(c.label)}
+                    className={clsx(
+                      "flex items-start gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors",
+                      !show && "border-border hover:border-accent hover:bg-bg-muted",
+                      show && right && "border-success bg-success-soft",
+                      show && mine && !right && "border-danger bg-danger-soft",
+                      show && !right && !mine && "border-border opacity-60"
+                    )}
+                  >
+                    <span className="w-5 shrink-0 font-semibold text-ink-muted">{c.label}</span>
+                    <span className="min-w-0 flex-1 whitespace-pre-wrap">{c.text}</span>
+                    {show && right && <Check size={16} className="shrink-0 text-success" />}
+                    {show && mine && !right && <X size={16} className="shrink-0 text-danger" />}
+                  </button>
+                );
+              })}
+            </div>
+            {picked !== null && (p.explanation || p.solutionImageUrl) && (
+              <div className="mt-4 rounded-lg bg-bg-muted p-3 text-sm text-ink-muted">
+                {p.explanation && <p className="whitespace-pre-wrap">{p.explanation}</p>}
+                {p.solutionImageUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.solutionImageUrl} alt="The worked solution" className="mt-2 w-full rounded-lg border border-border" />
+                )}
+              </div>
+            )}
+            {picked !== null && (
+              <Link href={watchHref(p)} className="mt-4 inline-flex items-center gap-1 self-center text-sm text-accent hover:underline">
+                <PlayCircle size={14} /> Watch it in the video{p.seconds ? ` (${formatTime(p.seconds)})` : ""}
+              </Link>
+            )}
+          </>
+        ) : !revealed ? (
           <p className="mt-6 text-center text-sm text-ink-muted">Solve it on paper or with your calculator, then reveal.</p>
         ) : (
           <div className="mt-6 border-t border-border pt-6 text-center">
@@ -147,7 +210,17 @@ export default function ProblemSession({ problems, backHref }: { problems: Probl
       </div>
 
       <div className="mt-4">
-        {!revealed ? (
+        {p.choices ? (
+          <Button className="w-full py-3" disabled={picked === null} onClick={() => grade(picked === p.correct)}>
+            {picked === null ? (
+              "Pick an answer"
+            ) : (
+              <>
+                Next <ArrowRight size={16} />
+              </>
+            )}
+          </Button>
+        ) : !revealed ? (
           <Button className="w-full py-3" onClick={() => setRevealed(true)}>
             <Eye size={16} /> Reveal answer
           </Button>

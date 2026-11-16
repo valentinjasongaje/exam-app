@@ -375,9 +375,14 @@ export default function VideoQuestions({
   const pendingCount = items.filter((q) =>
     q.kind === "solve" ? !q.answer : !q.inBank,
   ).length;
+  // Practise covers solved problems with an answer and complete multiple-choice questions.
   const solvedCount = items.filter(
     (q) => q.kind === "solve" && q.answer,
   ).length;
+  const mcqCount = items.filter(
+    (q) => q.kind === "mcq" && q.correct && hasAllChoices(q),
+  ).length;
+  const practiceCount = solvedCount + mcqCount;
 
   return (
     <NotesTabPanel
@@ -590,15 +595,19 @@ export default function VideoQuestions({
         </ul>
       )}
 
-      {solvedCount > 0 && !draft && (
+      {practiceCount > 0 && !draft && (
         <Link
           href={`/notes/problems?video=${videoId}`}
           className="inline-flex items-center gap-1.5 self-start text-sm text-accent hover:underline"
         >
           <ListChecks size={14} /> Practise{" "}
-          {solvedCount === 1
-            ? "this solved problem"
-            : `these ${solvedCount} solved problems`}
+          {mcqCount === 0
+            ? solvedCount === 1
+              ? "this solved problem"
+              : `these ${solvedCount} solved problems`
+            : practiceCount === 1
+              ? "this question"
+              : `these ${practiceCount} questions`}
         </Link>
       )}
 

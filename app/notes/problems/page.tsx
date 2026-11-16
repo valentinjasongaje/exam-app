@@ -15,7 +15,8 @@ import ProblemSession from "./problem-session";
  *
  * /notes/problems                 due problems, all subjects (&all=1 for all)
  * /notes/problems?subject=elex    due problems in a subject
- * /notes/problems?video=<id>      every solved problem from one video
+ * /notes/problems?video=<id>      every solved problem and multiple-choice
+ *                                 question from one video's lecture
  */
 export default async function ProblemsPage({
   searchParams,
@@ -36,8 +37,8 @@ export default async function ProblemsPage({
   const rows = await prisma.videoQuestion.findMany({
     where: {
       userId,
-      kind: "solve",
-      answer: { not: null },
+      // A lecture's practice also includes its multiple-choice questions (with an answer picked).
+      OR: p.video ? [{ kind: "solve", answer: { not: null } }, { kind: "mcq", correct: { not: null } }] : [{ kind: "solve", answer: { not: null } }],
       ...lectureVideos,
       ...(subject ? { subject } : {}),
       ...(dueOnly ? { OR: [{ dueDate: null }, { dueDate: { lte: today } }] } : {}),
@@ -45,6 +46,15 @@ export default async function ProblemsPage({
     include: { video: { select: { title: true } } },
     orderBy: [{ dueDate: "asc" }, { createdAt: "asc" }],
   });
+
+  const LABELS = ["A", "B", "C", "D"] as const;
+  const choicesOf = (q: (typeof rows)[number]) => {
+    const texts = [q.choiceA, q.choiceB, q.choiceC, q.choiceD].map((t) => t.trim());
+    return q.kind === "mcq" && q.correct && texts.every(Boolean) ? LABELS.map((label, k) => ({ label, text: texts[k] })) : null;
+  };
+  // Multiple-choice drafts without all four choices can't be practised yet.
+  const usable = rows.filter((q) => q.kind === "solve" || choicesOf(q));
+  const hasMcq = usable.some((q) => q.kind === "mcq");
 
   const scope = p.video
     ? from
@@ -58,8 +68,17 @@ export default async function ProblemsPage({
       <Link href={backHref} className="text-sm text-ink-muted hover:text-ink">
         ← {p.video ? "Back to the video" : "Notes"}
       </Link>
-      <PageHeader icon={Calculator} eyebrow="Solved problems" title={scope} subtitle="Solve it on paper first, then reveal the answer and be honest." />
-      {rows.length === 0 ? (
+      <PageHeader
+        icon={Calculator}
+        eyebrow={hasMcq ? "Lecture questions" : "Solved problems"}
+        title={scope}
+        subtitle={
+          hasMcq
+            ? "Solved problems: work it out, reveal and be honest. Multiple choice: pick an answer and see right away."
+            : "Solve it on paper first, then reveal the answer and be honest."
+        }
+      />
+      {usable.length === 0 ? (
         <EmptyState>
           {dueOnly ? (
             <>
@@ -69,17 +88,19 @@ export default async function ProblemsPage({
               </Link>
             </>
           ) : (
-            "No solved problems yet. While watching, use Add question → Solved problem, and add the final answer."
+            "No questions to practise yet. While watching, use Add question, and add the answer."
           )}
         </EmptyState>
       ) : (
         <ProblemSession
           backHref={backHref}
-          problems={shuffleCards(rows).map((q) => ({
+          problems={shuffleCards(usable).map((q) => ({
             id: q.id,
             text: q.text,
             imageUrl: q.imageUrl,
-            answer: q.answer!,
+            answer: q.answer ?? "",
+            choices: choicesOf(q),
+            correct: q.correct,
             solutionImageUrl: q.solutionImageUrl,
             explanation: q.explanation,
             topic: q.topic,
